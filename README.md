@@ -128,6 +128,61 @@ UI library:
 
 These are the semantic pieces that I used to define the domain model:
 
+- [Server](#api-server)
+- [Clients](#clients)
+- [Lobby](#lobby)
+- [Match](#match)
+- Turn
+- [Player](#player)
+- [Match state](#match-state)
+
+#### API Server
+
+- the game logic and the network connection are two different concerns and thus should be two separate layers
+- there could only be one instance of a Server at the time.
+- the server must be able to communicate in real-time with all the connected clients through WebSocket
+- a finite set of events message is exposed as a contract with the clients
+- a maximum of two clients are allowed to connect at a time.
+- is responsible for creating one instance of the game lobby
+
+#### Clients
+
+- clients are only able to communicate with other clients through an API server.
+- a persistent connection is established with WebSocket.
+- the API is the only source of truth for the match state
+- clients should react to a change of game state
+- clients can interact with the game state only by making a move when is their turn
+- should dispatch a move event with the player choice as a payload
+- clients can automatically produce a move action if the users are not interacting within a given time frame
+
+#### Match state
+
+- has a `turn` attribute that describes which player game turn is (`IPlayerID`)
+- has a `turnNumber` attributes that track the current turn's number
+- has an `inputNumber` attribute that represents the initial value
+- has an `action` attributes that represent the player choice (`-1 | 0 | +1`)
+- has an `outputNumber` attribute that represents the result of the user's operation on the input value
+- has a `state` attributes that encodes the game state after an action: (`PlayingState | PlayerID1WinState | PlayerID2WinState`)
+
+#### Lobby
+
+- there could only be one instance of a Lobby at the time.
+- is responsible for registering connected users
+- should implement the following operations: add user, remove user, start a match
+
+#### Match
+
+- there could only be one match at the time.
+- a match is between two players or between a player and a program.
+- a match is played until an end condition is met: player one won | player two won
+- if a player decides to play against an AI, then the AI behavior is handled by the match itself
+
+#### Player
+
+- a player has a unique `id`
+- a player has a `name`
+- a player has a type `human` | `ai.`
+
 ### 3. Implementation
 
 ## How to run it:
