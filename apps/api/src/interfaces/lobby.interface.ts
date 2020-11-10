@@ -9,10 +9,10 @@ import type { Human } from '../model/human'
 export interface ILobby {
   /**
    * gets an array representation of all the human IPlayers currently in the ILobby
-   * @returns {ReadonlyArray<Human>}
+   * @returns {ReadonlyArray<Readonly<Human>>}
    * @memberof ILobby
    */
-  getPlayers(): ReadonlyArray<Human>
+  getPlayers(): ReadonlyArray<Readonly<Human>>
 
   /**
    * gets the number of human IPlayer currently in the ILobby
@@ -34,4 +34,10 @@ export interface ILobby {
    * @memberof ILobby
    */
   removePlayer(player: Human): void
+
+  /**
+   * reset the lobby to a pristine state
+   * @memberof ILobby
+   */
+  reset(): void
 }
