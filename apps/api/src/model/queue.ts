@@ -33,21 +33,21 @@ export class Queue<T> implements IQueue<T> {
     return this.items[0]
   }
 
-  public size(): number {
-    return this.items.length
-  }
-
-  public toString(): string {
-    return this.items.toString()
-  }
-
   public remove(item: T): undefined | T {
     const index = this.items.indexOf(item)
     if (index === -1) return undefined
     return this.items.splice(index, 1)[0]
   }
 
+  public size(): number {
+    return this.items.length
+  }
+
   public toArray(): readonly Readonly<T>[] {
     return this.items.slice()
+  }
+
+  public toString(): string {
+    return this.items.toString()
   }
 }

@@ -1,21 +1,22 @@
-import { expect, it, describe, beforeEach, afterEach } from '@jest/globals'
-
-import { Lobby } from '../model/lobby'
-import { Human } from '../model/human'
+import { afterEach, beforeEach, describe, expect, it } from '@jest/globals'
 
 import type { ILobby } from '../interfaces'
+import { Human } from '../model/human'
+import { Lobby } from '../model/lobby'
 
-describe('Lobby', () => {
+describe('lobby', () => {
   const playerA = new Human('PLAYER_A_ID', 'PLAYER_A')
   const playerB = new Human('PLAYER_B_ID', 'PLAYER_B')
   const playerC = new Human('PLAYER_C_ID', 'PLAYER_C')
   const playerD = new Human('PLAYER_D_ID', 'PLAYER_D')
 
   let lobby: ILobby
+  // eslint-disable-next-line jest/no-hooks
   beforeEach(() => {
     lobby = Lobby.getInstance()
   })
 
+  // eslint-disable-next-line jest/no-hooks
   afterEach(() => {
     lobby.reset()
   })
@@ -67,7 +68,7 @@ describe('Lobby', () => {
     expect(players).toContain(playerC)
     expect(players).toContain(playerA)
     expect(players).not.toContain(playerD)
-    expect(players.length).toBe(3)
+    expect(players).toHaveLength(3)
   })
 
   it('should allow to remove a human IPlayer from the lobby', () => {
@@ -88,7 +89,7 @@ describe('Lobby', () => {
     expect(players).not.toContain(playerB)
     expect(players).not.toContain(playerC)
     expect(players).not.toContain(playerD)
-    expect(players.length).toBe(1)
+    expect(players).toHaveLength(1)
   })
 
   it('should allow to get the number of human IPlayer currently in the lobby', () => {
@@ -111,6 +112,7 @@ describe('Lobby', () => {
     lobby.addPlayer(playerC)
     lobby.addPlayer(playerD)
 
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(lobby.getPlayers).toBeDefined()
     expect(Array.isArray(lobby.getPlayers())).toBe(true)
     expect(lobby.getPlayers()).toContain(playerA)

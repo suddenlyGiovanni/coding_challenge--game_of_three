@@ -1,22 +1,25 @@
-import { expect, it, describe, jest } from '@jest/globals'
+import { describe, expect, it, jest } from '@jest/globals'
 
+import type { IPlayer } from '../interfaces'
 import { PlayerType } from '../interfaces/player.interface'
 import { AI } from '../model/ai'
 
-import type { IPlayer } from '../interfaces'
 import type { UUIDService } from '../model/ai'
 
-describe('AI class', () => {
+describe('ai class', () => {
   const AI_ID = 'AI_ID'
   const AI_NAME = 'AI_NAME'
   const ai: IPlayer = new AI(AI_ID, AI_NAME)
 
   it('should allow for uuid Service to be injected', () => {
+    expect.hasAssertions()
+
     const uuidService: UUIDService = () => AI_ID
     const uuidServiceMock = jest.fn(uuidService)
     const al = AI.make(uuidServiceMock)
     expect.hasAssertions()
-    expect(uuidServiceMock).toHaveBeenCalled()
+    expect(uuidServiceMock).toHaveBeenCalledTimes(1)
+    expect(uuidServiceMock).toHaveReturnedWith('AI_ID')
     expect(al.getId()).toBe('AI_ID')
     expect(al.getName()).toBe('AI')
   })
@@ -31,7 +34,7 @@ describe('AI class', () => {
     expect(ai.getName()).toBe('AI_NAME')
   })
 
-  it('should return the `AI` when `getType` method is invoked ', () => {
+  it('should return the `AI` when `getType` method is invoked', () => {
     expect.hasAssertions()
     expect(ai.getType()).toBe(PlayerType.AI)
   })

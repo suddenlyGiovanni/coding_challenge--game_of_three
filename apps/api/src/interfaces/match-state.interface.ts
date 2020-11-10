@@ -6,16 +6,15 @@ export enum MatchState {
   End = 1,
 }
 
-
 export interface IMatchState<
   Player1ID extends string,
   Player2ID extends string
 > {
+  action: -1 | 0 | 1
+  inputNumber: number
+  matchState: PlayingState | EndState
+  outputNumber: number
   turn: Player1ID | Player2ID
   turnNumber: number
-  inputNumber: number
-  action: -1 | 0 | 1
-  outputNumber: number
-  matchState: PlayingState | EndState
   winningPlayer?: Player1ID | Player2ID
 }

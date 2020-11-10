@@ -1,8 +1,7 @@
-import { expect, it, describe, beforeEach } from '@jest/globals'
-
-import { Queue } from '../model/queue'
+import { beforeEach, describe, expect, it } from '@jest/globals'
 
 import type { IQueue } from '../interfaces'
+import { Queue } from '../model/queue'
 
 class MyObj<T> {
   public constructor(
@@ -18,16 +17,19 @@ class MyObj<T> {
 describe('queue', () => {
   let queue: IQueue<number>
 
+  // eslint-disable-next-line jest/no-hooks
   beforeEach(() => {
     queue = new Queue<number>()
   })
 
   it('starts empty', () => {
+    expect.hasAssertions()
     expect(queue.size()).toBe(0)
     expect(queue.isEmpty()).toBe(true)
   })
 
   it('enqueue elements', () => {
+    expect.hasAssertions()
     queue.enqueue(1)
     expect(queue.size()).toBe(1)
     queue.enqueue(2)
@@ -39,6 +41,7 @@ describe('queue', () => {
   })
 
   it('dequeue elements', () => {
+    expect.hasAssertions()
     queue.enqueue(1)
     queue.enqueue(2)
     queue.enqueue(3)
@@ -50,6 +53,7 @@ describe('queue', () => {
   })
 
   it('implements FIFO logic', () => {
+    expect.hasAssertions()
     queue.enqueue(1)
     expect(queue.peek()).toBe(1)
     queue.enqueue(2)
@@ -64,6 +68,7 @@ describe('queue', () => {
   })
 
   it('allows to peek at the front element in the queue without dequeuing it', () => {
+    expect.hasAssertions()
     expect(queue.peek()).toBeUndefined()
 
     queue.enqueue(1)
@@ -77,6 +82,7 @@ describe('queue', () => {
   })
 
   it('returns the correct size', () => {
+    expect.hasAssertions()
     expect(queue.size()).toBe(0)
     queue.enqueue(1)
     expect(queue.size()).toBe(1)
@@ -104,6 +110,7 @@ describe('queue', () => {
   })
 
   it('returns if it is empty', () => {
+    expect.hasAssertions()
     expect(queue.isEmpty()).toBe(true)
     queue.enqueue(1)
     expect(queue.isEmpty()).toBe(false)
@@ -131,6 +138,7 @@ describe('queue', () => {
   })
 
   it('clears the queue', () => {
+    expect.hasAssertions()
     queue.clear()
     expect(queue.isEmpty()).toBe(true)
 
@@ -177,9 +185,10 @@ describe('queue', () => {
     // assert
     expect(queue.size()).toBe(4)
     expect(queue.peek()).toBe(1)
-    expect(removed).toBe(undefined)
+    expect(removed).toBeUndefined()
   })
   it('returns toString primitive types', () => {
+    expect.hasAssertions()
     expect(queue.toString()).toBe('')
 
     queue.enqueue(1)
@@ -200,6 +209,7 @@ describe('queue', () => {
   })
 
   it('returns toString objects', () => {
+    expect.hasAssertions()
     const queueMyObj = new Queue<MyObj<number>>()
     expect(queueMyObj.toString()).toBe('')
 

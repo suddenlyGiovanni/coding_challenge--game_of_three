@@ -34,20 +34,6 @@ export interface IQueue<T> {
   peek(): T | undefined
 
   /**
-   * Returns the size of the Queue
-   * @returns {number}
-   * @memberof IQueue
-   */
-  size(): number
-
-  /**
-   * Serialize the content of the Queue and returns it
-   * @returns {string}
-   * @memberof IQueue
-   */
-  toString(): string
-
-  /**
    * If element is in the queue, it removes it and then return it.
    * If the element is not in the queue, it returns `undefined`
    * @param {T} x
@@ -55,6 +41,13 @@ export interface IQueue<T> {
    * @memberof IQueue
    */
   remove(x: T): undefined | T
+
+  /**
+   * Returns the size of the Queue
+   * @returns {number}
+   * @memberof IQueue
+   */
+  size(): number
 
   /**
    * returns an immutable copy of the queue in array form.
@@ -68,4 +61,11 @@ export interface IQueue<T> {
    * @internal
    */
   toArray(): ReadonlyArray<Readonly<T>>
+
+  /**
+   * Serialize the content of the Queue and returns it
+   * @returns {string}
+   * @memberof IQueue
+   */
+  toString(): string
 }
