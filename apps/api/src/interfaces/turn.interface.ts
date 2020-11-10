@@ -1,6 +1,9 @@
 import type { IPlayer } from './player.interface'
 
-export interface ITurn<Player1 extends IPlayer, Player2 extends IPlayer> {
+export interface ITurn<
+  Player1 extends IPlayer = IPlayer,
+  Player2 extends IPlayer = IPlayer
+> {
   /**
    * initialize the state by
    * - setting the currentTurn to Player1
