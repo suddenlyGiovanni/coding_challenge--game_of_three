@@ -8,6 +8,13 @@ import type { Human } from '../model/human'
 
 export interface ILobby {
   /**
+   * adds a human IPlayer to the ILobby
+   * @param {Human} player
+   * @memberof ILobby
+   */
+  addPlayer(player: Human): void
+
+  /**
    * gets an array representation of all the human IPlayers currently in the ILobby
    * @returns {ReadonlyArray<Readonly<Human>>}
    * @memberof ILobby
@@ -20,13 +27,6 @@ export interface ILobby {
    * @memberof ILobby
    */
   getSize(): number
-
-  /**
-   * adds a human IPlayer to the ILobby
-   * @param {Human} player
-   * @memberof ILobby
-   */
-  addPlayer(player: Human): void
 
   /**
    * removes a human IPlayer from the ILobby

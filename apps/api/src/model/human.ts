@@ -1,6 +1,5 @@
+import type { IHUMAN, IPlayer } from '../interfaces'
 import { PlayerType } from '../interfaces/player.interface'
-
-import type { IPlayer, IHUMAN } from '../interfaces'
 
 export class Human implements IPlayer {
   private readonly id: string
@@ -13,23 +12,21 @@ export class Human implements IPlayer {
     this.type = PlayerType.HUMAN
   }
 
-  public isSame(player: IPlayer): player is this {
-    return this.id === player.getId()
+  public getId(): string {
+    return this.id
   }
-
+  public getName(): string {
+    return this.name
+  }
   public getType(): IHUMAN {
     return this.type
   }
 
-  public getId(): string {
-    return this.id
-  }
-
-  public getName(): string {
-    return this.name
-  }
-
   public isAi(): false {
     return false
+  }
+
+  public isSame(player: IPlayer): player is this {
+    return this.id === player.getId()
   }
 }

@@ -1,15 +1,16 @@
-import { expect, it, describe, beforeEach } from '@jest/globals'
-
-import { Turn } from '../model/turn'
-import { Human } from '../model/human'
+/* eslint-disable jest/require-to-throw-message */
+import { beforeEach, describe, expect, it } from '@jest/globals'
 
 import type { IPlayer, ITurn } from '../interfaces'
+import { Human } from '../model/human'
+import { Turn } from '../model/turn'
 
-describe('Turn', () => {
+describe('turn', () => {
   let player1: IPlayer
   let player2: IPlayer
   let turn: ITurn
 
+  // eslint-disable-next-line jest/no-hooks
   beforeEach(() => {
     player1 = new Human('PLAYER_1_ID', 'PLAYER_1_NAME')
     player2 = new Human('PLAYER_2_ID', 'PLAYER_2_NAME')
@@ -22,8 +23,8 @@ describe('Turn', () => {
   })
 
   it('should instantiate correctly', () => {
-    const turn = new Turn(player1, player2)
     expect.hasAssertions()
+    const turn = new Turn(player1, player2)
     expect(turn).toBeInstanceOf(Turn)
   })
 
@@ -53,20 +54,23 @@ describe('Turn', () => {
   it('should initialize with `currentPlayer` equal to `player1`', () => {
     expect.hasAssertions()
     turn.init()
+    // eslint-disable-next-line jest/prefer-strict-equal
     expect(turn.getCurrent()).toEqual(player1)
     expect(turn.getCurrent().isSame(player1)).toBe(true)
   })
 
   it('should return the Player whose turn is currently active when `getCurrent` method is invoked', () => {
-    turn.init()
     expect.hasAssertions()
+    turn.init()
+    // eslint-disable-next-line jest/prefer-strict-equal
     expect(turn.getCurrent()).toEqual(player1)
     expect(turn.getCurrent().isSame(player2)).not.toBe(true)
   })
 
   it('should return the Player whose turn  will be active next when `peekNext` method is invoked', () => {
-    turn.init()
     expect.hasAssertions()
+    turn.init()
+    // eslint-disable-next-line jest/prefer-strict-equal
     expect(turn.peekNext()).toEqual(player2)
     expect(turn.peekNext().isSame(player2)).toBe(true)
   })
@@ -91,6 +95,7 @@ describe('Turn', () => {
     for (let i = turn.getTurnNumber(); i < 10; i++) {
       const currentTurn = turn.next()
       expect(turn.getTurnNumber()).toBe(i + 1)
+      // eslint-disable-next-line jest/prefer-strict-equal
       expect(currentTurn).toEqual((i + 1) % 2 === 0 ? player2 : player1)
     }
   })

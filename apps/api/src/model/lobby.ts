@@ -1,25 +1,21 @@
-import { Queue } from './queue'
-
-import type { Human } from './human'
 import type { ILobby, IQueue } from '../interfaces'
 
+import type { Human } from './human'
+import { Queue } from './queue'
+
 export class Lobby implements ILobby {
-  private readonly playersQueue: IQueue<Human>
   private static instance: Lobby
+  private readonly playersQueue: IQueue<Human>
 
   private constructor() {
     this.playersQueue = new Queue<Human>()
   }
-  public reset(): void {
-    this.playersQueue.clear()
-  }
 
-  public getPlayers(): readonly Readonly<Human>[] {
-    return this.playersQueue.toArray()
-  }
-
-  public getSize(): number {
-    return this.playersQueue.size()
+  public static getInstance(): ILobby {
+    if (!Lobby.instance) {
+      Lobby.instance = new Lobby()
+    }
+    return Lobby.instance
   }
 
   public addPlayer(player: Human): void {
@@ -34,11 +30,12 @@ export class Lobby implements ILobby {
     }
   }
 
-  private isPlayerInLobby(player: Human): boolean {
-    if (this.playersQueue.isEmpty()) {
-      return false
-    }
-    return this.playersQueue.toArray().indexOf(player) !== -1
+  public getPlayers(): readonly Readonly<Human>[] {
+    return this.playersQueue.toArray()
+  }
+
+  public getSize(): number {
+    return this.playersQueue.size()
   }
 
   public removePlayer(player: Human): void {
@@ -53,10 +50,14 @@ export class Lobby implements ILobby {
     }
   }
 
-  public static getInstance(): ILobby {
-    if (!Lobby.instance) {
-      Lobby.instance = new Lobby()
+  public reset(): void {
+    this.playersQueue.clear()
+  }
+
+  private isPlayerInLobby(player: Human): boolean {
+    if (this.playersQueue.isEmpty()) {
+      return false
     }
-    return Lobby.instance
+    return this.playersQueue.toArray().indexOf(player) !== -1
   }
 }

@@ -2,27 +2,19 @@ import type { IPlayer, ITurn } from '../interfaces'
 
 export class Turn<Player1 extends IPlayer, Player2 extends IPlayer>
   implements ITurn<Player1, Player2> {
+  private currentTurn: Player1 | Player2
   private readonly player1: Player1
   private readonly player2: Player2
   private turnNumber: number
-  private currentTurn: Player1 | Player2
 
   public constructor(player1: Player1, player2: Player2) {
     this.player1 = player1
     this.player2 = player2
   }
 
-  public init(): void {
-    this.currentTurn = this.player1
-    this.turnNumber = 1
-  }
-
-  private assertInt(): void {
-    if (this.turnNumber === undefined || !this.currentTurn) {
-      throw new Error(
-        'Turn not initialized: remember to call init() on a newly instantiated Turn'
-      )
-    }
+  public getCurrent(): Player1 | Player2 {
+    this.assertInt()
+    return this.currentTurn
   }
 
   public getTurnNumber(): number {
@@ -30,8 +22,15 @@ export class Turn<Player1 extends IPlayer, Player2 extends IPlayer>
     return this.turnNumber
   }
 
-  public getCurrent(): Player1 | Player2 {
+  public init(): void {
+    this.currentTurn = this.player1
+    this.turnNumber = 1
+  }
+
+  public next(): Player1 | Player2 {
     this.assertInt()
+    this.turnNumber += 1
+    this.currentTurn = this.peekNext()
     return this.currentTurn
   }
 
@@ -45,10 +44,11 @@ export class Turn<Player1 extends IPlayer, Player2 extends IPlayer>
     }
   }
 
-  public next(): Player1 | Player2 {
-    this.assertInt()
-    this.turnNumber += 1
-    this.currentTurn = this.peekNext()
-    return this.currentTurn
+  private assertInt(): void {
+    if (this.turnNumber === undefined || !this.currentTurn) {
+      throw new Error(
+        'Turn not initialized: remember to call init() on a newly instantiated Turn'
+      )
+    }
   }
 }

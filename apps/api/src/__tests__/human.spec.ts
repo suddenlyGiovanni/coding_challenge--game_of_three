@@ -1,10 +1,10 @@
-import { expect, it, describe } from '@jest/globals'
+import { describe, expect, it } from '@jest/globals'
+
+import type { IPlayer } from '../interfaces'
 import { PlayerType } from '../interfaces/player.interface'
 import { Human } from '../model/human'
 
-import type { IPlayer } from '../interfaces'
-
-describe('Human class', () => {
+describe('human class', () => {
   const ID_1 = 'PLAYER_1_ID'
   const NAME_1 = 'PLAYER_1_NAME'
   const ID_2 = 'PLAYER_2_ID'
@@ -22,7 +22,7 @@ describe('Human class', () => {
     expect(player1.getName()).toBe('PLAYER_1_NAME')
   })
 
-  it('should return the `HUMAN` when `getType` method is invoked ', () => {
+  it('should return the `HUMAN` when `getType` method is invoked', () => {
     expect.hasAssertions()
     expect(player1.getType()).toBe(PlayerType.HUMAN)
   })
