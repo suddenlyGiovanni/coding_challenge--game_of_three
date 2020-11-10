@@ -1,7 +1,10 @@
 import { v4 as uuid } from 'uuid'
-
 import { IAI, IPlayer } from '../interfaces'
 import { PlayerType } from './player-type'
+
+import type { v4 } from 'uuid'
+
+type UUIDService = typeof v4
 
 export class AI implements IPlayer {
   private readonly id: string
@@ -19,8 +22,8 @@ export class AI implements IPlayer {
     return this.id === player.getId()
   }
 
-  static make(): AI {
-    return new AI(uuid(), AI.NAME)
+  static make(uuidService: UUIDService = uuid): AI {
+    return new AI(uuidService(), AI.NAME)
   }
 
   public getType(): IAI {
