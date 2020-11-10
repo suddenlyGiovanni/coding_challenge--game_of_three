@@ -1,10 +1,9 @@
 import { v4 as uuid } from 'uuid'
-import { IAI, IPlayer } from '../interfaces'
-import { PlayerType } from './player-type'
+import { PlayerType } from '../interfaces/player.interface'
 
-import type { v4 } from 'uuid'
+import type { IAI, IPlayer } from '../interfaces'
 
-type UUIDService = typeof v4
+export type UUIDService = () => string
 
 export class AI implements IPlayer {
   private readonly id: string

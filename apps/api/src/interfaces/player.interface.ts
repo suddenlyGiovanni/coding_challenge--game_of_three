@@ -3,6 +3,11 @@ export type IHUMAN = 'HUMAN'
 
 export type IPlayerType = IAI | IHUMAN
 
+export enum PlayerType {
+  HUMAN = 'HUMAN',
+  AI = 'AI',
+}
+
 export interface IPlayer {
   /**
    * gets the id of the player

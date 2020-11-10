@@ -1,4 +1,5 @@
-import { PlayerType } from './player-type'
+import { PlayerType } from '../interfaces/player.interface'
+
 import type { IPlayer, IHUMAN } from '../interfaces'
 
 export class Human implements IPlayer {
