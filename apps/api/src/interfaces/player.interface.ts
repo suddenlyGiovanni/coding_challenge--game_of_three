@@ -8,13 +8,13 @@ export enum PlayerType {
   AI = 'AI',
 }
 
-export interface IPlayer {
+export interface IPlayer<PlayerID extends string = string> {
   /**
    * gets the id of the player
-   * @returns {string} id of the player
+   * @returns {PlayerID} id of the player
    * @memberof IPlayer
    */
-  getId(): string
+  getId(): PlayerID
 
   /**
    * gets the name of the Player
@@ -39,9 +39,9 @@ export interface IPlayer {
 
   /**
    * verifies if the given player is the same as the current one
-   * @param {IPlayer} player
+   * @param {IPlayer<PlayerID>} player
    * @returns {boolean}
    * @memberof IPlayer
    */
-  isSame(player: IPlayer): boolean
+  isSame(player: IPlayer<PlayerID>): boolean
 }

@@ -1,18 +1,19 @@
 import type { IHUMAN, IPlayer } from '../interfaces'
 import { PlayerType } from '../interfaces/player.interface'
 
-export class Human implements IPlayer {
-  private readonly id: string
+export class Human<PlayerID extends string = string>
+  implements IPlayer<PlayerID> {
+  private readonly id: PlayerID
   private readonly name: string
   private readonly type: IHUMAN
 
-  public constructor(id: string, name: string) {
+  public constructor(id: PlayerID, name: string) {
     this.id = id
     this.name = name
     this.type = PlayerType.HUMAN
   }
 
-  public getId(): string {
+  public getId(): PlayerID {
     return this.id
   }
   public getName(): string {
@@ -26,7 +27,7 @@ export class Human implements IPlayer {
     return false
   }
 
-  public isSame(player: IPlayer): player is this {
+  public isSame(player: IPlayer<PlayerID>): player is this {
     return this.id === player.getId()
   }
 }
