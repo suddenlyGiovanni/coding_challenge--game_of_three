@@ -5,23 +5,23 @@ import { PlayerType } from '../interfaces/player.interface'
 
 export type UUIDService = () => string
 
-export class AI implements IPlayer {
+export class AI<PlayerID extends string> implements IPlayer<PlayerID> {
   private static readonly NAME = 'AI'
-  private readonly id: string
+  private readonly id: PlayerID
   private readonly name: string
   private readonly type: IAI
 
-  public constructor(id: string, name: string) {
+  public constructor(id: PlayerID, name: string) {
     this.id = id
     this.name = name
     this.type = PlayerType.AI
   }
 
-  static make(uuidService: UUIDService = uuid): AI {
+  static make(uuidService: UUIDService = uuid): AI<ReturnType<UUIDService>> {
     return new AI(uuidService(), AI.NAME)
   }
 
-  public getId(): string {
+  public getId(): PlayerID {
     return this.id
   }
 
@@ -37,7 +37,7 @@ export class AI implements IPlayer {
     return true
   }
 
-  public isSame(player: IPlayer): player is this {
+  public isSame(player: IPlayer<PlayerID>): player is this {
     return this.id === player.getId()
   }
 }
