@@ -67,7 +67,7 @@ describe('turn', () => {
     expect(turn.getCurrent().isSame(player2)).not.toBe(true)
   })
 
-  it('should return the Player whose turn  will be active next when `peekNext` method is invoked', () => {
+  it('should return the Player whose turn will be active next when `peekNext` method is invoked', () => {
     expect.hasAssertions()
     turn.init()
     // eslint-disable-next-line jest/prefer-strict-equal

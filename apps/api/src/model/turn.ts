@@ -10,6 +10,7 @@ export class Turn<Player1 extends IPlayer, Player2 extends IPlayer>
   public constructor(player1: Player1, player2: Player2) {
     this.player1 = player1
     this.player2 = player2
+    this.turnNumber = 0
   }
 
   public getCurrent(): Player1 | Player2 {
@@ -45,7 +46,7 @@ export class Turn<Player1 extends IPlayer, Player2 extends IPlayer>
   }
 
   private assertInt(): void {
-    if (this.turnNumber === undefined || !this.currentTurn) {
+    if (this.turnNumber === 0 || !this.currentTurn) {
       throw new Error(
         'Turn not initialized: remember to call init() on a newly instantiated Turn'
       )
