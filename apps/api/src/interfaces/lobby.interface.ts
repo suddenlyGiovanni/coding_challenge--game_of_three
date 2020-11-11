@@ -29,6 +29,13 @@ export interface ILobby {
   getSize(): number
 
   /**
+   * returns true if the lobby is empty
+   * @returns {boolean}
+   * @memberof ILobby
+   */
+  isEmpty(): boolean
+
+  /**
    * removes a human IPlayer from the ILobby
    * @param {Human} player
    * @memberof ILobby

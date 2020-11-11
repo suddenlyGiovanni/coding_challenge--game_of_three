@@ -104,6 +104,13 @@ describe('lobby', () => {
     expect(lobby.getSize()).toBe(4)
   })
 
+  it('should tell if the looby is empty', () => {
+    expect.hasAssertions()
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(lobby.isEmpty).toBeDefined()
+    expect(lobby.isEmpty()).toBe(true)
+  })
+
   it('should allow to gets an array representation of all the human IPlayers currently in the lobby', () => {
     expect.hasAssertions()
     // act

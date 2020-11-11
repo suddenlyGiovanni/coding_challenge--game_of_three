@@ -38,6 +38,10 @@ export class Lobby implements ILobby {
     return this.playersQueue.size()
   }
 
+  public isEmpty(): boolean {
+    return this.playersQueue.isEmpty()
+  }
+
   public removePlayer(player: Human): void {
     try {
       if (this.isPlayerInLobby(player)) {
