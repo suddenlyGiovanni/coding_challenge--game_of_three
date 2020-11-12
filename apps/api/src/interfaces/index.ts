@@ -10,6 +10,7 @@ export type { ITurn } from './turn.interface'
 export type { ILobby } from './lobby.interface'
 export type { IQueue } from './queue.interface'
 export type { IMatch } from './match.interface'
+export type { IObserver, ISubject } from './observable.interface'
 
 export { MatchStatus } from './match-state.interface'
 export { PlayerType } from './player.interface'
