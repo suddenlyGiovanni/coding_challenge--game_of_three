@@ -4,7 +4,9 @@ import { PlayerType } from '../interfaces/player.interface'
 export class Human<PlayerID extends string = string>
   implements IPlayer<PlayerID> {
   private readonly id: PlayerID
+
   private readonly name: string
+
   private readonly type: IHUMAN
 
   public constructor(id: PlayerID, name: string) {
@@ -16,9 +18,11 @@ export class Human<PlayerID extends string = string>
   public getId(): PlayerID {
     return this.id
   }
+
   public getName(): string {
     return this.name
   }
+
   public getType(): IHUMAN {
     return this.type
   }

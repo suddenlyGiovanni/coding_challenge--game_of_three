@@ -7,8 +7,11 @@ export type UUIDService = () => string
 
 export class AI<PlayerID extends string> implements IPlayer<PlayerID> {
   private static readonly NAME = 'AI'
+
   private readonly id: PlayerID
+
   private readonly name: string
+
   private readonly type: IAI
 
   public constructor(id: PlayerID, name: string) {

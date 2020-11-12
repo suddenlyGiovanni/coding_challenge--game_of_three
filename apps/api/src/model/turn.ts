@@ -3,8 +3,11 @@ import type { IPlayer, ITurn } from '../interfaces'
 export class Turn<Player1 extends IPlayer, Player2 extends IPlayer>
   implements ITurn<Player1, Player2> {
   private currentTurn: Player1 | Player2
+
   private readonly player1: Player1
+
   private readonly player2: Player2
+
   private turnNumber: number
 
   public constructor(player1: Player1, player2: Player2) {

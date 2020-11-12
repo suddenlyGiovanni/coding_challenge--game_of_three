@@ -5,6 +5,7 @@ import { Queue } from './queue'
 
 export class Lobby implements ILobby {
   private static instance: Lobby
+
   private readonly playersQueue: IQueue<Human>
 
   private constructor() {
