@@ -20,12 +20,19 @@ export class Match<
   IPlayer2 extends IPlayer<string>
 > implements IMatch<IPlayer1, IPlayer2>, ISubject<IMatchState> {
   public static readonly MAX = 100
+
   public static readonly MIN = 3
+
   private initialized: boolean
+
   private readonly matchStateHistory: IMatchState[]
+
   private readonly numberGeneratorStrategy: NumberGeneratorStrategy
+
   private readonly observers: IObserver<IMatchState>[]
+
   private readonly players: readonly [IPlayer1, IPlayer2]
+
   private readonly turn: ITurn<IPlayer1, IPlayer2>
 
   public constructor(
@@ -217,6 +224,7 @@ export class Match<
       )
     }
   }
+
   private assertMatchStatePlaying(): void {
     if (this.getMatchStatus() === MatchStatus.Stop) {
       throw new Error("Match ended. Can't make a move after a match has ended")
