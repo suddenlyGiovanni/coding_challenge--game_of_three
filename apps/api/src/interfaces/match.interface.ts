@@ -73,4 +73,11 @@ export interface IMatch<
    * @memberof IMatch
    */
   peekNextTurn(): IPlayer1 | IPlayer2
+
+  /**
+   * set a new match state
+   * @param {IMatchState} matchState
+   * @memberof IMatch
+   */
+  setMatchState(matchState: IMatchState): void
 }

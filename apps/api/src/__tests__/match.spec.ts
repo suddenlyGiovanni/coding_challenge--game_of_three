@@ -8,7 +8,7 @@ import {
   jest,
 } from '@jest/globals'
 
-import type { IMatchState, IObserver } from '../interfaces'
+import type { IMatchState, IMatchStatePlaying, IObserver } from '../interfaces'
 import { MatchStatus } from '../interfaces'
 import { AI } from '../model/ai'
 import { Human } from '../model/human'
@@ -25,7 +25,13 @@ describe('match', () => {
   let match: Match<typeof human, typeof ai>
 
   const numberGeneratorStrategy: NumberGeneratorStrategy = () => 100
+
   const mockNumberGeneratorStrategy = jest.fn(numberGeneratorStrategy)
+  const mockUpdateA = jest.fn()
+  const mockUpdateB = jest.fn()
+
+  const observerA: IObserver<IMatchState> = { update: mockUpdateA }
+  const observerB: IObserver<IMatchState> = { update: mockUpdateB }
 
   beforeEach(() => {
     match = new Match(human, ai, mockNumberGeneratorStrategy)
@@ -33,6 +39,8 @@ describe('match', () => {
 
   afterEach(() => {
     mockNumberGeneratorStrategy.mockClear()
+    mockUpdateA.mockClear()
+    mockUpdateB.mockClear()
   })
 
   it('should exist', () => {
@@ -133,6 +141,40 @@ describe('match', () => {
         turnNumber: 1,
       },
     ])
+  })
+
+  it('should allow to set an new state to the match state history', () => {
+    expect.hasAssertions()
+    // arrange
+    match.init()
+    match.registerObserver(observerA)
+    const [player1, player2] = match.getPlayers()
+    const initialMatchStateObj = {
+      inputNumber: 100,
+      status: 0,
+      turn: player1.getId(),
+      turnNumber: 1,
+    }
+    const injectedMatchState: IMatchStatePlaying = {
+      action: -1,
+      inputNumber: 100,
+      outputNumber: 33,
+      status: MatchStatus.Playing,
+      turn: player1.getId(),
+      turnNumber: 1,
+    }
+    expect(match.getMatchState()).toMatchObject(initialMatchStateObj)
+    // act
+    expect(() => match.setMatchState(injectedMatchState)).not.toThrow()
+    // assert
+    expect(match.getMatchStateHistory()).toHaveLength(2)
+    expect(match.getMatchStateHistory()).toContainEqual(initialMatchStateObj)
+    expect(match.getMatchStateHistory()).toContainEqual(injectedMatchState)
+    expect(match.getMatchState()).toBe(injectedMatchState)
+    expect(match.getCurrentTurnNumber()).toBe(2)
+    expect(match.getCurrentTurn()).toBe(player2)
+    expect(mockUpdateA).toHaveBeenCalledTimes(1)
+    expect(mockUpdateA).toHaveBeenCalledWith(injectedMatchState)
   })
 
   describe('move', () => {
@@ -283,40 +325,23 @@ describe('match', () => {
   })
 
   describe('observer pattern', () => {
-    let matchWithObserver: Match<Human<'ID_HUMAN'>, AI<string>>
-    const mockUpdateA = jest.fn()
-    const mockUpdateB = jest.fn()
-    const observerA: IObserver<IMatchState> = { update: mockUpdateA }
-    const observerB: IObserver<IMatchState> = { update: mockUpdateB }
-
-    beforeEach(() => {
-      matchWithObserver = new Match(human, ai, () => 100)
-    })
-
-    afterEach(() => {
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      mockUpdateA.mockClear
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      mockUpdateB.mockClear
-    })
-
     it('should implement the ISubject interface', () => {
       expect.hasAssertions()
-      expect(matchWithObserver).toHaveProperty('registerObserver')
-      expect(matchWithObserver).toHaveProperty('removeObserver')
-      expect(matchWithObserver).toHaveProperty('notifyObservers')
+      expect(match).toHaveProperty('registerObserver')
+      expect(match).toHaveProperty('removeObserver')
+      expect(match).toHaveProperty('notifyObservers')
     })
 
     it('should allow to register many observers', () => {
       expect.hasAssertions()
-      expect(matchWithObserver['observers']).toHaveLength(0)
+      expect(match['observers']).toHaveLength(0)
       // act
-      expect(() => matchWithObserver.registerObserver(observerA)).not.toThrow()
-      expect(() => matchWithObserver.registerObserver(observerB)).not.toThrow()
+      expect(() => match.registerObserver(observerA)).not.toThrow()
+      expect(() => match.registerObserver(observerB)).not.toThrow()
       // assert
-      expect(matchWithObserver['observers']).toHaveLength(2)
-      expect(matchWithObserver['observers']).toContain(observerA)
-      expect(matchWithObserver['observers']).toContain(observerB)
+      expect(match['observers']).toHaveLength(2)
+      expect(match['observers']).toContain(observerA)
+      expect(match['observers']).toContain(observerB)
       expect(mockUpdateA).toHaveBeenCalledTimes(0)
       expect(mockUpdateB).toHaveBeenCalledTimes(0)
     })
@@ -324,16 +349,16 @@ describe('match', () => {
     it('should allow to remove an observer', () => {
       expect.hasAssertions()
       // arrange
-      expect(matchWithObserver['observers']).toHaveLength(0)
-      matchWithObserver.registerObserver(observerA)
-      matchWithObserver.registerObserver(observerB)
-      expect(matchWithObserver['observers']).toHaveLength(2)
+      expect(match['observers']).toHaveLength(0)
+      match.registerObserver(observerA)
+      match.registerObserver(observerB)
+      expect(match['observers']).toHaveLength(2)
       // act
-      expect(() => matchWithObserver.removeObserver(observerA)).not.toThrow()
+      expect(() => match.removeObserver(observerA)).not.toThrow()
       // assert
-      expect(matchWithObserver['observers']).toHaveLength(1)
-      expect(matchWithObserver['observers']).toContain(observerB)
-      expect(matchWithObserver['observers']).not.toContain(observerA)
+      expect(match['observers']).toHaveLength(1)
+      expect(match['observers']).toContain(observerB)
+      expect(match['observers']).not.toContain(observerA)
       expect(mockUpdateA).toHaveBeenCalledTimes(0)
       expect(mockUpdateB).toHaveBeenCalledTimes(0)
     })
@@ -341,11 +366,11 @@ describe('match', () => {
     it('should notify all observer', () => {
       expect.hasAssertions()
       // arrange
-      matchWithObserver.registerObserver(observerA)
-      matchWithObserver.registerObserver(observerB)
-      matchWithObserver.init()
+      match.registerObserver(observerA)
+      match.registerObserver(observerB)
+      match.init()
       // act
-      expect(() => matchWithObserver.notifyObservers()).not.toThrow()
+      expect(() => match.notifyObservers()).not.toThrow()
       // assert
       const expectedUpdateArgument = {
         inputNumber: 100,

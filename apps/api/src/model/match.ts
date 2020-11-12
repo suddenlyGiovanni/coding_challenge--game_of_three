@@ -11,6 +11,7 @@ import {
   ITurn,
   MatchStatus,
 } from '../interfaces'
+import { isMatchStatePlaying } from '../interfaces/match-state.interface'
 
 import { Turn } from './turn'
 
@@ -135,7 +136,7 @@ export class Match<
 
       if (this.isEqualToOneValidator(outputNumber)) {
         // victory
-        const newMatchState: IMatchStateStop = {
+        const matchStateStop: IMatchStateStop = {
           action,
           inputNumber,
           outputNumber,
@@ -144,13 +145,13 @@ export class Match<
           turnNumber: this.turn.getTurnNumber(),
           winningPlayer: this.turn.getCurrent().getId(),
         }
-        this.matchStateHistory.push(newMatchState)
+        this.setMatchState(matchStateStop)
         return
       }
 
       if (this.isDivisibleByThreeValidator(outputNumber)) {
         // next round
-        const newMatchState: IMatchStatePlaying = {
+        const matchStatePlaying: IMatchStatePlaying = {
           action,
           inputNumber,
           outputNumber,
@@ -158,13 +159,12 @@ export class Match<
           turn: this.turn.peekNext().getId(),
           turnNumber: this.turn.getTurnNumber() + 1,
         }
-        this.matchStateHistory.push(newMatchState)
-        this.turn.next()
+        this.setMatchState(matchStatePlaying)
         return
       }
 
       // lost
-      const newMatchState: IMatchStateStop = {
+      const matchStateStop: IMatchStateStop = {
         action,
         inputNumber,
         outputNumber,
@@ -173,11 +173,11 @@ export class Match<
         turnNumber: this.turn.getTurnNumber(),
         winningPlayer: this.turn.peekNext().getId(),
       }
-      this.matchStateHistory.push(newMatchState)
+      this.setMatchState(matchStateStop)
       return
     } else {
       // end (status: lost)
-      const newMatchState: IMatchStateStop = {
+      const matchStateStop: IMatchStateStop = {
         action,
         inputNumber,
         outputNumber,
@@ -186,7 +186,7 @@ export class Match<
         turnNumber: this.turn.getTurnNumber(),
         winningPlayer: this.turn.peekNext().getId(),
       }
-      this.matchStateHistory.push(newMatchState)
+      this.setMatchState(matchStateStop)
       return
     }
   }
@@ -215,6 +215,16 @@ export class Match<
     if (index !== -1) {
       this.observers.splice(index, 1)
     }
+  }
+
+  public setMatchState(matchState: IMatchState<string, string>): void {
+    this.assertInitialized()
+    this.matchStateHistory.push(matchState)
+
+    if (isMatchStatePlaying(matchState)) {
+      this.turn.next()
+    }
+    this.notifyObservers()
   }
 
   private assertInitialized(): void {

@@ -52,3 +52,21 @@ export type IMatchState<
   | IMatchStateStart<Player1ID, Player2ID>
   | IMatchStatePlaying<Player1ID, Player2ID>
   | IMatchStateStop<Player1ID, Player2ID>
+
+export function isMatchStateStart(
+  matchState: IMatchState
+): matchState is IMatchStateStart {
+  return matchState.status === MatchStatus.Start
+}
+
+export function isMatchStatePlaying(
+  matchState: IMatchState
+): matchState is IMatchStatePlaying {
+  return matchState.status === MatchStatus.Playing
+}
+
+export function isMatchStateStop(
+  matchState: IMatchState
+): matchState is IMatchStatePlaying {
+  return matchState.status === MatchStatus.Stop
+}
