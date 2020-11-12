@@ -5,7 +5,9 @@ import {
   IMatchStateStart,
   IMatchStateStop,
   IMatchStatus,
+  IObserver,
   IPlayer,
+  ISubject,
   ITurn,
   MatchStatus,
 } from '../interfaces'
@@ -16,12 +18,13 @@ export type NumberGeneratorStrategy = () => number
 export class Match<
   IPlayer1 extends IPlayer<string>,
   IPlayer2 extends IPlayer<string>
-> implements IMatch<IPlayer1, IPlayer2> {
+> implements IMatch<IPlayer1, IPlayer2>, ISubject<IMatchState> {
   public static readonly MAX = 100
   public static readonly MIN = 3
   private initialized: boolean
   private readonly matchStateHistory: IMatchState[]
   private readonly numberGeneratorStrategy: NumberGeneratorStrategy
+  private readonly observers: IObserver<IMatchState>[]
   private readonly players: readonly [IPlayer1, IPlayer2]
   private readonly turn: ITurn<IPlayer1, IPlayer2>
 
@@ -34,6 +37,7 @@ export class Match<
     this.players = [player1, player2] as const
     this.turn = new Turn(player1, player2)
     this.matchStateHistory = []
+    this.observers = []
 
     if (numberGeneratorStrategy) {
       this.numberGeneratorStrategy = numberGeneratorStrategy
@@ -180,9 +184,30 @@ export class Match<
     }
   }
 
+  public notifyObservers(): void {
+    this.observers.forEach((observer) => {
+      observer.update(this.getMatchState())
+    })
+  }
+
   public peekNextTurn(): IPlayer1 | IPlayer2 {
     this.assertInitialized()
     return this.turn.peekNext()
+  }
+
+  public registerObserver(
+    observer: IObserver<IMatchState<string, string>>
+  ): void {
+    this.observers.push(observer)
+  }
+
+  public removeObserver(
+    observer: IObserver<IMatchState<string, string>>
+  ): void {
+    const index = this.observers.indexOf(observer)
+    if (index !== -1) {
+      this.observers.splice(index, 1)
+    }
   }
 
   private assertInitialized(): void {

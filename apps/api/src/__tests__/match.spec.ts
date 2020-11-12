@@ -8,6 +8,7 @@ import {
   jest,
 } from '@jest/globals'
 
+import type { IMatchState, IObserver } from '../interfaces'
 import { MatchStatus } from '../interfaces'
 import { AI } from '../model/ai'
 import { Human } from '../model/human'
@@ -278,6 +279,84 @@ describe('match', () => {
       expect(() => match.move(0)).toThrow(
         "Match ended. Can't make a move after a match has ended"
       )
+    })
+  })
+
+  describe('observer pattern', () => {
+    let matchWithObserver: Match<Human<'ID_HUMAN'>, AI<string>>
+    const mockUpdateA = jest.fn()
+    const mockUpdateB = jest.fn()
+    const observerA: IObserver<IMatchState> = { update: mockUpdateA }
+    const observerB: IObserver<IMatchState> = { update: mockUpdateB }
+
+    beforeEach(() => {
+      matchWithObserver = new Match(human, ai, () => 100)
+    })
+
+    afterEach(() => {
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      mockUpdateA.mockClear
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      mockUpdateB.mockClear
+    })
+
+    it('should implement the ISubject interface', () => {
+      expect.hasAssertions()
+      expect(matchWithObserver).toHaveProperty('registerObserver')
+      expect(matchWithObserver).toHaveProperty('removeObserver')
+      expect(matchWithObserver).toHaveProperty('notifyObservers')
+    })
+
+    it('should allow to register many observers', () => {
+      expect.hasAssertions()
+      expect(matchWithObserver['observers']).toHaveLength(0)
+      // act
+      expect(() => matchWithObserver.registerObserver(observerA)).not.toThrow()
+      expect(() => matchWithObserver.registerObserver(observerB)).not.toThrow()
+      // assert
+      expect(matchWithObserver['observers']).toHaveLength(2)
+      expect(matchWithObserver['observers']).toContain(observerA)
+      expect(matchWithObserver['observers']).toContain(observerB)
+      expect(mockUpdateA).toHaveBeenCalledTimes(0)
+      expect(mockUpdateB).toHaveBeenCalledTimes(0)
+    })
+
+    it('should allow to remove an observer', () => {
+      expect.hasAssertions()
+      // arrange
+      expect(matchWithObserver['observers']).toHaveLength(0)
+      matchWithObserver.registerObserver(observerA)
+      matchWithObserver.registerObserver(observerB)
+      expect(matchWithObserver['observers']).toHaveLength(2)
+      // act
+      expect(() => matchWithObserver.removeObserver(observerA)).not.toThrow()
+      // assert
+      expect(matchWithObserver['observers']).toHaveLength(1)
+      expect(matchWithObserver['observers']).toContain(observerB)
+      expect(matchWithObserver['observers']).not.toContain(observerA)
+      expect(mockUpdateA).toHaveBeenCalledTimes(0)
+      expect(mockUpdateB).toHaveBeenCalledTimes(0)
+    })
+
+    it('should notify all observer', () => {
+      expect.hasAssertions()
+      // arrange
+      matchWithObserver.registerObserver(observerA)
+      matchWithObserver.registerObserver(observerB)
+      matchWithObserver.init()
+      // act
+      expect(() => matchWithObserver.notifyObservers()).not.toThrow()
+      // assert
+      const expectedUpdateArgument = {
+        inputNumber: 100,
+        status: MatchStatus.Start,
+        turn: human.getId(),
+        turnNumber: 1,
+      }
+      expect(mockUpdateA).toHaveBeenCalledTimes(1)
+      expect(mockUpdateA).toHaveBeenCalledWith(expectedUpdateArgument)
+      expect(mockUpdateB).toHaveBeenCalledTimes(1)
+      expect(mockUpdateB).toHaveBeenCalledWith(expectedUpdateArgument)
     })
   })
 })
