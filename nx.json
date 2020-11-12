@@ -1,7 +1,7 @@
 {
   "npmScope": "game-of-three",
   "affected": {
-    "defaultBase": "master"
+    "defaultBase": "main"
   },
   "implicitDependencies": {
     "workspace.json": "*",
