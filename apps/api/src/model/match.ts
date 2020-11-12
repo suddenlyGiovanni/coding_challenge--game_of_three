@@ -1,17 +1,14 @@
 import {
   IMatch,
   IMatchState,
-  IMatchStatePlaying,
-  IMatchStateStart,
-  IMatchStateStop,
+  IMatchStateSerialized,
   IMatchStatus,
   IObserver,
   IPlayer,
   ISubject,
   ITurn,
-  MatchStatus,
 } from '../interfaces'
-import { isMatchStatePlaying } from '../interfaces/match-state.interface'
+import { MatchState, MatchStatus } from '../model/match-state'
 
 import { Turn } from './turn'
 
@@ -19,7 +16,7 @@ export type NumberGeneratorStrategy = () => number
 export class Match<
   IPlayer1 extends IPlayer<string>,
   IPlayer2 extends IPlayer<string>
-> implements IMatch<IPlayer1, IPlayer2>, ISubject<IMatchState> {
+> implements IMatch<IPlayer1, IPlayer2>, ISubject<IMatchStateSerialized> {
   public static readonly MAX = 100
 
   public static readonly MIN = 3
@@ -30,7 +27,7 @@ export class Match<
 
   private readonly numberGeneratorStrategy: NumberGeneratorStrategy
 
-  private readonly observers: IObserver<IMatchState>[]
+  private readonly observers: IObserver<IMatchStateSerialized>[]
 
   private readonly players: readonly [IPlayer1, IPlayer2]
 
@@ -106,15 +103,15 @@ export class Match<
       )
     } else {
       this.turn.init()
-      const inputNumber = this.numberGeneratorStrategy()
-      const turn = this.turn.getCurrent().getId()
-      const turnNumber = this.turn.getTurnNumber()
-      const initialMatchState: IMatchStateStart<string, string> = {
-        inputNumber,
+      const outputNumber = this.numberGeneratorStrategy()
+      const nextTurn = this.turn.getCurrent()
+      const turnNumber = 0
+      const initialMatchState: IMatchState = new MatchState({
+        nextTurn,
+        outputNumber,
         status: MatchStatus.Start,
-        turn,
         turnNumber,
-      }
+      })
       this.matchStateHistory.push(initialMatchState)
       this.initialized = true
       // TODO: should trigger a message of some sort to notify Match players
@@ -125,7 +122,7 @@ export class Match<
   public move(action: 0 | 1 | -1): void {
     this.assertInitialized()
     this.assertMatchStatePlaying()
-    const inputNumber = this.getInputNumber()
+    const inputNumber = this.getNewInputNumber()
     const outputNumber = this.calculateOutputNumber(inputNumber, action)
 
     if (this.isPositiveIntegerValidator(outputNumber)) {
@@ -136,56 +133,57 @@ export class Match<
 
       if (this.isEqualToOneValidator(outputNumber)) {
         // victory
-        const matchStateStop: IMatchStateStop = {
+        const matchStateStop: IMatchState = new MatchState({
           action,
+          currentTurn: this.turn.getCurrent(),
           inputNumber,
           outputNumber,
           status: MatchStatus.Stop,
-          turn: this.turn.getCurrent().getId(),
           turnNumber: this.turn.getTurnNumber(),
-          winningPlayer: this.turn.getCurrent().getId(),
-        }
+          winningPlayer: this.turn.getCurrent(),
+        })
         this.setMatchState(matchStateStop)
         return
       }
 
       if (this.isDivisibleByThreeValidator(outputNumber)) {
         // next round
-        const matchStatePlaying: IMatchStatePlaying = {
+        const matchStatePlaying: IMatchState = new MatchState({
           action,
+          currentTurn: this.turn.getCurrent(),
           inputNumber,
+          nextTurn: this.turn.peekNext(),
           outputNumber,
           status: MatchStatus.Playing,
-          turn: this.turn.peekNext().getId(),
-          turnNumber: this.turn.getTurnNumber() + 1,
-        }
+          turnNumber: this.turn.getTurnNumber(),
+        })
         this.setMatchState(matchStatePlaying)
         return
       }
 
       // lost
-      const matchStateStop: IMatchStateStop = {
+      const matchStateStop: IMatchState = new MatchState({
         action,
+        currentTurn: this.turn.getCurrent(),
         inputNumber,
         outputNumber,
         status: MatchStatus.Stop,
-        turn: this.turn.getCurrent().getId(),
         turnNumber: this.turn.getTurnNumber(),
-        winningPlayer: this.turn.peekNext().getId(),
-      }
+        winningPlayer: this.turn.peekNext(),
+      })
       this.setMatchState(matchStateStop)
       return
     } else {
       // end (status: lost)
-      const matchStateStop: IMatchStateStop = {
+      const matchStateStop: IMatchState = new MatchState({
         action,
+        currentTurn: this.turn.getCurrent(),
         inputNumber,
         outputNumber,
         status: MatchStatus.Stop,
-        turn: this.turn.getCurrent().getId(),
         turnNumber: this.turn.getTurnNumber(),
-        winningPlayer: this.turn.peekNext().getId(),
-      }
+        winningPlayer: this.turn.peekNext(),
+      })
       this.setMatchState(matchStateStop)
       return
     }
@@ -193,7 +191,7 @@ export class Match<
 
   public notifyObservers(): void {
     this.observers.forEach((observer) => {
-      observer.update(this.getMatchState())
+      observer.update(this.getMatchState().serialize())
     })
   }
 
@@ -202,26 +200,22 @@ export class Match<
     return this.turn.peekNext()
   }
 
-  public registerObserver(
-    observer: IObserver<IMatchState<string, string>>
-  ): void {
+  public registerObserver(observer: IObserver<IMatchStateSerialized>): void {
     this.observers.push(observer)
   }
 
-  public removeObserver(
-    observer: IObserver<IMatchState<string, string>>
-  ): void {
+  public removeObserver(observer: IObserver<IMatchStateSerialized>): void {
     const index = this.observers.indexOf(observer)
     if (index !== -1) {
       this.observers.splice(index, 1)
     }
   }
 
-  public setMatchState(matchState: IMatchState<string, string>): void {
+  public setMatchState(matchState: IMatchState): void {
     this.assertInitialized()
     this.matchStateHistory.push(matchState)
 
-    if (isMatchStatePlaying(matchState)) {
+    if (matchState.isPlaying()) {
       this.turn.next()
     }
     this.notifyObservers()
@@ -248,14 +242,10 @@ export class Match<
     return (inputNumber + action) / 3
   }
 
-  private getInputNumber(): number {
+  private getNewInputNumber(): number {
     this.assertInitialized()
-    const state = this.getMatchState()
-    if (state.status === MatchStatus.Start) {
-      return state.inputNumber
-    } else {
-      return state.outputNumber
-    }
+    const matchState = this.getMatchState()
+    return matchState.outputNumber
   }
 
   private isDivisibleByThreeValidator(number: number): boolean {

@@ -8,11 +8,16 @@ import {
   jest,
 } from '@jest/globals'
 
-import type { IMatchState, IMatchStatePlaying, IObserver } from '../interfaces'
-import { MatchStatus } from '../interfaces'
+import type {
+  IMatchState,
+  IMatchStateSerialized,
+  IMatchStateStartSerialized,
+  IObserver,
+} from '../interfaces'
 import { AI } from '../model/ai'
 import { Human } from '../model/human'
 import { Match, NumberGeneratorStrategy } from '../model/match'
+import { MatchState, MatchStatus } from '../model/match-state'
 
 describe('match', () => {
   const PLAYER_1_ID = 'ID_HUMAN'
@@ -30,8 +35,8 @@ describe('match', () => {
   const mockUpdateA = jest.fn()
   const mockUpdateB = jest.fn()
 
-  const observerA: IObserver<IMatchState> = { update: mockUpdateA }
-  const observerB: IObserver<IMatchState> = { update: mockUpdateB }
+  const observerA: IObserver<IMatchStateSerialized> = { update: mockUpdateA }
+  const observerB: IObserver<IMatchStateSerialized> = { update: mockUpdateB }
 
   beforeEach(() => {
     match = new Match(human, ai, mockNumberGeneratorStrategy)
@@ -84,7 +89,7 @@ describe('match', () => {
     // assert
     expect(match.getPlayers()).toMatchObject([human, ai])
     expect(mockNumberGeneratorStrategy).toHaveBeenCalledTimes(1)
-    expect(match.getMatchStateHistory()[0].inputNumber).toBe(
+    expect(match.getMatchStateHistory()[0].outputNumber).toBe(
       numberGeneratorStrategy()
     )
     expect(() => match.getMatchStateHistory()).not.toThrow()
@@ -135,10 +140,10 @@ describe('match', () => {
     expect(match.getMatchStateHistory()).toHaveLength(1)
     expect(match.getMatchStateHistory()).toMatchObject([
       {
-        inputNumber: numberGeneratorStrategy(),
+        nextTurn: human,
+        outputNumber: numberGeneratorStrategy(),
         status: MatchStatus.Start,
-        turn: human.getId(),
-        turnNumber: 1,
+        turnNumber: 0,
       },
     ])
   })
@@ -149,108 +154,130 @@ describe('match', () => {
     match.init()
     match.registerObserver(observerA)
     const [player1, player2] = match.getPlayers()
-    const initialMatchStateObj = {
-      inputNumber: 100,
-      status: 0,
-      turn: player1.getId(),
-      turnNumber: 1,
-    }
-    const injectedMatchState: IMatchStatePlaying = {
+    const initialMatchState: IMatchState = new MatchState({
+      nextTurn: player1,
+      outputNumber: 100,
+      status: MatchStatus.Start,
+      turnNumber: 0,
+    })
+    const injectedMatchState: IMatchState = new MatchState({
       action: -1,
+      currentTurn: player1,
       inputNumber: 100,
+      nextTurn: player2,
       outputNumber: 33,
       status: MatchStatus.Playing,
-      turn: player1.getId(),
       turnNumber: 1,
-    }
-    expect(match.getMatchState()).toMatchObject(initialMatchStateObj)
+    })
+    expect(match.getMatchState()).toStrictEqual(initialMatchState)
     // act
     expect(() => match.setMatchState(injectedMatchState)).not.toThrow()
     // assert
     expect(match.getMatchStateHistory()).toHaveLength(2)
-    expect(match.getMatchStateHistory()).toContainEqual(initialMatchStateObj)
+    expect(match.getMatchStateHistory()).toContainEqual(initialMatchState)
     expect(match.getMatchStateHistory()).toContainEqual(injectedMatchState)
     expect(match.getMatchState()).toBe(injectedMatchState)
     expect(match.getCurrentTurnNumber()).toBe(2)
     expect(match.getCurrentTurn()).toBe(player2)
     expect(mockUpdateA).toHaveBeenCalledTimes(1)
-    expect(mockUpdateA).toHaveBeenCalledWith(injectedMatchState)
+    expect(mockUpdateA).toHaveBeenCalledWith(injectedMatchState.serialize())
   })
 
   describe('move', () => {
     it('should stop the match if the output value of a move is not a positive integer', () => {
       expect.hasAssertions()
+      // arrange
       const matchMove = new Match(human, ai, () => 0)
       const [player1, player2] = match.getPlayers()
+
+      const initState = {
+        nextTurn: player1,
+        outputNumber: 0,
+        status: MatchStatus.Start,
+        turnNumber: 0,
+      }
+
+      const expectedMoveState = {
+        action: -1,
+        currentTurn: player1,
+        inputNumber: 0,
+        outputNumber: (0 - 1) / 3,
+        status: MatchStatus.Stop,
+        turnNumber: 1,
+        winningPlayer: player2,
+      }
+
       matchMove.init()
 
-      matchMove.move(-1)
+      // act
+      matchMove.move(-1) // output = (0 -1)/3
+
+      // assert
       expect(matchMove.getMatchStatus()).toBe(MatchStatus.Stop)
       expect(matchMove.getMatchStateHistory()).toMatchObject([
-        {
-          inputNumber: 0,
-          status: MatchStatus.Start,
-          turn: player1.getId(),
-          turnNumber: 1,
-        },
-        {
-          action: -1,
-          status: MatchStatus.Stop,
-          turn: player1.getId(),
-          turnNumber: 1,
-          winningPlayer: player2.getId(),
-        },
+        initState,
+        expectedMoveState,
       ])
     })
 
     it('should stop the match if output value of a move not divisible by three', () => {
       expect.hasAssertions()
+      // arrange
       const matchMove = new Match(human, ai, () => 18)
       const [player1, player2] = match.getPlayers()
       matchMove.init()
 
+      // act
       matchMove.move(1)
+
+      // assert
       expect(matchMove.getMatchStatus()).toBe(MatchStatus.Stop)
       expect(matchMove.getMatchStateHistory()).toMatchObject([
         {
-          inputNumber: 18,
+          nextTurn: player1,
+          outputNumber: 18,
           status: MatchStatus.Start,
-          turn: player1.getId(),
-          turnNumber: 1,
+          turnNumber: 0,
         },
         {
           action: 1,
+          currentTurn: player1,
+          inputNumber: 18,
+          outputNumber: (18 + 1) / 3,
           status: MatchStatus.Stop,
-          turn: player1.getId(),
           turnNumber: 1,
-          winningPlayer: player2.getId(),
+          winningPlayer: player2,
         },
       ])
     })
 
     it('should stop the match if output value of a move  is equal to one', () => {
       expect.hasAssertions()
+      // arrange
       const matchMove = new Match(human, ai, () => 3)
       const [player1, player2] = match.getPlayers()
       matchMove.init()
 
+      // act
       matchMove.move(0)
+
+      // assert
       expect(matchMove.getMatchStatus()).toBe(MatchStatus.Stop)
       expect(matchMove.getMatchStateHistory()).toMatchObject([
         {
-          inputNumber: 3,
+          nextTurn: player1,
+          outputNumber: 3,
           status: MatchStatus.Start,
-          turn: player1.getId(),
-          turnNumber: 1,
+          turnNumber: 0,
         },
         {
           action: 0,
+          currentTurn: player1,
           inputNumber: 3,
-          outputNumber: 1,
+          outputNumber: (3 + 0) / 3,
           status: MatchStatus.Stop,
-          turn: player1.getId(),
           turnNumber: 1,
-          winningPlayer: player1.getId(),
+          winningPlayer: player1,
         },
       ])
     })
@@ -262,59 +289,65 @@ describe('match', () => {
       const [player1, player2] = match.getPlayers()
       match.init()
       expect(match.getMatchStateHistory()).toHaveLength(1)
-      expect(match.getMatchState().inputNumber).toBe(initialValue) // 100
+      expect(match.getMatchState().outputNumber).toBe(initialValue) // 100
       expect(match.getCurrentTurn()).toBe(player1)
 
       /* TURN 1: PLAYER 1  MOVING */
+
       // act
       match.move(-1)
+
       // assert:
       expect(match.getMatchStateHistory()).toHaveLength(2)
       expect(match.getMatchStateHistory()).toMatchObject([
         {
-          inputNumber: initialValue,
+          nextTurn: player1,
+          outputNumber: initialValue,
           status: MatchStatus.Start,
-          turn: player1.getId(),
-          turnNumber: 1,
+          turnNumber: 0,
         },
         {
           action: -1,
+          currentTurn: player1,
           inputNumber: initialValue,
-          outputNumber: 33,
+          nextTurn: player2,
+          outputNumber: (initialValue - 1) / 3,
           status: MatchStatus.Playing,
-          turn: player2.getId(),
-          turnNumber: 2,
+          turnNumber: 1,
         },
       ])
 
       /* TURN 2: PLAYER 2 MOVING */
+
       // act
       match.move(0)
+
       // assert
       expect(match.getMatchStateHistory()).toHaveLength(3)
       expect(match.getMatchStateHistory()).toMatchObject([
         {
-          inputNumber: initialValue,
+          nextTurn: player1,
+          outputNumber: initialValue,
           status: MatchStatus.Start,
-          turn: player1.getId(),
-          turnNumber: 1,
+          turnNumber: 0,
         },
         {
           action: -1,
+          currentTurn: player1,
           inputNumber: initialValue,
-          outputNumber: 33,
+          nextTurn: player2,
+          outputNumber: (initialValue - 1) / 3,
           status: MatchStatus.Playing,
-          turn: player2.getId(),
-          turnNumber: 2,
+          turnNumber: 1,
         },
         {
           action: 0,
+          currentTurn: player2,
           inputNumber: 33,
-          outputNumber: 11,
+          outputNumber: (33 + 0) / 3,
           status: MatchStatus.Stop,
-          turn: player2.getId(),
           turnNumber: 2,
-          winningPlayer: player1.getId(),
+          winningPlayer: player1,
         },
       ])
 
@@ -373,10 +406,14 @@ describe('match', () => {
       expect(() => match.notifyObservers()).not.toThrow()
       // assert
       const expectedUpdateArgument = {
-        inputNumber: 100,
+        action: undefined,
+        currentTurn: undefined,
+        inputNumber: undefined,
+        nextTurn: human.getId(),
+        outputNumber: 100,
         status: MatchStatus.Start,
-        turn: human.getId(),
-        turnNumber: 1,
+        turnNumber: 0,
+        winningPlayer: undefined,
       }
       expect(mockUpdateA).toHaveBeenCalledTimes(1)
       expect(mockUpdateA).toHaveBeenCalledWith(expectedUpdateArgument)
