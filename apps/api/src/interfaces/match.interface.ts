@@ -29,10 +29,10 @@ export interface IMatch<
   /**
    * gets the history of all the match states.
    * it returns an immutable array of readonly states
-   * @returns {ReadonlyArray<Readonly<IMatchState<string, string>>>}
+   * @returns {ReadonlyArray<Readonly<IMatchState>>}
    * @memberof IMatch
    */
-  getMatchStateHistory(): ReadonlyArray<Readonly<IMatchState<string, string>>>
+  getMatchStateHistory(): ReadonlyArray<Readonly<IMatchState>>
 
   /**
    * gets the current match status

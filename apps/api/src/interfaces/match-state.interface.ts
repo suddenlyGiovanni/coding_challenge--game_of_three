@@ -1,72 +1,69 @@
+import { MatchStatus } from '../model/match-state'
+
+import { IPlayer } from './player.interface'
+
 type StartStatus = 0
 type PlayingStatus = 1
 type StopStatus = 2
 
 export type IMatchStatus = StartStatus | PlayingStatus | StopStatus
 
-export enum MatchStatus {
-  Start = 0,
-  Playing = 1,
-  Stop = 2,
+export interface IMatchState {
+  readonly action?: -1 | 0 | 1
+
+  readonly currentTurn?: IPlayer
+
+  readonly inputNumber?: number
+
+  readonly nextTurn?: IPlayer
+
+  readonly outputNumber: number
+
+  readonly status: IMatchStatus
+
+  readonly turnNumber: number
+
+  readonly winningPlayer?: IPlayer
+
+  isPlaying(): boolean
+
+  isStarting(): boolean
+
+  isStopped(): boolean
+
+  serialize(): Readonly<IMatchStateSerialized>
 }
 
-export interface IMatchStateStart<
-  Player1ID extends string = string,
-  Player2ID extends string = string
+export interface IMatchStateStartSerialized<PlayerID extends string = string> {
+  readonly nextTurn: PlayerID
+  readonly outputNumber: number
+  readonly status: MatchStatus.Start
+  readonly turnNumber: 0
+}
+
+export interface IMatchStatePlayingSerialized<
+  PlayerID extends string = string
 > {
-  inputNumber: number
-  status: MatchStatus.Start
-  turn: Player1ID | Player2ID
-  turnNumber: number
+  readonly action: -1 | 0 | 1
+  readonly currentTurn: PlayerID
+  readonly inputNumber: number
+  readonly nextTurn: PlayerID
+  readonly outputNumber: number
+  readonly status: MatchStatus.Playing
+  readonly turnNumber: number
 }
 
-export interface IMatchStatePlaying<
-  Player1ID extends string = string,
-  Player2ID extends string = string
-> {
-  action: -1 | 0 | 1
-  inputNumber: number
-  outputNumber: number
-  status: MatchStatus.Playing
-  turn: Player1ID | Player2ID
-  turnNumber: number
+export interface IMatchStateStopSerialized<PlayerID extends string = string> {
+  readonly action: -1 | 0 | 1
+  readonly currentTurn: PlayerID
+  readonly inputNumber: number
+  readonly outputNumber: number
+  readonly status: MatchStatus.Stop
+  readonly turnNumber: number
+  readonly winningPlayer: PlayerID
 }
 
-export interface IMatchStateStop<
-  Player1ID extends string = string,
-  Player2ID extends string = string
-> {
-  action: -1 | 0 | 1
-  inputNumber: number
-  outputNumber: number
-  status: MatchStatus.Stop
-  turn: Player1ID | Player2ID
-  turnNumber: number
-  winningPlayer: Player1ID | Player2ID
-}
-
-export type IMatchState<
-  Player1ID extends string = string,
-  Player2ID extends string = string
-> =
-  | IMatchStateStart<Player1ID, Player2ID>
-  | IMatchStatePlaying<Player1ID, Player2ID>
-  | IMatchStateStop<Player1ID, Player2ID>
-
-export function isMatchStateStart(
-  matchState: IMatchState
-): matchState is IMatchStateStart {
-  return matchState.status === MatchStatus.Start
-}
-
-export function isMatchStatePlaying(
-  matchState: IMatchState
-): matchState is IMatchStatePlaying {
-  return matchState.status === MatchStatus.Playing
-}
-
-export function isMatchStateStop(
-  matchState: IMatchState
-): matchState is IMatchStatePlaying {
-  return matchState.status === MatchStatus.Stop
-}
+export type IMatchStateSerialized<PlayerID extends string = string> =
+  | IMatchStateStartSerialized<PlayerID>
+  | IMatchStatePlayingSerialized<PlayerID>
+  | IMatchStateStopSerialized<PlayerID>
