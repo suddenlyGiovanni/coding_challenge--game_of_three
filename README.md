@@ -132,6 +132,7 @@ These are the semantic pieces that I used to define the domain model:
 - [Clients](#clients)
 - [Lobby](#lobby)
 - [Match](#match)
+- [Match Service](#match-service)
 - Turn
 - [Player](#player)
 - [Match state](#match-state)
@@ -176,6 +177,14 @@ These are the semantic pieces that I used to define the domain model:
 - a match is between two players or between a player and a program.
 - a match is played until an end condition is met: player one won | player two won
 - if a player decides to play against an AI, then the AI behavior is handled by the match itself
+
+#### Match Service
+
+- is responsible for creating an instance of a Match
+- if a user wants to play a match against an AI, it is his responsibility to create an AI Actor that will interact with the system as the human player would
+- is responsible for validating players action
+- it exposes a move property
+- it informs the players of the match state changes
 
 #### Player
 
