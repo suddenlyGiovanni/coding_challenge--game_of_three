@@ -1,0 +1,145 @@
+/* eslint-disable jest/no-hooks */
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals'
+
+import { AIActor, TurnAction } from '../ai-actor'
+import type { IMatchStateSerialized, IObserver } from '../interfaces'
+
+import { AI } from '../model/ai'
+import { MatchStatus } from '../model/match-state'
+describe('ai actor', () => {
+  const player1ID = 'HUMAN_PLAYER_ID'
+  const ai = AI.make(() => 'ID_AI')
+  let aiActor: AIActor<string>
+  const mockUpdateA = jest.fn()
+  const mockUpdateB = jest.fn()
+  const observerA: IObserver<TurnAction> = { update: mockUpdateA }
+  const observerB: IObserver<TurnAction> = { update: mockUpdateB }
+
+  const matchStateSerialized: IMatchStateSerialized = {
+    action: 0,
+    currentTurn: player1ID,
+    inputNumber: 12,
+    nextTurn: ai.getId(),
+    outputNumber: 12,
+    status: MatchStatus.Playing,
+    turnNumber: 2,
+  }
+
+  beforeEach(() => {
+    aiActor = new AIActor(ai)
+  })
+
+  afterEach(() => {
+    jest.clearAllMocks()
+  })
+  it('should exist', () => {
+    expect.hasAssertions()
+    expect(AIActor).toBeDefined()
+  })
+
+  it('should instantiate correctly', () => {
+    expect.hasAssertions()
+    expect(() => new AIActor(ai)).not.toThrow()
+  })
+
+  it('should implement the `ISubject` interface', () => {
+    expect.hasAssertions()
+    const action: TurnAction = 0
+    expect(aiActor).toHaveProperty('registerObserver')
+
+    expect(aiActor).toHaveProperty('notifyObservers')
+
+    expect(mockUpdateA).toHaveBeenCalledTimes(0)
+    expect(mockUpdateB).toHaveBeenCalledTimes(0)
+
+    expect(() => aiActor.registerObserver(observerA)).not.toThrow()
+    expect(() => aiActor.registerObserver(observerB)).not.toThrow()
+
+    // act
+    expect(() => aiActor['notifyObservers'](action)).not.toThrow()
+    expect(mockUpdateA).toHaveBeenCalledTimes(1)
+    expect(mockUpdateA).toHaveBeenLastCalledWith(action)
+    expect(mockUpdateB).toHaveBeenCalledTimes(1)
+    expect(mockUpdateB).toHaveBeenLastCalledWith(action)
+
+    expect(aiActor).toHaveProperty('removeObserver')
+    expect(() => aiActor.removeObserver(observerA)).not.toThrow()
+    expect(() => aiActor.removeObserver(observerB)).not.toThrow()
+
+    expect(mockUpdateA).toHaveBeenCalledTimes(1)
+    expect(mockUpdateB).toHaveBeenCalledTimes(1)
+
+    expect(() => aiActor['notifyObservers'](action)).not.toThrow()
+    expect(mockUpdateA).toHaveBeenCalledTimes(1)
+    expect(mockUpdateB).toHaveBeenCalledTimes(1)
+  })
+
+  it('should implement the `IObserver` interface', () => {
+    expect.hasAssertions()
+    expect(aiActor).toHaveProperty('update')
+    expect(() => aiActor.update(matchStateSerialized)).not.toThrow()
+  })
+
+  describe('should act when its update method gets called by the ISubject', () => {
+    it('should only act when it is his turn and the match has not ended', () => {
+      expect.hasAssertions()
+      // arrange
+      aiActor.registerObserver(observerA)
+
+      // act
+      expect(() =>
+        aiActor.update({
+          action: -1,
+          currentTurn: player1ID,
+          inputNumber: 100,
+          nextTurn: ai.getId(),
+          outputNumber: 33,
+          status: MatchStatus.Playing,
+          turnNumber: 1,
+        })
+      ).not.toThrow()
+
+      // assert
+      expect(mockUpdateA).not.toHaveBeenCalled()
+
+      expect(() =>
+        aiActor.update({
+          action: -1,
+          currentTurn: player1ID,
+          inputNumber: 4,
+          outputNumber: 1,
+          status: MatchStatus.Stop,
+          turnNumber: 4,
+          winningPlayer: player1ID,
+        })
+      ).not.toThrow()
+
+      expect(mockUpdateA).not.toHaveBeenCalled()
+    })
+
+    it('should make the best possible choice for the next move', () => {
+      expect.hasAssertions()
+      // arrange
+      aiActor.registerObserver(observerA)
+
+      expect(() =>
+        aiActor.update({
+          action: 0,
+          currentTurn: player1ID,
+          inputNumber: 33,
+          nextTurn: ai.getId(),
+          outputNumber: 11,
+          status: MatchStatus.Playing,
+          turnNumber: 4,
+        })
+      ).not.toThrow()
+    })
+  })
+})
