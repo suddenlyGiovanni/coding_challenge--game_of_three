@@ -68,5 +68,9 @@
   },
   "dependencies": {
     "uuid": "~8.3.1"
+  },
+  "wallaby": {
+    "autoDetect": true,
+    "onSave": true
   }
 }

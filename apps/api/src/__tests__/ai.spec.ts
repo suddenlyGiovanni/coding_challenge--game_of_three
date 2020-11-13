@@ -1,10 +1,7 @@
 import { describe, expect, it, jest } from '@jest/globals'
 
-import type { IPlayer } from '../interfaces'
-import { PlayerType } from '../interfaces/player.interface'
-import { AI } from '../model/ai'
-
-import type { UUIDService } from '../model/ai'
+import { IPlayer, PlayerType } from '../interfaces'
+import { AI, UUIDService } from '../model'
 
 describe('ai class', () => {
   const AI_ID = 'AI_ID'

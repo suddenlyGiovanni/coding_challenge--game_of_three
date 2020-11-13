@@ -1,9 +1,7 @@
-/* eslint-disable jest/require-to-throw-message */
 import { beforeEach, describe, expect, it } from '@jest/globals'
 
 import type { IPlayer, ITurn } from '../interfaces'
-import { Human } from '../model/human'
-import { Turn } from '../model/turn'
+import { Human, Turn } from '../model'
 
 describe('turn', () => {
   let player1: IPlayer
@@ -30,9 +28,13 @@ describe('turn', () => {
 
   it('should initialize correctly', () => {
     expect.hasAssertions()
+    // eslint-disable-next-line jest/require-to-throw-message
     expect(() => turn.getCurrent()).toThrow()
+    // eslint-disable-next-line jest/require-to-throw-message
     expect(() => turn.getTurnNumber()).toThrow()
+    // eslint-disable-next-line jest/require-to-throw-message
     expect(() => turn.peekNext()).toThrow()
+    // eslint-disable-next-line jest/require-to-throw-message
     expect(() => turn.next()).toThrow()
 
     // act

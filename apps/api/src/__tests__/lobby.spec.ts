@@ -1,8 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals'
 
 import type { ILobby } from '../interfaces'
-import { Human } from '../model/human'
-import { Lobby } from '../model/lobby'
+import { Human, Lobby } from '../model'
 
 describe('lobby', () => {
   const playerA = new Human('PLAYER_A_ID', 'PLAYER_A')
@@ -120,7 +119,7 @@ describe('lobby', () => {
     lobby.addPlayer(playerD)
 
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(lobby.getPlayers).toBeDefined()
+    expect(() => lobby.getPlayers()).not.toThrow()
     expect(Array.isArray(lobby.getPlayers())).toBe(true)
     expect(lobby.getPlayers()).toContain(playerA)
     expect(lobby.getPlayers()).toContain(playerB)

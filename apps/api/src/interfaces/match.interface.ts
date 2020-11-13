@@ -20,6 +20,13 @@ export interface IMatch<
   getCurrentTurnNumber(): number
 
   /**
+   * get the match unique ID
+   * @returns {string}
+   * @memberof IMatch
+   */
+  getId(): string
+
+  /**
    * get the current match state
    * @returns {Readonly<IMatchState>}
    * @memberof IMatch
@@ -60,12 +67,6 @@ export interface IMatch<
    * @memberof IMatch
    */
   init(): void
-
-  /**
-   * a move is an action that change the state of the match
-   * @memberof IMatch
-   */
-  move(action: -1 | 0 | 1): void
 
   /**
    * gets who will be playing the next turn (without setting it)

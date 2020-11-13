@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import type {
+  IAction,
   IMatchState,
   IMatchStatePlayingSerialized,
   IMatchStateSerialized,
@@ -16,7 +17,7 @@ export enum MatchStatus {
 }
 
 export class MatchState implements IMatchState {
-  readonly action?: -1 | 0 | 1
+  readonly action?: IAction
 
   readonly currentTurn?: IPlayer
 
@@ -40,7 +41,7 @@ export class MatchState implements IMatchState {
   })
 
   public constructor(state: {
-    action: -1 | 0 | 1
+    action: IAction
     currentTurn: IPlayer
     inputNumber: number
     nextTurn: IPlayer
@@ -50,7 +51,7 @@ export class MatchState implements IMatchState {
   })
 
   public constructor(state: {
-    action: -1 | 0 | 1
+    action: IAction
     currentTurn: IPlayer
     inputNumber: number
     outputNumber: number
@@ -60,7 +61,7 @@ export class MatchState implements IMatchState {
   })
 
   public constructor(state: {
-    action?: -1 | 0 | 1
+    action?: IAction
     currentTurn?: IPlayer
     inputNumber?: number
     nextTurn?: IPlayer

@@ -1,3 +1,5 @@
+import { v4 as uuid } from 'uuid'
+
 import {
   IMatch,
   IMatchState,
@@ -12,7 +14,8 @@ import { MatchState, MatchStatus } from '../model/match-state'
 
 import { Turn } from './turn'
 
-export type NumberGeneratorStrategy = () => number
+export type IUUIDStrategy = () => string
+export type INumberGeneratorStrategy = () => number
 export class Match<
   IPlayer1 extends IPlayer<string>,
   IPlayer2 extends IPlayer<string>
@@ -21,11 +24,13 @@ export class Match<
 
   public static readonly MIN = 3
 
+  private readonly id: string
+
   private initialized: boolean
 
   private readonly matchStateHistory: IMatchState[]
 
-  private readonly numberGeneratorStrategy: NumberGeneratorStrategy
+  private readonly numberGeneratorStrategy: INumberGeneratorStrategy
 
   private readonly observers: IObserver<IMatchStateSerialized>[]
 
@@ -36,8 +41,10 @@ export class Match<
   public constructor(
     player1: IPlayer1,
     player2: IPlayer2,
-    numberGeneratorStrategy?: NumberGeneratorStrategy
+    numberGeneratorStrategy?: INumberGeneratorStrategy,
+    uuidStrategy: IUUIDStrategy = uuid
   ) {
+    this.id = uuidStrategy()
     this.initialized = false
     this.players = [player1, player2] as const
     this.turn = new Turn(player1, player2)
@@ -70,6 +77,10 @@ export class Match<
   public getCurrentTurnNumber(): number {
     this.assertInitialized()
     return this.turn.getTurnNumber()
+  }
+
+  public getId(): string {
+    return this.id
   }
 
   public getMatchState(): Readonly<IMatchState> {
@@ -114,78 +125,7 @@ export class Match<
       })
       this.matchStateHistory.push(initialMatchState)
       this.initialized = true
-      // TODO: should trigger a message of some sort to notify Match players
-    }
-  }
-
-  // TODO: can't make a move if not your turn
-  public move(action: 0 | 1 | -1): void {
-    this.assertInitialized()
-    this.assertMatchStatePlaying()
-    const inputNumber = this.getNewInputNumber()
-    const outputNumber = this.calculateOutputNumber(inputNumber, action)
-
-    if (this.isPositiveIntegerValidator(outputNumber)) {
-      // outputNumber could be:
-      // 1. equal to 1 => end (status: victory)
-      // 2. divisible by 3 => next turn
-      // 3. not divisible by three
-
-      if (this.isEqualToOneValidator(outputNumber)) {
-        // victory
-        const matchStateStop: IMatchState = new MatchState({
-          action,
-          currentTurn: this.turn.getCurrent(),
-          inputNumber,
-          outputNumber,
-          status: MatchStatus.Stop,
-          turnNumber: this.turn.getTurnNumber(),
-          winningPlayer: this.turn.getCurrent(),
-        })
-        this.setMatchState(matchStateStop)
-        return
-      }
-
-      if (this.isDivisibleByThreeValidator(outputNumber)) {
-        // next round
-        const matchStatePlaying: IMatchState = new MatchState({
-          action,
-          currentTurn: this.turn.getCurrent(),
-          inputNumber,
-          nextTurn: this.turn.peekNext(),
-          outputNumber,
-          status: MatchStatus.Playing,
-          turnNumber: this.turn.getTurnNumber(),
-        })
-        this.setMatchState(matchStatePlaying)
-        return
-      }
-
-      // lost
-      const matchStateStop: IMatchState = new MatchState({
-        action,
-        currentTurn: this.turn.getCurrent(),
-        inputNumber,
-        outputNumber,
-        status: MatchStatus.Stop,
-        turnNumber: this.turn.getTurnNumber(),
-        winningPlayer: this.turn.peekNext(),
-      })
-      this.setMatchState(matchStateStop)
-      return
-    } else {
-      // end (status: lost)
-      const matchStateStop: IMatchState = new MatchState({
-        action,
-        currentTurn: this.turn.getCurrent(),
-        inputNumber,
-        outputNumber,
-        status: MatchStatus.Stop,
-        turnNumber: this.turn.getTurnNumber(),
-        winningPlayer: this.turn.peekNext(),
-      })
-      this.setMatchState(matchStateStop)
-      return
+      this.notifyObservers()
     }
   }
 
@@ -227,36 +167,5 @@ export class Match<
         'Match not initialize. Remember to invoke `init()` after instantiation.'
       )
     }
-  }
-
-  private assertMatchStatePlaying(): void {
-    if (this.getMatchStatus() === MatchStatus.Stop) {
-      throw new Error("Match ended. Can't make a move after a match has ended")
-    }
-  }
-
-  private calculateOutputNumber(
-    inputNumber: number,
-    action: -1 | 0 | 1
-  ): number {
-    return (inputNumber + action) / 3
-  }
-
-  private getNewInputNumber(): number {
-    this.assertInitialized()
-    const matchState = this.getMatchState()
-    return matchState.outputNumber
-  }
-
-  private isDivisibleByThreeValidator(number: number): boolean {
-    return number % 3 === 0
-  }
-
-  private isEqualToOneValidator(number: number): boolean {
-    return number === 1
-  }
-
-  private isPositiveIntegerValidator(number: number): boolean {
-    return Number.isInteger(number) && number > 0
   }
 }

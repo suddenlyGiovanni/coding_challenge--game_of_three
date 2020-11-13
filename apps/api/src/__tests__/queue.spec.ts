@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from '@jest/globals'
 
 import type { IQueue } from '../interfaces'
-import { Queue } from '../model/queue'
+import { Queue } from '../model'
 
 class MyObj<T> {
   public constructor(

@@ -1,8 +1,7 @@
 import { describe, expect, it } from '@jest/globals'
 
-import type { IPlayer } from '../interfaces'
-import { PlayerType } from '../interfaces/player.interface'
-import { Human } from '../model/human'
+import { IPlayer, PlayerType } from '../interfaces'
+import { Human } from '../model'
 
 describe('human class', () => {
   const ID_1 = 'PLAYER_1_ID'
