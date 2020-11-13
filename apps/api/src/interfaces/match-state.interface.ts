@@ -8,8 +8,10 @@ type StopStatus = 2
 
 export type IMatchStatus = StartStatus | PlayingStatus | StopStatus
 
+export type IAction = -1 | 0 | 1
+
 export interface IMatchState {
-  readonly action?: -1 | 0 | 1
+  readonly action?: IAction
 
   readonly currentTurn?: IPlayer
 
@@ -44,7 +46,7 @@ export interface IMatchStateStartSerialized<PlayerID extends string = string> {
 export interface IMatchStatePlayingSerialized<
   PlayerID extends string = string
 > {
-  readonly action: -1 | 0 | 1
+  readonly action: IAction
   readonly currentTurn: PlayerID
   readonly inputNumber: number
   readonly nextTurn: PlayerID
@@ -54,7 +56,7 @@ export interface IMatchStatePlayingSerialized<
 }
 
 export interface IMatchStateStopSerialized<PlayerID extends string = string> {
-  readonly action: -1 | 0 | 1
+  readonly action: IAction
   readonly currentTurn: PlayerID
   readonly inputNumber: number
   readonly outputNumber: number

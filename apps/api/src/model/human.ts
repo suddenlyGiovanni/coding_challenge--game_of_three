@@ -1,6 +1,8 @@
 import type { IHUMAN, IPlayer } from '../interfaces'
 import { PlayerType } from '../interfaces/player.interface'
 
+import type { AI } from './ai'
+
 export class Human<PlayerID extends string = string>
   implements IPlayer<PlayerID> {
   private readonly id: PlayerID
@@ -27,7 +29,7 @@ export class Human<PlayerID extends string = string>
     return this.type
   }
 
-  public isAi(): false {
+  public isAi(): this is AI<PlayerID> {
     return false
   }
 

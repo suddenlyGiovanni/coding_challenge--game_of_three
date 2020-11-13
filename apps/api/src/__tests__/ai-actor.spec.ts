@@ -1,5 +1,5 @@
-/* eslint-disable jest/no-hooks */
 import {
+  afterAll,
   afterEach,
   beforeEach,
   describe,
@@ -8,19 +8,18 @@ import {
   jest,
 } from '@jest/globals'
 
-import { AIActor, TurnAction } from '../ai-actor'
-import type { IMatchStateSerialized, IObserver } from '../interfaces'
+import { AIActor } from '../ai-actor'
+import type { IAction, IMatchStateSerialized, IObserver } from '../interfaces'
+import { AI, MatchStatus } from '../model'
 
-import { AI } from '../model/ai'
-import { MatchStatus } from '../model/match-state'
 describe('ai actor', () => {
   const player1ID = 'HUMAN_PLAYER_ID'
   const ai = AI.make(() => 'ID_AI')
   let aiActor: AIActor<string>
   const mockUpdateA = jest.fn()
   const mockUpdateB = jest.fn()
-  const observerA: IObserver<TurnAction> = { update: mockUpdateA }
-  const observerB: IObserver<TurnAction> = { update: mockUpdateB }
+  const observerA: IObserver<IAction> = { update: mockUpdateA }
+  const observerB: IObserver<IAction> = { update: mockUpdateB }
 
   const matchStateSerialized: IMatchStateSerialized = {
     action: 0,
@@ -33,12 +32,21 @@ describe('ai actor', () => {
   }
 
   beforeEach(() => {
+    mockUpdateA.mockClear()
+    mockUpdateB.mockClear()
     aiActor = new AIActor(ai)
   })
 
   afterEach(() => {
+    aiActor.removeObserver(observerA)
+    aiActor.removeObserver(observerB)
     jest.clearAllMocks()
   })
+
+  afterAll(() => {
+    jest.useRealTimers()
+  })
+
   it('should exist', () => {
     expect.hasAssertions()
     expect(AIActor).toBeDefined()
@@ -51,7 +59,7 @@ describe('ai actor', () => {
 
   it('should implement the `ISubject` interface', () => {
     expect.hasAssertions()
-    const action: TurnAction = 0
+    const action: IAction = 0
     expect(aiActor).toHaveProperty('registerObserver')
 
     expect(aiActor).toHaveProperty('notifyObservers')
@@ -124,22 +132,35 @@ describe('ai actor', () => {
       expect(mockUpdateA).not.toHaveBeenCalled()
     })
 
-    it('should make the best possible choice for the next move', () => {
+    const flushPromises = () => new Promise((res) => process.nextTick(res))
+
+    it('should make the best possible choice for the next move', async () => {
       expect.hasAssertions()
+      jest.useFakeTimers()
       // arrange
       aiActor.registerObserver(observerA)
 
-      expect(() =>
-        aiActor.update({
-          action: 0,
-          currentTurn: player1ID,
-          inputNumber: 33,
-          nextTurn: ai.getId(),
-          outputNumber: 11,
-          status: MatchStatus.Playing,
-          turnNumber: 4,
-        })
-      ).not.toThrow()
+      // act
+      aiActor.update({
+        action: 0,
+        currentTurn: player1ID,
+        inputNumber: 33,
+        nextTurn: ai.getId(),
+        outputNumber: 11,
+        status: MatchStatus.Playing,
+        turnNumber: 4,
+      })
+      // At this point in time, the mockUpdateA should not have been called yet
+      expect(mockUpdateA).not.toHaveBeenCalled()
+
+      // Fast-forward until all timers have been executed
+      jest.advanceTimersByTime(5000)
+      await flushPromises()
+
+      // assert
+      // Now our mockUpdateA should have been called!
+      expect(mockUpdateA).toHaveBeenCalledTimes(1)
+      expect(mockUpdateA).toHaveBeenCalledWith(1)
     })
   })
 })
