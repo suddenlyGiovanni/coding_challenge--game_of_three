@@ -36,7 +36,7 @@ export class AI<PlayerID extends string> implements IPlayer<PlayerID> {
     return this.type
   }
 
-  public isAi(): true {
+  public isAi(): this is AI<PlayerID> {
     return true
   }
 

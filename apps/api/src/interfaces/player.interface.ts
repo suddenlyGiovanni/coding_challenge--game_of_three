@@ -1,3 +1,5 @@
+import type { AI } from '../model/ai'
+
 export type IAI = 'AI'
 export type IHUMAN = 'HUMAN'
 
@@ -35,7 +37,7 @@ export interface IPlayer<PlayerID extends string = string> {
    * @returns {boolean} true if the player is an `AI`
    * @memberof IPlayer
    */
-  isAi(): boolean
+  isAi(): this is AI<PlayerID>
 
   /**
    * verifies if the given player is the same as the current one
