@@ -12,6 +12,8 @@ import { AIActor } from '../ai-actor'
 import type { IAction, IMatchStateSerialized, IObserver } from '../interfaces'
 import { AI, MatchStatus } from '../model'
 
+import { flushPromises } from './helpers'
+
 describe('ai actor', () => {
   const player1ID = 'HUMAN_PLAYER_ID'
   const ai = AI.make(() => 'ID_AI')
@@ -131,8 +133,6 @@ describe('ai actor', () => {
 
       expect(mockUpdateA).not.toHaveBeenCalled()
     })
-
-    const flushPromises = () => new Promise((res) => process.nextTick(res))
 
     it('should make the best possible choice for the next move', async () => {
       expect.hasAssertions()
