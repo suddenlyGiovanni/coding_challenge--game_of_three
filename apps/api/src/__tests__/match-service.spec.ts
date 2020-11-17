@@ -18,6 +18,8 @@ import type {
 import { MatchService } from '../match-service'
 import { AI, Human, INumberGeneratorStrategy, MatchStatus } from '../model'
 
+import { flushPromises } from './helpers'
+
 describe('match-service', () => {
   const PLAYER_1_ID = 'PLAYER_1_ID'
   const PLAYER_2_ID = 'PLAYER_2_ID'
@@ -241,8 +243,6 @@ describe('match-service', () => {
         onePlayerAgainstAIMatchService['aiActor']
       )
     })
-
-    const flushPromises = () => new Promise((res) => process.nextTick(res))
 
     it('should see the ai counteract the human player moves', async () => {
       expect.hasAssertions()
