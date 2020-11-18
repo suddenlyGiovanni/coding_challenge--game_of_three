@@ -98,7 +98,11 @@ module.exports = {
   // preset: undefined,
 
   // Run tests from one or more projects
-  projects: ['<rootDir>/apps/api'],
+  projects: [
+    '<rootDir>/apps/client',
+    '<rootDir>/apps/api',
+    '<rootDir>/libs/api-interfaces',
+  ],
 
   // Use this configuration option to add custom reporters to Jest
   // reporters: undefined,

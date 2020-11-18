@@ -7,7 +7,7 @@
     "project": "./tsconfig.*?.json"
   },
   "ignorePatterns": ["**/*"],
-  "plugins": ["@typescript-eslint", "@nrwl/nx", "import", "jest", "prettier"],
+  "plugins": ["@typescript-eslint", "@nrwl/nx", "import", "prettier"],
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
@@ -18,14 +18,11 @@
     "plugin:import/warnings",
     "plugin:import/typescript",
 
-    "plugin:jest/all",
-
     "prettier",
     "prettier/@typescript-eslint",
     "plugin:prettier/recommended"
   ],
   "rules": {
-    "jest/no-hooks": "off",
     "@typescript-eslint/explicit-member-accessibility": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/explicit-function-return-type": "off",
@@ -127,16 +124,31 @@
   },
   "overrides": [
     {
-      "files": ["*.tsx"],
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
       "rules": {
-        "@typescript-eslint/no-unused-vars": "off"
+        "@nrwl/nx/enforce-module-boundaries": [
+          "error",
+          {
+            "enforceBuildableLibDependency": true,
+            "allow": [],
+            "depConstraints": [
+              { "sourceTag": "*", "onlyDependOnLibsWithTags": ["*"] }
+            ]
+          }
+        ],
+        "lines-between-class-members": ["error", "always"]
       }
     },
     {
-      "files": ["*.ts"],
-      "rules": {
-        "lines-between-class-members": ["error", "always"]
-      }
+      "files": ["*.ts", "*.tsx"],
+      "extends": ["plugin:@nrwl/nx/typescript"],
+      "parserOptions": { "project": "./tsconfig.*?.json" },
+      "rules": {}
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "extends": ["plugin:@nrwl/nx/javascript"],
+      "rules": {}
     }
   ]
 }

@@ -4,6 +4,7 @@ import type { Socket } from 'socket.io'
 import type { IServer } from './interfaces/server.interface'
 
 export enum EventType {
+  CONNECTION = 'connection',
   CONNECT = 'connect',
   LOGIN = 'login',
   LOGIN_SUCCESS = 'login_success',
@@ -14,10 +15,14 @@ export enum EventType {
   PLAYER_LEFT = 'player_left',
 
   NEW_GAME = 'new_game',
+
+  HELLO = 'hello!',
+
+  MESSAGE = 'message',
 }
 
 export class Server implements IServer {
-  public static readonly PORT: number = 3333
+  public static readonly PORT: number = 3000
 
   private static instance: Server
 
@@ -27,9 +32,11 @@ export class Server implements IServer {
 
   private constructor() {
     this.port = Number(process.env.port) || Server.PORT
-    this.io = new IOServer(this.port)
-    console.log('initiating server')
-    this._listen()
+    this.io = new IOServer(this.port, {
+      cors: { origin: [`http://localhost:4200`] },
+    })
+
+    console.log(`Listening at ws://localhost:${this.port}`)
   }
 
   public static getInstance(): Server {
@@ -43,19 +50,23 @@ export class Server implements IServer {
     return this.io
   }
 
-  private _listen = (): void => {
-    console.log(`Listening at ws://localhost:${this.port}`)
-    this.io.on(EventType.CONNECT, (socket: Socket): void => {
-      console.log(`connect ${socket.id}`)
+  public listen = (): void => {
+    this.io.on(EventType.CONNECTION, this._onSocketConnect)
 
-      socket.on('ping', (cb: () => void) => {
-        console.log('ping')
-        cb()
-      })
+    setInterval(() => {
+      this.io.emit(EventType.MESSAGE, new Date().toISOString())
+    }, 1000)
+  }
 
-      socket.on(EventType.CONNECT, (): void => {
-        console.log(`disconnect ${socket.id}`)
-      })
+  private _onSocketConnect = (socket: Socket): void => {
+    console.log(`connect: ${socket.id}`)
+
+    socket.on(EventType.HELLO, () => {
+      console.log(`hello from ${socket.id}`)
+    })
+
+    socket.on(EventType.DISCONNECT, () => {
+      console.log(`disconnect: ${socket.id}`)
     })
   }
 }

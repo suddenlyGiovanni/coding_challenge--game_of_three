@@ -1,0 +1,14 @@
+{
+  "extends": [
+    "plugin:@nrwl/nx/react",
+    "../../.eslintrc.json",
+    "plugin:jest/all"
+  ],
+  "plugins": ["jest"],
+  "ignorePatterns": ["!**/*"],
+  "rules": {
+    "react/jsx-uses-react": "off",
+    "react/react-in-jsx-scope": "off",
+    "jest/no-hooks": "off"
+  }
+}

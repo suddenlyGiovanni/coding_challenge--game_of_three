@@ -1,0 +1,13 @@
+{
+  "presets": [
+    "@nrwl/react/babel",
+    "@emotion/babel-preset-css-prop",
+    [
+      "@babel/preset-react",
+      {
+        "runtime": "automatic"
+      }
+    ]
+  ],
+  "plugins": []
+}
