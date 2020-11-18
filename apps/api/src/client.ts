@@ -1,4 +1,4 @@
-import { Manager } from 'socket.io-client'
+import { Manager, Socket } from 'socket.io-client'
 
 const manager = new Manager('ws://localhost:3333')
 const socket = manager.socket('/')
@@ -10,9 +10,10 @@ socket.on('connect', () => {
 socket.on('disconnect', () => {
   console.log(`disconnect`)
 })
+socket.on('pong', () => {
+  socket.emit('ping')
+})
 
 setInterval(() => {
-  socket.emit('ping', () => {
-    console.log('pong')
-  })
+  socket.emit('ping', () => console.log('ping'))
 }, 1000)
