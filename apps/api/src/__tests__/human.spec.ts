@@ -7,9 +7,11 @@ describe('human class', () => {
   const ID_1 = 'PLAYER_1_ID'
   const NAME_1 = 'PLAYER_1_NAME'
   const ID_2 = 'PLAYER_2_ID'
+  const ID_3 = 'PLAYER_3_ID'
   const NAME_2 = 'PLAYER_2_NAME'
   const player1: IPlayer = new Human(ID_1, NAME_1)
   const player2: IPlayer = new Human(ID_2, NAME_2)
+  const player3 = new Human(ID_3)
 
   it('should return the `id` when `getId` method is invoked', () => {
     expect.hasAssertions()
@@ -19,6 +21,14 @@ describe('human class', () => {
   it('should return the `name` when `getName` method is invoked', () => {
     expect.hasAssertions()
     expect(player1.getName()).toBe('PLAYER_1_NAME')
+    expect(player3.getName()).toBe('')
+  })
+
+  it('should allow to set the `name`', () => {
+    expect.hasAssertions()
+    expect(player3.getName()).toBe('')
+    expect(() => player3.setName('PLAYER_3_NAME')).not.toThrow()
+    expect(player3.getName()).toBe('PLAYER_3_NAME')
   })
 
   it('should return the `HUMAN` when `getType` method is invoked', () => {

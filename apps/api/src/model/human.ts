@@ -7,13 +7,13 @@ export class Human<PlayerID extends string = string>
   implements IPlayer<PlayerID> {
   private readonly id: PlayerID
 
-  private readonly name: string
+  private name: string
 
   private readonly type: IHUMAN
 
-  public constructor(id: PlayerID, name: string) {
+  public constructor(id: PlayerID, name?: string) {
     this.id = id
-    this.name = name
+    this.name = name || ''
     this.type = PlayerType.HUMAN
   }
 
@@ -35,5 +35,9 @@ export class Human<PlayerID extends string = string>
 
   public isSame(player: IPlayer<PlayerID>): player is this {
     return this.id === player.getId()
+  }
+
+  public setName(name: string): void {
+    this.name = name
   }
 }
