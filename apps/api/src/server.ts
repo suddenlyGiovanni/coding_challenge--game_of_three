@@ -1,9 +1,17 @@
-import { Server as IOServer } from 'socket.io'
-import type { Socket } from 'socket.io'
+import { Server as IOServer, Socket } from 'socket.io'
 
-import type { IServer } from './interfaces/server.interface'
+import type { IPlayersStore, IServer } from './interfaces'
+import { Human } from './model'
 
-export enum EventType {
+import { PlayersStore } from './players-store'
+
+export type SocketActionFn<T> = (socket: Socket) => (message: T) => void
+export interface WrappedServerSocket<T> {
+  callback: SocketActionFn<T>
+  event: string
+}
+
+export enum SocketEvent {
   //#region SYSTEM RESERVED EVENTS
 
   /**
@@ -58,11 +66,60 @@ export enum EventType {
    * ```
    */
   DISCONNECTING = 'disconnecting',
+
+  /**
+   * Fired upon a connection error
+   */
   CONNECT_ERROR = 'connect_error',
+
+  /**
+   * Fired upon a connection timeout
+   */
+  CONNECT_TIMEOUT = 'connect_timeout',
+
+  /**
+   * Fired upon an attempt to reconnect
+   */
+  RECONNECT_ATTEMPT = 'reconnect_attempt',
+
+  /**
+   * Fired upon a reconnection attempt error
+   */
+  reconnect_error = 'reconnect_error',
+
+  /**
+   * Fired when the client couldn’t reconnect within reconnectionAttempts
+   */
+  RECONNECT_FAILED = 'reconnect_failed',
+
+  /**
+   * Alias for “reconnect_attempt”
+   */
+  RECONNECTING = 'reconnecting',
+
+  /**
+   * Fired upon a successful reconnection
+   */
+  RECONNECT = 'reconnect',
+
+  /**
+   * Fired when a `ping` is sent to the server
+   */
+  PING = 'ping',
+
+  /**
+   * Fired when a `pong` is received from the server
+   */
+  PONG = 'pong',
+
   NEW_LISTENER = 'newListener',
+
   REMOVE_LISTENER = 'removeListener',
 
   //#endregion SYSTEM RESERVED EVENTS
+
+  HEARTBEAT = 'heartbeat',
+  HELLO = 'hello',
 }
 
 export class Server implements IServer {
@@ -70,7 +127,11 @@ export class Server implements IServer {
 
   private static instance: Server
 
+  private heartbeatTimerID: NodeJS.Timeout
+
   private readonly io: IOServer
+
+  private readonly playersStore: IPlayersStore
 
   private readonly port: number
 
@@ -79,6 +140,8 @@ export class Server implements IServer {
     this.io = new IOServer(this.port, {
       cors: { origin: [`http://localhost:4200`] },
     })
+
+    this.playersStore = PlayersStore.getInstance()
 
     console.log(`Listening at ws://localhost:${this.port}`)
   }
@@ -95,22 +158,62 @@ export class Server implements IServer {
   }
 
   public listen = (): void => {
-    this.io.on(EventType.CONNECTION, this._onSocketConnect)
-
-    setInterval(() => {
-      this.io.emit('message', new Date().toISOString())
-    }, 1000)
+    this.io.on(SocketEvent.CONNECTION, this._registerSocketToEventListeners)
+    this.heartbeatTimerID = setInterval(
+      () => this.io.emit(SocketEvent.HEARTBEAT, new Date().toISOString()),
+      1000
+    )
   }
 
-  private _onSocketConnect = (socket: Socket): void => {
-    console.log(`connect: ${socket.id}`)
+  private _createSocket<T>(
+    event: SocketEvent,
+    action?: SocketActionFn<T>
+  ): WrappedServerSocket<T> {
+    return { callback: action, event }
+  }
 
-    socket.on('hello!', () => {
-      console.log(`hello from ${socket.id}`)
-    })
+  private _handleUserConnect = (socket: Socket) => {
+    console.log(`_handleUserConnect: ${socket.id}`)
+    // add user to the store
+    const player = new Human(socket.id)
+    this.playersStore.addPlayer(player)
 
-    socket.on(EventType.DISCONNECT, () => {
-      console.log(`disconnect: ${socket.id}`)
-    })
+    console.log(this.playersStore.players) // TODO: Remove store debug
+
+    // do other stuff...
+  }
+
+  private _handleUserDisconnect: SocketActionFn<void> = (socket) => () => {
+    console.log(`disconnect: ${socket.id}`)
+    // const user = this.userStore.getUserByID(uuid)
+    // remove the user for the Lobby?
+    // notify the interested clients: (players in the lobby, player in a match if affected)
+    // remove the user from the store
+
+    const player = this.playersStore.removePlayerByID(socket.id)
+    if (player) console.log(`player id:${socket.id} disconnected.`, player)
+    console.log(this.playersStore.players) // TODO: Remove store debug
+  }
+
+  private _handlerEventHello: SocketActionFn<string> = (socket) => (
+    message
+  ): void => {
+    console.log(`hello ${message} from ${socket.id}`)
+  }
+
+  private _registerSocketToEventListeners = (socket: Socket): void => {
+    const registeredEvents = [
+      this._createSocket<void>(
+        SocketEvent.DISCONNECT,
+        this._handleUserDisconnect
+      ),
+      this._createSocket<string>(SocketEvent.HELLO, this._handlerEventHello),
+    ] as const
+
+    registeredEvents.forEach(({ callback, event }) =>
+      socket.on(event, callback(socket))
+    )
+
+    this._handleUserConnect(socket)
   }
 }
