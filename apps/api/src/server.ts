@@ -4,21 +4,65 @@ import type { Socket } from 'socket.io'
 import type { IServer } from './interfaces/server.interface'
 
 export enum EventType {
-  CONNECTION = 'connection',
+  //#region SYSTEM RESERVED EVENTS
+
+  /**
+   * Fired upon a connection from client.
+   * socket (Socket) socket connection with client
+   * @example
+   * ```
+   * io.on('connection', (socket) => {
+   *  // ...
+   * });
+   *
+   * io.of('/admin').on('connection', (socket) => {
+   *  // ...
+   * });
+   * ```
+   */
   CONNECT = 'connect',
-  LOGIN = 'login',
-  LOGIN_SUCCESS = 'login_success',
+  /**
+   * Synonym of Event: ‘connect’.
+   */
+  CONNECTION = 'connection',
+  /**
+   * Fired upon disconnection
+   * reason (String) the reason of the disconnection (either client or server-side):
+   *
+   * | `transport error`
+   * | `server namespace disconnect`
+   * | `client namespace disconnect`
+   * | `ping timeout`
+   * | `transport close`
+   * @example
+   * ```
+   * io.on('connection', (socket) => {
+   *  socket.on('disconnect', (reason) => {
+   *    // ...
+   *   });
+   * });
+   * ```
+   */
   DISCONNECT = 'disconnect',
+
+  /**
+   * Fired when the client is going to be disconnected (but hasn’t left its rooms yet).
+   * reason (String) the reason of the disconnection (either client or server-side)
+   * @example
+   * ```
+   * io.on('connection', (socket) => {
+   *  socket.on('disconnecting', (reason) => {
+   *    console.log(socket.rooms); // Set { ... }
+   *  });
+   * });
+   * ```
+   */
   DISCONNECTING = 'disconnecting',
+  CONNECT_ERROR = 'connect_error',
+  NEW_LISTENER = 'newListener',
+  REMOVE_LISTENER = 'removeListener',
 
-  PLAYER_JOINED = 'player_joined',
-  PLAYER_LEFT = 'player_left',
-
-  NEW_GAME = 'new_game',
-
-  HELLO = 'hello!',
-
-  MESSAGE = 'message',
+  //#endregion SYSTEM RESERVED EVENTS
 }
 
 export class Server implements IServer {
@@ -54,14 +98,14 @@ export class Server implements IServer {
     this.io.on(EventType.CONNECTION, this._onSocketConnect)
 
     setInterval(() => {
-      this.io.emit(EventType.MESSAGE, new Date().toISOString())
+      this.io.emit('message', new Date().toISOString())
     }, 1000)
   }
 
   private _onSocketConnect = (socket: Socket): void => {
     console.log(`connect: ${socket.id}`)
 
-    socket.on(EventType.HELLO, () => {
+    socket.on('hello!', () => {
       console.log(`hello from ${socket.id}`)
     })
 

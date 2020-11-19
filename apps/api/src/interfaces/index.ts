@@ -14,5 +14,7 @@ export type { IQueue } from './queue.interface'
 export type { IMatch } from './match.interface'
 export type { IMatchService } from './match-service.interface'
 export type { IObserver, ISubject } from './observable.interface'
+export type { IPlayersStore, UUID } from './players-store.interface'
+export type { IServer } from './server.interface'
 
 export { PlayerType } from './player.interface'
