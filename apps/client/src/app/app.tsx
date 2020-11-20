@@ -1,35 +1,32 @@
 import React, { useEffect, useState } from 'react'
 
-import { Manager } from 'socket.io-client'
-
-import { SocketEvent } from '@game-of-three/api-interfaces'
-
-const manager = new Manager('ws://localhost:3000')
-const socket = manager.socket('/')
+import socket, {
+  socketConnect,
+  socketDisconnect,
+  socketHeartbeat,
+  socketHello,
+} from '../sockets'
 
 export function App() {
   const [isConnected, setIsConnected] = useState(socket.connected)
   const [lastMessage, setLastMessage] = useState<null | string>(null)
 
   useEffect(() => {
-    socket.on(SocketEvent.CONNECT, () => {
-      setIsConnected(true)
-    })
-    socket.on(SocketEvent.DISCONNECT, () => {
-      setIsConnected(false)
-    })
-    socket.on(SocketEvent.HEARTBEAT, (dataStringISO: string) => {
+    socketConnect.on(() => setIsConnected(true))
+    socketDisconnect.on(() => setIsConnected(false))
+
+    socketHeartbeat.on((dataStringISO) =>
       setLastMessage(new Date(dataStringISO).getSeconds().toString())
-    })
+    )
     return () => {
-      socket.off(SocketEvent.CONNECT)
-      socket.off(SocketEvent.DISCONNECT)
-      socket.off(SocketEvent.HEARTBEAT)
+      socketConnect.off()
+      socketDisconnect.off()
+      socketHeartbeat.off()
     }
   })
 
   const sendMessage = () => {
-    socket.emit('hello', 'world!')
+    socketHello.emit('world!')
   }
 
   return (

@@ -131,3 +131,12 @@ export enum SocketEvent {
   HEARTBEAT = 'heartbeat',
   HELLO = 'hello',
 }
+
+type ISODataString = string
+
+export interface IEvents extends Record<ISocketEvent, unknown> {
+  [SocketEvent.CONNECT]: void
+  [SocketEvent.DISCONNECT]: void
+  [SocketEvent.HEARTBEAT]: ISODataString
+  [SocketEvent.HELLO]: 'world!'
+}
