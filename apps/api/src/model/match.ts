@@ -4,15 +4,16 @@ import {
   IMatch,
   IMatchState,
   IMatchStateSerialized,
-  IMatchStatus,
   IObserver,
   IPlayer,
   ISubject,
   ITurn,
 } from '../interfaces'
-import { MatchState, MatchStatus } from '../model/match-state'
+import { MatchState } from '../model/match-state'
 
 import { Turn } from './turn'
+
+import { IMatchStatus, MatchStatus } from '@game-of-three/api-interfaces'
 
 export type IUUIDStrategy = () => string
 export type INumberGeneratorStrategy = () => number

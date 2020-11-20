@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-inferrable-types */
-import type {
+import type { IObserver, ISubject } from './interfaces'
+import { AI, MatchState } from './model'
+
+import {
   IAction,
   IMatchStatePlayingSerialized,
   IMatchStateSerialized,
-  IObserver,
-  ISubject,
-} from './interfaces'
-import { AI, MatchState } from './model'
+} from '@game-of-three/api-interfaces'
 
 /**
  * where `b`, the `divisor`
