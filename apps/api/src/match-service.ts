@@ -1,18 +1,17 @@
 import { AIActor } from './ai-actor'
 import type {
-  IAction,
   IMatchService,
   IMatchState,
-  IMatchStateSerialized,
   IObserver,
   IPlayer,
 } from './interfaces'
+import { INumberGeneratorStrategy, Match, MatchState } from './model'
+
 import {
-  INumberGeneratorStrategy,
-  Match,
-  MatchState,
+  IAction,
+  IMatchStateSerialized,
   MatchStatus,
-} from './model'
+} from '@game-of-three/api-interfaces'
 
 export class MatchService<
   IPlayer1 extends IPlayer<string>,

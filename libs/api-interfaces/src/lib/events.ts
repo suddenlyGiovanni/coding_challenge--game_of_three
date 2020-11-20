@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/member-ordering */
 export type ISocketEvent =
   //#region  SYSTEM RESERVED EVENTS
   | 'connect'
@@ -95,7 +96,7 @@ export enum SocketEvent {
   /**
    * Fired upon a reconnection attempt error
    */
-  reconnect_error = 'reconnect_error',
+  RECONNECT_ERROR = 'reconnect_error',
 
   /**
    * Fired when the client couldn’t reconnect within reconnectionAttempts
@@ -135,8 +136,28 @@ export enum SocketEvent {
 type ISODataString = string
 
 export interface IEvents extends Record<ISocketEvent, unknown> {
+  //#region SYSTEM RESERVED EVENTS
   [SocketEvent.CONNECT]: void
-  [SocketEvent.DISCONNECT]: void
+  [SocketEvent.CONNECTION]: void
+  [SocketEvent.DISCONNECT]:
+    | 'transport error'
+    | 'server namespace disconnect'
+    | 'client namespace disconnect'
+    | 'ping timeout'
+    | 'transport close'
+  [SocketEvent.DISCONNECTING]: string
+  [SocketEvent.CONNECT_ERROR]: void
+  [SocketEvent.CONNECT_TIMEOUT]: void
+  [SocketEvent.RECONNECT_ATTEMPT]: void
+  [SocketEvent.RECONNECT_ERROR]: void
+  [SocketEvent.RECONNECT_FAILED]: void
+  [SocketEvent.RECONNECTING]: void
+  [SocketEvent.RECONNECT]: void
+  [SocketEvent.PING]: void
+  [SocketEvent.PONG]: void
+  [SocketEvent.NEW_LISTENER]: void
+  [SocketEvent.REMOVE_LISTENER]: void
+  //#endregion SYSTEM RESERVED EVENTS
   [SocketEvent.HEARTBEAT]: ISODataString
   [SocketEvent.HELLO]: 'world!'
 }

@@ -7,18 +7,20 @@ import {
   jest,
 } from '@jest/globals'
 
-import type {
+import type { IObserver } from '../interfaces'
+
+import { MatchService } from '../match-service'
+import { AI, Human, INumberGeneratorStrategy } from '../model'
+
+import { flushPromises } from './helpers'
+
+import {
   IMatchStatePlayingSerialized,
   IMatchStateSerialized,
   IMatchStateStartSerialized,
   IMatchStateStopSerialized,
-  IObserver,
-} from '../interfaces'
-
-import { MatchService } from '../match-service'
-import { AI, Human, INumberGeneratorStrategy, MatchStatus } from '../model'
-
-import { flushPromises } from './helpers'
+  MatchStatus,
+} from '@game-of-three/api-interfaces'
 
 describe('match-service', () => {
   const PLAYER_1_ID = 'PLAYER_1_ID'

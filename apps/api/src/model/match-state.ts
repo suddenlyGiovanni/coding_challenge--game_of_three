@@ -1,20 +1,15 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import type {
+import type { IMatchState, IPlayer } from '../interfaces'
+
+import {
   IAction,
-  IMatchState,
   IMatchStatePlayingSerialized,
   IMatchStateSerialized,
   IMatchStateStartSerialized,
   IMatchStateStopSerialized,
   IMatchStatus,
-  IPlayer,
-} from '../interfaces'
-
-export enum MatchStatus {
-  Start = 0,
-  Playing = 1,
-  Stop = 2,
-}
+  MatchStatus,
+} from '@game-of-three/api-interfaces'
 
 export class MatchState implements IMatchState {
   readonly action?: IAction

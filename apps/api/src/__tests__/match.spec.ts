@@ -7,12 +7,7 @@ import {
   jest,
 } from '@jest/globals'
 
-import type {
-  IMatchState,
-  IMatchStateSerialized,
-  IMatchStateStartSerialized,
-  IObserver,
-} from '../interfaces'
+import type { IMatchState, IObserver } from '../interfaces'
 
 import {
   AI,
@@ -21,8 +16,13 @@ import {
   IUUIDStrategy,
   Match,
   MatchState,
-  MatchStatus,
 } from '../model'
+
+import {
+  IMatchStateSerialized,
+  IMatchStateStartSerialized,
+  MatchStatus,
+} from '@game-of-three/api-interfaces'
 
 describe('match', () => {
   const PLAYER_1_ID = 'ID_HUMAN'

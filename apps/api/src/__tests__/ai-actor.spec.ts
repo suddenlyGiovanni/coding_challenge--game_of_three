@@ -9,10 +9,16 @@ import {
 } from '@jest/globals'
 
 import { AIActor } from '../ai-actor'
-import type { IAction, IMatchStateSerialized, IObserver } from '../interfaces'
-import { AI, MatchStatus } from '../model'
+import type { IObserver } from '../interfaces'
+import { AI } from '../model'
 
 import { flushPromises } from './helpers'
+
+import {
+  IAction,
+  IMatchStateSerialized,
+  MatchStatus,
+} from '@game-of-three/api-interfaces'
 
 describe('ai actor', () => {
   const player1ID = 'HUMAN_PLAYER_ID'
