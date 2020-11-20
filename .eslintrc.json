@@ -22,22 +22,33 @@
     "prettier/@typescript-eslint",
     "plugin:prettier/recommended"
   ],
+  "settings": {
+    "import/parsers": {
+      "@typescript-eslint/parser": [".ts", ".tsx"]
+    },
+    "import/resolver": {
+      "typescript": {
+        "project": "./tsconfig.base.json"
+      }
+    }
+  },
   "rules": {
-    "@typescript-eslint/explicit-member-accessibility": "off",
-    "@typescript-eslint/explicit-module-boundary-types": "off",
-    "@typescript-eslint/explicit-function-return-type": "off",
-    "@typescript-eslint/no-parameter-properties": "off",
     "@nrwl/nx/enforce-module-boundaries": [
       "error",
       {
-        "enforceBuildableLibDependency": true,
         "allow": [],
         "depConstraints": [
-          { "sourceTag": "*", "onlyDependOnLibsWithTags": ["*"] }
-        ]
+          {
+            "onlyDependOnLibsWithTags": ["*"],
+            "sourceTag": "*"
+          }
+        ],
+        "enforceBuildableLibDependency": true
       }
     ],
-    "@typescript-eslint/no-unused-vars": "off",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/explicit-member-accessibility": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/member-ordering": [
       "error",
       {
@@ -85,6 +96,9 @@
         }
       }
     ],
+    "@typescript-eslint/no-parameter-properties": "off",
+    "@typescript-eslint/no-unused-vars": "off",
+    "import/default": "off",
     "import/order": [
       "warn",
       {
