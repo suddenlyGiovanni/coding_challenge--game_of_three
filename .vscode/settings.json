@@ -1,5 +1,6 @@
 {
   "cSpell.words": ["IHUMAN", "endregion"],
+  "eslint.lintTask.enable": true,
   "eslint.packageManager": "yarn",
   "eslint.run": "onSave"
 }

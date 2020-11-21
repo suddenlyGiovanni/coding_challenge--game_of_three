@@ -3,7 +3,6 @@ import { v4 as uuid } from 'uuid'
 import {
   IMatch,
   IMatchState,
-  IMatchStateSerialized,
   IObserver,
   IPlayer,
   ISubject,
@@ -13,7 +12,11 @@ import { MatchState } from '../model/match-state'
 
 import { Turn } from './turn'
 
-import { IMatchStatus, MatchStatus } from '@game-of-three/api-interfaces'
+import {
+  IMatchStateSerialized,
+  IMatchStatus,
+  MatchStatus,
+} from '@game-of-three/api-interfaces'
 
 export type IUUIDStrategy = () => string
 export type INumberGeneratorStrategy = () => number
