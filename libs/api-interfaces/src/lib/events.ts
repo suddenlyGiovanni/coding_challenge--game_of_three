@@ -162,7 +162,8 @@ export enum SocketEvent {
 
 type ISODataString = string
 
-export interface IEvents extends Record<ISocketEvent, unknown> {
+export interface IEvents
+  extends Record<ISocketEvent, Action<ISocketEvent, unknown> | string | void> {
   //#region SYSTEM RESERVED EVENTS
   [SocketEvent.CONNECT]: void
   [SocketEvent.CONNECTION]: void
@@ -209,7 +210,7 @@ interface ActionWithPayload<Type extends string, Payload>
   payload: Payload
 }
 
-type Action<Type extends string, Payload = unknown> = Payload extends unknown
+export type Action<Type extends string, Payload> = Payload extends never
   ? ActionBase<Type>
   : ActionWithPayload<Type, Payload>
 
