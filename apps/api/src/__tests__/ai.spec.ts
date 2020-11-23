@@ -3,6 +3,8 @@ import { describe, expect, it, jest } from '@jest/globals'
 import { IPlayer, PlayerType } from '../interfaces'
 import { AI, UUIDService } from '../model'
 
+import type { PlayerSerialized } from '@game-of-three/api-interfaces'
+
 describe('ai class', () => {
   const AI_ID = 'AI_ID'
   const AI_NAME = 'AI_NAME'
@@ -49,5 +51,21 @@ describe('ai class', () => {
   it('should return the a false when `isSame` method is invoked with the another IPlayer', () => {
     expect.hasAssertions()
     expect(ai.isSame(new AI('ID', 'NAME'))).toBe(false)
+  })
+
+  it('should allow to be serialized', () => {
+    expect.hasAssertions()
+
+    let serializedAIPlayerObject: PlayerSerialized
+    expect(() => (serializedAIPlayerObject = ai.serialize())).not.toThrow()
+
+    expect(serializedAIPlayerObject).toHaveProperty('id')
+    expect(serializedAIPlayerObject).toHaveProperty('type')
+    expect(serializedAIPlayerObject).toHaveProperty('name')
+    expect(serializedAIPlayerObject).toMatchObject({
+      id: ai.getId(),
+      name: ai.getName(),
+      type: ai.getType(),
+    })
   })
 })

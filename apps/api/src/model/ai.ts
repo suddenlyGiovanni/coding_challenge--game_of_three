@@ -3,6 +3,8 @@ import { v4 as uuid } from 'uuid'
 import type { IAI, IPlayer } from '../interfaces'
 import { PlayerType } from '../interfaces/player.interface'
 
+import { PlayerSerialized } from '@game-of-three/api-interfaces'
+
 export type UUIDService = () => string
 
 export class AI<PlayerID extends string> implements IPlayer<PlayerID> {
@@ -42,5 +44,13 @@ export class AI<PlayerID extends string> implements IPlayer<PlayerID> {
 
   public isSame(player: IPlayer<PlayerID>): player is this {
     return this.id === player.getId()
+  }
+
+  public serialize(): PlayerSerialized {
+    return {
+      id: this.getId(),
+      name: this.getName(),
+      type: this.getType(),
+    }
   }
 }

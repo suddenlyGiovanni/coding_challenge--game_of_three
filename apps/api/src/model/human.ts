@@ -3,6 +3,8 @@ import { PlayerType } from '../interfaces/player.interface'
 
 import type { AI } from './ai'
 
+import { PlayerSerialized } from '@game-of-three/api-interfaces'
+
 export class Human<PlayerID extends string = string>
   implements IPlayer<PlayerID> {
   private readonly id: PlayerID
@@ -35,6 +37,14 @@ export class Human<PlayerID extends string = string>
 
   public isSame(player: IPlayer<PlayerID>): player is this {
     return this.id === player.getId()
+  }
+
+  public serialize(): PlayerSerialized {
+    return {
+      id: this.getId(),
+      name: this.getName(),
+      type: this.getType(),
+    }
   }
 
   public setName(name: string): void {

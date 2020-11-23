@@ -53,11 +53,11 @@ export enum SocketEvent {
    * });
    * ```
    */
-  CONNECT = 'connect',
+  INTERNAL_CONNECT = 'connect',
   /**
    * Synonym of Event: ‘connect’.
    */
-  CONNECTION = 'connection',
+  INTERNAL_CONNECTION = 'connection',
   /**
    * Fired upon disconnection
    * reason (String) the reason of the disconnection (either client or server-side):
@@ -76,7 +76,7 @@ export enum SocketEvent {
    * });
    * ```
    */
-  DISCONNECT = 'disconnect',
+  INTERNAL_DISCONNECT = 'disconnect',
 
   /**
    * Fired when the client is going to be disconnected (but hasn’t left its rooms yet).
@@ -90,72 +90,72 @@ export enum SocketEvent {
    * });
    * ```
    */
-  DISCONNECTING = 'disconnecting',
+  INTERNAL_DISCONNECTING = 'disconnecting',
 
   /**
    * Fired upon a connection error
    */
-  CONNECT_ERROR = 'connect_error',
+  INTERNAL_CONNECT_ERROR = 'connect_error',
 
   /**
    * Fired upon a connection timeout
    */
-  CONNECT_TIMEOUT = 'connect_timeout',
+  INTERNAL_CONNECT_TIMEOUT = 'connect_timeout',
 
   /**
    * Fired upon an attempt to reconnect
    */
-  RECONNECT_ATTEMPT = 'reconnect_attempt',
+  INTERNAL_RECONNECT_ATTEMPT = 'reconnect_attempt',
 
   /**
    * Fired upon a reconnection attempt error
    */
-  RECONNECT_ERROR = 'reconnect_error',
+  INTERNAL_RECONNECT_ERROR = 'reconnect_error',
 
   /**
    * Fired when the client couldn’t reconnect within reconnectionAttempts
    */
-  RECONNECT_FAILED = 'reconnect_failed',
+  INTERNAL_RECONNECT_FAILED = 'reconnect_failed',
 
   /**
    * Alias for “reconnect_attempt”
    */
-  RECONNECTING = 'reconnecting',
+  INTERNAL_RECONNECTING = 'reconnecting',
 
   /**
    * Fired upon a successful reconnection
    */
-  RECONNECT = 'reconnect',
+  INTERNAL_RECONNECT = 'reconnect',
 
   /**
    * Fired when a `ping` is sent to the server
    */
-  PING = 'ping',
+  INTERNAL_PING = 'ping',
 
   /**
    * Fired when a `pong` is received from the server
    */
-  PONG = 'pong',
+  INTERNAL_PONG = 'pong',
 
-  NEW_LISTENER = 'newListener',
+  INTERNAL_NEW_LISTENER = 'newListener',
 
-  REMOVE_LISTENER = 'removeListener',
+  INTERNAL_REMOVE_LISTENER = 'removeListener',
 
   //#endregion SYSTEM RESERVED EVENTS
 
-  HEARTBEAT = 'heartbeat',
+  SYSTEM_HEARTBEAT = 'heartbeat',
 
-  HELLO = 'hello',
+  SYSTEM_HELLO = 'hello',
 
-  PLAYER_JOINED = 'player_joined',
-  PLAYER_LEFT = 'player_left',
-  INITIALIZE = 'initialize',
-  NAME_UPDATE = 'name_update',
-  NAME_CHANGED = 'name_changed',
+  SYSTEM_PLAYER_JOINED = 'player_joined',
+  SYSTEM_PLAYER_LEFT = 'player_left',
+  SYSTEM_INITIALIZE = 'initialize',
+  SYSTEM_NAME_UPDATE = 'name_update',
+  SYSTEM_NAME_CHANGED = 'name_changed',
   LOBBY_PLAYER_JOINED = 'lobby_player_joined',
   LOBBY_PLAYER_LEFT = 'lobby_player_left',
-  MATCH_MAKING = 'match_making',
-  NEW_MATCH = 'new_match',
+  LOBBY_MAKE_MATCH = 'match_making',
+  MATCH_NEW_MATCH = 'new_match',
   MATCH_MOVE = 'match_move',
   MATCH_NEW_STATE = 'match_new_state',
 }
@@ -165,47 +165,47 @@ type ISODataString = string
 export interface IEvents
   extends Record<ISocketEvent, Action<ISocketEvent, unknown> | string | void> {
   //#region SYSTEM RESERVED EVENTS
-  [SocketEvent.CONNECT]: void
-  [SocketEvent.CONNECTION]: void
-  [SocketEvent.DISCONNECT]:
+  [SocketEvent.INTERNAL_CONNECT]: void
+  [SocketEvent.INTERNAL_CONNECTION]: void
+  [SocketEvent.INTERNAL_DISCONNECT]:
     | 'transport error'
     | 'server namespace disconnect'
     | 'client namespace disconnect'
     | 'ping timeout'
     | 'transport close'
-  [SocketEvent.DISCONNECTING]: string
-  [SocketEvent.CONNECT_ERROR]: void
-  [SocketEvent.CONNECT_TIMEOUT]: void
-  [SocketEvent.RECONNECT_ATTEMPT]: void
-  [SocketEvent.RECONNECT_ERROR]: void
-  [SocketEvent.RECONNECT_FAILED]: void
-  [SocketEvent.RECONNECTING]: void
-  [SocketEvent.RECONNECT]: void
-  [SocketEvent.PING]: void
-  [SocketEvent.PONG]: void
-  [SocketEvent.NEW_LISTENER]: void
-  [SocketEvent.REMOVE_LISTENER]: void
+  [SocketEvent.INTERNAL_DISCONNECTING]: string
+  [SocketEvent.INTERNAL_CONNECT_ERROR]: void
+  [SocketEvent.INTERNAL_CONNECT_TIMEOUT]: void
+  [SocketEvent.INTERNAL_RECONNECT_ATTEMPT]: void
+  [SocketEvent.INTERNAL_RECONNECT_ERROR]: void
+  [SocketEvent.INTERNAL_RECONNECT_FAILED]: void
+  [SocketEvent.INTERNAL_RECONNECTING]: void
+  [SocketEvent.INTERNAL_RECONNECT]: void
+  [SocketEvent.INTERNAL_PING]: void
+  [SocketEvent.INTERNAL_PONG]: void
+  [SocketEvent.INTERNAL_NEW_LISTENER]: void
+  [SocketEvent.INTERNAL_REMOVE_LISTENER]: void
   //#endregion SYSTEM RESERVED EVENTS
-  [SocketEvent.HEARTBEAT]: HeartbeatAction
-  [SocketEvent.HELLO]: HelloAction
-  [SocketEvent.PLAYER_JOINED]: PlayerJoinedAction
-  [SocketEvent.INITIALIZE]: InitializeAction
-  [SocketEvent.PLAYER_LEFT]: PlayerLeftAction
-  [SocketEvent.NAME_UPDATE]: UpdateNameAction
-  [SocketEvent.NAME_CHANGED]: PlayerNameChangedAction
-  [SocketEvent.LOBBY_PLAYER_JOINED]: LobbyPlayerJoinedAction
-  [SocketEvent.LOBBY_PLAYER_LEFT]: LobbyPlayerLeftAction
-  [SocketEvent.MATCH_MAKING]: MatchMakingAction
-  [SocketEvent.NEW_MATCH]: MatchNewMatchAction
-  [SocketEvent.MATCH_MOVE]: MatchMoveAction
-  [SocketEvent.MATCH_NEW_STATE]: MatchNewStateAction
+  [SocketEvent.SYSTEM_HEARTBEAT]: ActionHeartbeat
+  [SocketEvent.SYSTEM_HELLO]: ActionHello
+  [SocketEvent.SYSTEM_PLAYER_JOINED]: ActionPlayerJoined
+  [SocketEvent.SYSTEM_INITIALIZE]: ActionInitialize
+  [SocketEvent.SYSTEM_PLAYER_LEFT]: ActionPlayerLeft
+  [SocketEvent.SYSTEM_NAME_UPDATE]: ActionUpdateName
+  [SocketEvent.SYSTEM_NAME_CHANGED]: ActionPlayerNameChanged
+  [SocketEvent.LOBBY_PLAYER_JOINED]: ActionLobbyPlayerJoined
+  [SocketEvent.LOBBY_PLAYER_LEFT]: ActionLobbyPlayerLeft
+  [SocketEvent.LOBBY_MAKE_MATCH]: ActionMatchMaking
+  [SocketEvent.MATCH_NEW_MATCH]: ActionMatchNewMatch
+  [SocketEvent.MATCH_MOVE]: ActionMatchMove
+  [SocketEvent.MATCH_NEW_STATE]: ActionMatchNewState
 }
 
 interface ActionBase<Type extends string> {
   type: Type
 }
 
-interface ActionWithPayload<Type extends string, Payload>
+export interface ActionWithPayload<Type extends string, Payload>
   extends ActionBase<Type> {
   payload: Payload
 }
@@ -214,8 +214,8 @@ export type Action<Type extends string, Payload> = Payload extends never
   ? ActionBase<Type>
   : ActionWithPayload<Type, Payload>
 
-type HelloAction = Action<SocketEvent.HELLO, 'world!'>
-type HeartbeatAction = Action<SocketEvent.HEARTBEAT, ISODataString>
+type ActionHello = Action<SocketEvent.SYSTEM_HELLO, 'world!'>
+type ActionHeartbeat = Action<SocketEvent.SYSTEM_HEARTBEAT, ISODataString>
 
 /**
  * this event is emitted by the server to all the connected clients
@@ -224,7 +224,10 @@ type HeartbeatAction = Action<SocketEvent.HEARTBEAT, ISODataString>
  * event: SocketEvent.PLAYER_JOINED
  * payload: PlayerSerialized
  */
-type PlayerJoinedAction = Action<SocketEvent.PLAYER_JOINED, PlayerSerialized>
+type ActionPlayerJoined = Action<
+  SocketEvent.SYSTEM_PLAYER_JOINED,
+  PlayerSerialized
+>
 
 /**
  * this event is fired by the server to a single socket after it has established a connection
@@ -233,7 +236,10 @@ type PlayerJoinedAction = Action<SocketEvent.PLAYER_JOINED, PlayerSerialized>
  * event: SocketEvent.INITIALIZE
  * payload: PlayerSerialized[]
  */
-type InitializeAction = Action<SocketEvent.INITIALIZE, PlayerSerialized[]>
+type ActionInitialize = Action<
+  SocketEvent.SYSTEM_INITIALIZE,
+  PlayerSerialized[]
+>
 
 /**
  * this event is emitted by the server to all the connected clients
@@ -242,7 +248,7 @@ type InitializeAction = Action<SocketEvent.INITIALIZE, PlayerSerialized[]>
  * event: SocketEvent.PLAYER_LEFT
  * payload: PlayerSerialized
  */
-type PlayerLeftAction = Action<SocketEvent.PLAYER_LEFT, PlayerSerialized>
+type ActionPlayerLeft = Action<SocketEvent.SYSTEM_PLAYER_LEFT, PlayerSerialized>
 
 /**
  * this event is fired by the client to notify to the server a player name change
@@ -250,7 +256,7 @@ type PlayerLeftAction = Action<SocketEvent.PLAYER_LEFT, PlayerSerialized>
  * event: SocketEvent.name_update
  * payload: PlayerSerialized
  */
-type UpdateNameAction = Action<SocketEvent.NAME_UPDATE, PlayerSerialized>
+type ActionUpdateName = Action<SocketEvent.SYSTEM_NAME_UPDATE, string>
 
 /**
  * this event is emitted by the server to all the connected clients
@@ -259,8 +265,8 @@ type UpdateNameAction = Action<SocketEvent.NAME_UPDATE, PlayerSerialized>
  * event: SocketEvent.name_changed
  * payload: PlayerSerialized
  */
-type PlayerNameChangedAction = Action<
-  SocketEvent.NAME_CHANGED,
+type ActionPlayerNameChanged = Action<
+  SocketEvent.SYSTEM_NAME_CHANGED,
   PlayerSerialized
 >
 
@@ -271,7 +277,7 @@ type PlayerNameChangedAction = Action<
  * event: SocketEvent.LOBBY_PLAYER_JOINED
  * payload: PlayerSerialized
  */
-type LobbyPlayerJoinedAction = Action<
+type ActionLobbyPlayerJoined = Action<
   SocketEvent.LOBBY_PLAYER_JOINED,
   PlayerSerialized
 >
@@ -283,7 +289,7 @@ type LobbyPlayerJoinedAction = Action<
  * event: SocketEvent.LOBBY_PLAYER_LEFT
  * payload: PlayerSerialized
  */
-type LobbyPlayerLeftAction = Action<
+type ActionLobbyPlayerLeft = Action<
   SocketEvent.LOBBY_PLAYER_LEFT,
   PlayerSerialized
 >
@@ -295,7 +301,7 @@ type LobbyPlayerLeftAction = Action<
  * event: SocketEvent.MATCH_MAKING
  * payload: PlayerSerialized
  */
-type MatchMakingAction = Action<SocketEvent.MATCH_MAKING, PlayerSerialized>
+type ActionMatchMaking = Action<SocketEvent.LOBBY_MAKE_MATCH, PlayerSerialized>
 
 /**
  * this event is emitted by the server to a game (id) room
@@ -305,7 +311,10 @@ type MatchMakingAction = Action<SocketEvent.MATCH_MAKING, PlayerSerialized>
  * event: SocketEvent.NEW_MATCH
  * payload: IMatchStateSerialized
  */
-type MatchNewMatchAction = Action<SocketEvent.NEW_MATCH, IMatchStateSerialized>
+type ActionMatchNewMatch = Action<
+  SocketEvent.MATCH_NEW_MATCH,
+  IMatchStateSerialized
+>
 
 /**
  * this event is fired by the client to notify the server of a game move ( -1 | 0 | 1)
@@ -313,7 +322,7 @@ type MatchNewMatchAction = Action<SocketEvent.NEW_MATCH, IMatchStateSerialized>
  * event: SocketEvent.MATCH_MOVE
  * payload: IAction
  */
-type MatchMoveAction = Action<SocketEvent.MATCH_MOVE, IAction>
+type ActionMatchMove = Action<SocketEvent.MATCH_MOVE, IAction>
 
 /**
  * this event is emitted by the server to a game (id) room
@@ -323,7 +332,7 @@ type MatchMoveAction = Action<SocketEvent.MATCH_MOVE, IAction>
  * event: SocketEvent.MATCH_NEW_STATE
  * payload: IMatchStateSerialized
  */
-type MatchNewStateAction = Action<
+type ActionMatchNewState = Action<
   SocketEvent.MATCH_NEW_STATE,
   IMatchStateSerialized
 >

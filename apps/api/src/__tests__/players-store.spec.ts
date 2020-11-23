@@ -4,6 +4,8 @@ import type { IPlayersStore } from '../interfaces'
 import { Human } from '../model'
 import { PlayersStore } from '../players-store'
 
+import type { PlayerSerialized } from '@game-of-three/api-interfaces'
+
 describe('users-store', () => {
   const playerA = new Human('USER_A_ID', 'PLAYER_A')
   const playerB = new Human('USER_B_ID', 'PLAYER_B')
@@ -18,18 +20,18 @@ describe('users-store', () => {
     playersStore.clear()
   })
 
-  it('should create an instance of the UserStore class', () => {
+  it('should create an instance of the PlayerStore class', () => {
     expect.hasAssertions()
     expect(playersStore).not.toBeUndefined()
     expect(playersStore).toBeInstanceOf(PlayersStore)
   })
 
-  it('should create only an instance of the UserStore class', () => {
+  it('should create only an instance of the PlayerStore class', () => {
     expect.hasAssertions()
     expect(playersStore).toBe(PlayersStore.getInstance())
   })
 
-  it('should allow to reset the UserStore to its initial pristine state', () => {
+  it('should allow to reset the PlayerStore to its initial pristine state', () => {
     expect.hasAssertions()
     expect(playersStore.size).toBe(0)
     expect(playersStore.isEmpty()).toBe(true)
@@ -78,7 +80,7 @@ describe('users-store', () => {
     expect(playersStore.players.get(playerB.getId())).toBe(playerB)
   })
 
-  it('should allow to remove a IUser from the UserStore', () => {
+  it('should allow to remove a IUser from the PlayerStore', () => {
     expect.hasAssertions()
     // arrange
     playersStore.addPlayer(playerA)
@@ -123,5 +125,21 @@ describe('users-store', () => {
     expect(playersStore.getPlayerByID(playerC.getId()).getName()).toBe(
       'PLAYER_C'
     )
+  })
+
+  it('should have a method to retrieve a serialized version of the store', () => {
+    expect.hasAssertions()
+    let serializedStore: PlayerSerialized[]
+    playersStore.addPlayer(playerA)
+    playersStore.addPlayer(playerB)
+    playersStore.addPlayer(playerC)
+    expect(
+      () => (serializedStore = playersStore.getSerializedPlayer())
+    ).not.toThrow()
+
+    expect(Array.isArray(serializedStore)).toBe(true)
+    expect(serializedStore).toContainEqual(playerA.serialize())
+    expect(serializedStore).toContainEqual(playerB.serialize())
+    expect(serializedStore).toContainEqual(playerC.serialize())
   })
 })

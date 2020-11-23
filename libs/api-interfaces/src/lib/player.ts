@@ -3,7 +3,5 @@ export interface PlayerSerialized {
 
   readonly name: string
 
-  readonly state: 'PENDING' | 'WAITING' | 'PLAYING'
-
   readonly type: 'AI' | 'HUMAN'
 }

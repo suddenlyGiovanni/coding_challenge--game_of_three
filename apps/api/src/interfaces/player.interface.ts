@@ -1,5 +1,7 @@
 import type { AI } from '../model/ai'
 
+import { PlayerSerialized } from '@game-of-three/api-interfaces'
+
 export type IAI = 'AI'
 export type IHUMAN = 'HUMAN'
 
@@ -46,4 +48,6 @@ export interface IPlayer<PlayerID extends string = string> {
    * @memberof IPlayer
    */
   isSame(player: IPlayer<PlayerID>): boolean
+
+  serialize(): PlayerSerialized
 }

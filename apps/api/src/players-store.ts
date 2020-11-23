@@ -1,6 +1,8 @@
 import type { IPlayersStore, UUID } from './interfaces'
 import type { Human } from './model'
 
+import type { PlayerSerialized } from '@game-of-three/api-interfaces'
+
 export class PlayersStore implements IPlayersStore {
   private static instance: PlayersStore
 
@@ -37,6 +39,10 @@ export class PlayersStore implements IPlayersStore {
 
   public getPlayerByID(id: UUID): undefined | Human {
     return this._players.get(id)
+  }
+
+  public getSerializedPlayer(): PlayerSerialized[] {
+    return [...this._players.values()].map((player) => player.serialize())
   }
 
   public isEmpty(): boolean {

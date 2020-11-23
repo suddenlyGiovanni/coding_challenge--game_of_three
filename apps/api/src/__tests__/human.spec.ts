@@ -3,6 +3,8 @@ import { describe, expect, it } from '@jest/globals'
 import { IPlayer, PlayerType } from '../interfaces'
 import { Human } from '../model'
 
+import type { PlayerSerialized } from '@game-of-three/api-interfaces'
+
 describe('human class', () => {
   const ID_1 = 'PLAYER_1_ID'
   const NAME_1 = 'PLAYER_1_NAME'
@@ -49,5 +51,21 @@ describe('human class', () => {
   it('should return the a false when `isSame` method is invoked with the another IPlayer', () => {
     expect.hasAssertions()
     expect(player1.isSame(player2)).toBe(false)
+  })
+
+  it('should allow to be serialized', () => {
+    expect.hasAssertions()
+
+    let serializedPlayerObject: PlayerSerialized
+    expect(() => (serializedPlayerObject = player1.serialize())).not.toThrow()
+
+    expect(serializedPlayerObject).toHaveProperty('id')
+    expect(serializedPlayerObject).toHaveProperty('type')
+    expect(serializedPlayerObject).toHaveProperty('name')
+    expect(serializedPlayerObject).toMatchObject({
+      id: player1.getId(),
+      name: player1.getName(),
+      type: player1.getType(),
+    })
   })
 })
