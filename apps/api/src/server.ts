@@ -5,19 +5,15 @@ import { Server as IOServer, Socket } from 'socket.io'
 import type { IPlayersStore, IServer } from './interfaces'
 import { Human } from './model'
 import { PlayersStore } from './players-store'
+import {
+  SocketActionFn,
+  broadcast,
+  createSocket,
+  emitToAllSockets,
+  emitToSocket,
+} from './sockets'
 
 import { IEvents, SocketEvent } from '@game-of-three/contracts'
-
-export type SocketActionFn<Payload> = (
-  socket: Socket
-) => (payload: Payload) => void
-export interface WrappedServerSocket<
-  Event extends keyof IEvents,
-  Payload extends IEvents[Event]
-> {
-  callback: SocketActionFn<Payload>
-  event: Event
-}
 
 export class Server implements IServer {
   public static readonly CORS_ORIGIN: string = `http://localhost:4200`
@@ -71,54 +67,29 @@ export class Server implements IServer {
     this.io.close()
   }
 
-  private _broadcast<Event extends keyof IEvents>(
-    event: Event,
-    action: IEvents[Event]
-  ): void {
-    this.io?.emit(event, action)
-  }
-
-  private _broadcastToAllButThisSocket = (socket: Socket) => <
-    Event extends keyof IEvents
-  >(
-    event: Event,
-    action: IEvents[Event]
-  ): void => {
-    socket.broadcast.emit(event, action)
-  }
-
-  private _createSocket<
-    Event extends keyof IEvents,
-    Payload extends IEvents[Event]
-  >(
-    event: Event,
-    callback?: SocketActionFn<Payload>
-  ): WrappedServerSocket<Event, Payload> {
-    return { callback, event } as const
-  }
-
-  private _emitToSocket = (socket: Socket) => <Event extends keyof IEvents>(
-    event: Event,
-    action: IEvents[Event]
-  ): void => {
-    socket.emit(event, action)
-  }
-
-  private _handleClientInitializeData = (socket: Socket) => {
+  private _handlerClientInitializeData = (socket: Socket) => {
     const actionInitialize = {
       payload: this.playersStore.getSerializedPlayer(),
       type: SocketEvent.SYSTEM_INITIALIZE,
     } as const
-    this._emitToSocket(socket)(SocketEvent.SYSTEM_INITIALIZE, actionInitialize)
+    emitToSocket(socket)(SocketEvent.SYSTEM_INITIALIZE, actionInitialize)
   }
 
-  private _handleMatchMaking: SocketActionFn<
+  private _handlerEventHello: SocketActionFn<
+    IEvents[SocketEvent.SYSTEM_HELLO]
+  > = (socket) => (action) => {
+    const { id } = socket
+    const { payload } = action
+    console.log(`user message '${payload}' id: ${id}`) // TODO: remove this console.log
+  }
+
+  private _handlerMatchMaking: SocketActionFn<
     IEvents[SocketEvent.LOBBY_MAKE_MATCH]
-  > = (socket) => ({ payload }) => {
-    console.log(`user id: ${socket.id} - match making ${payload}`)
+  > = (socket) => ({ type }) => {
+    console.log(`user id: ${socket.id} - match making '${type}'`)
   }
 
-  private _handleMatchMove: SocketActionFn<IEvents[SocketEvent.MATCH_MOVE]> = (
+  private _handlerMatchMove: SocketActionFn<IEvents[SocketEvent.MATCH_MOVE]> = (
     socket
   ) => (action) => {
     // route the match move to the correct match ('room')
@@ -127,7 +98,7 @@ export class Server implements IServer {
     console.log(`user id: ${id} - match move: ${move}`) // TODO: remove this console.log
   }
 
-  private _handleNameUpdate: SocketActionFn<
+  private _handlerNameUpdate: SocketActionFn<
     IEvents[SocketEvent.SYSTEM_NAME_UPDATE]
   > = (socket) => (action) => {
     const { id } = socket
@@ -140,13 +111,13 @@ export class Server implements IServer {
     console.log(`user id: ${id} - name changed: ${name}`) // TODO: remove this console.log
 
     // 3. notify clients of name changes
-    this._broadcast(SocketEvent.SYSTEM_NAME_CHANGED, {
+    broadcast(this.io)(SocketEvent.SYSTEM_NAME_CHANGED, {
       payload: this.playersStore.getPlayerByID(id).serialize(),
       type: SocketEvent.SYSTEM_NAME_CHANGED,
     })
   }
 
-  private _handleUserConnect = (socket: Socket) => {
+  private _handlerUserConnect = (socket: Socket) => {
     const { id } = socket
     console.log(`user connected id: ${id}`) // TODO: remove this console.log
     // add user to the store
@@ -154,19 +125,16 @@ export class Server implements IServer {
     this.playersStore.addPlayer(player)
 
     // notify socket of who is online
-    this._handleClientInitializeData(socket)
+    this._handlerClientInitializeData(socket)
 
     // notify all connected clients (except this client) that a new client has joined
-    this._broadcastToAllButThisSocket(socket)(
-      SocketEvent.SYSTEM_PLAYER_JOINED,
-      {
-        payload: player.serialize(),
-        type: SocketEvent.SYSTEM_PLAYER_JOINED,
-      }
-    )
+    emitToAllSockets(socket)(SocketEvent.SYSTEM_PLAYER_JOINED, {
+      payload: player.serialize(),
+      type: SocketEvent.SYSTEM_PLAYER_JOINED,
+    })
   }
 
-  private _handleUserDisconnect: SocketActionFn<
+  private _handlerUserDisconnect: SocketActionFn<
     IEvents[SocketEvent.INTERNAL_DISCONNECT]
   > = (socket) => () => {
     const { id } = socket
@@ -182,55 +150,44 @@ export class Server implements IServer {
 
       // notify connected client that a client has disconnected
 
-      this._broadcastToAllButThisSocket(socket)(
-        SocketEvent.SYSTEM_PLAYER_LEFT,
-        {
-          payload: player.serialize(),
-          type: SocketEvent.SYSTEM_PLAYER_LEFT,
-        }
-      )
+      emitToAllSockets(socket)(SocketEvent.SYSTEM_PLAYER_LEFT, {
+        payload: player.serialize(),
+        type: SocketEvent.SYSTEM_PLAYER_LEFT,
+      })
     }
-  }
-
-  private _handlerEventHello: SocketActionFn<
-    IEvents[SocketEvent.SYSTEM_HELLO]
-  > = (socket) => (action) => {
-    const { id } = socket
-    const { payload } = action
-    console.log(`user message '${payload}' id: ${id}`) // TODO: remove this console.log
   }
 
   private _registerSocketToEventListeners = (socket: Socket): void => {
     const registeredEvents = [
-      this._createSocket(
+      createSocket(
         SocketEvent.INTERNAL_DISCONNECT,
-        this._handleUserDisconnect
+        this._handlerUserDisconnect
       ),
-      this._createSocket(SocketEvent.SYSTEM_HELLO, this._handlerEventHello),
-      this._createSocket(
-        SocketEvent.SYSTEM_NAME_UPDATE,
-        this._handleNameUpdate
-      ),
+      createSocket(SocketEvent.SYSTEM_HELLO, this._handlerEventHello),
+      createSocket(SocketEvent.SYSTEM_NAME_UPDATE, this._handlerNameUpdate),
 
-      this._createSocket(SocketEvent.MATCH_MOVE, this._handleMatchMove),
+      createSocket(SocketEvent.MATCH_MOVE, this._handlerMatchMove),
 
-      this._createSocket(SocketEvent.LOBBY_MAKE_MATCH, this._handleMatchMaking),
+      createSocket(SocketEvent.LOBBY_MAKE_MATCH, this._handlerMatchMaking),
     ] as const
 
     registeredEvents.forEach(({ callback, event }) =>
       socket.on(event, callback(socket))
     )
 
-    this._handleUserConnect(socket)
+    this._handlerUserConnect(socket)
   }
 
   private _startEmitHeartbeat(): void {
+    const _broadcast = broadcast(this.io)
+    const action = () =>
+      ({
+        payload: new Date().toISOString(),
+        type: SocketEvent.SYSTEM_HEARTBEAT,
+      } as const)
+
     this.heartbeatTimerID = setInterval(
-      () =>
-        this._broadcast(SocketEvent.SYSTEM_HEARTBEAT, {
-          payload: new Date().toISOString(),
-          type: SocketEvent.SYSTEM_HEARTBEAT,
-        }),
+      () => _broadcast(SocketEvent.SYSTEM_HEARTBEAT, action()),
       1000
     )
   }
