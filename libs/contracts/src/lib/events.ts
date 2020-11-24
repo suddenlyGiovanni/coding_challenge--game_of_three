@@ -230,16 +230,24 @@ type ActionPlayerJoined = Action<
 >
 
 /**
+ * FIXME: RENAME TO SOMETHING MORE APPROPRIATE
+ * FIXME: MOVE TO A PLACE MORE APPROPRIATE
+ * @export
+ * @interface ServerState
+ */
+export interface ServerState {
+  lobby: PlayerSerialized[]
+  players: PlayerSerialized[]
+}
+
+/**
  * this event is fired by the server to a single socket after it has established a connection
  * it provides the players state
  * SERVER --> CLIENT
  * event: SocketEvent.INITIALIZE
  * payload: PlayerSerialized[]
  */
-type ActionInitialize = Action<
-  SocketEvent.SYSTEM_INITIALIZE,
-  PlayerSerialized[]
->
+type ActionInitialize = Action<SocketEvent.SYSTEM_INITIALIZE, ServerState>
 
 /**
  * this event is emitted by the server to all the connected clients

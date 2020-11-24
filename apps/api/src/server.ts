@@ -2,8 +2,8 @@ import { clearInterval } from 'timers'
 
 import { Server as IOServer, Socket } from 'socket.io'
 
-import type { IPlayersStore, IServer } from './interfaces'
-import { Human } from './model'
+import type { ILobby, IPlayersStore, IServer } from './interfaces'
+import { Human, Lobby } from './model'
 import { PlayersStore } from './players-store'
 import {
   SocketActionFn,
@@ -26,6 +26,8 @@ export class Server implements IServer {
 
   private readonly io: IOServer
 
+  private readonly lobby: ILobby
+
   private readonly playersStore: IPlayersStore
 
   private readonly port: number
@@ -39,6 +41,7 @@ export class Server implements IServer {
     })
 
     this.playersStore = PlayersStore.getInstance()
+    this.lobby = Lobby.getInstance()
 
     console.log(`Listening at ws://localhost:${this.port}`)
   }
@@ -67,9 +70,28 @@ export class Server implements IServer {
     this.io.close()
   }
 
+  private _addPlayerToLobby(playerId: string): void {
+    const player = this.playersStore.getPlayerByID(playerId)
+
+    if (!this.lobby.getPlayers().includes(player)) {
+      this.lobby.addPlayer(player)
+      console.info(`add player id ${player.getId()} to the lobby`)
+
+      broadcast(this.io)(SocketEvent.LOBBY_PLAYER_JOINED, {
+        payload: player.serialize(),
+        type: SocketEvent.LOBBY_PLAYER_JOINED,
+      })
+    } else {
+      console.info(`can't add player id ${player.getId()} to the lobby`)
+    }
+  }
+
   private _handlerClientInitializeData = (socket: Socket) => {
     const actionInitialize = {
-      payload: this.playersStore.getSerializedPlayer(),
+      payload: {
+        lobby: this.lobby.getPlayers().map((p) => p.serialize()),
+        players: this.playersStore.getSerializedPlayer(),
+      },
       type: SocketEvent.SYSTEM_INITIALIZE,
     } as const
     emitToSocket(socket)(SocketEvent.SYSTEM_INITIALIZE, actionInitialize)
@@ -105,16 +127,14 @@ export class Server implements IServer {
     const { payload: name } = action
     // update user name
     // 1. get player
-    const player = this.playersStore.getPlayerByID(id)
     // 2. update name
-    player.setName(name)
-    console.log(`user id: ${id} - name changed: ${name}`) // TODO: remove this console.log
-
     // 3. notify clients of name changes
-    broadcast(this.io)(SocketEvent.SYSTEM_NAME_CHANGED, {
-      payload: this.playersStore.getPlayerByID(id).serialize(),
-      type: SocketEvent.SYSTEM_NAME_CHANGED,
-    })
+    // 4. add player to the lobby
+    // 5. emit to all players that he has joined the lobby
+
+    this._renamePlayer(id, name)
+
+    this._addPlayerToLobby(id)
   }
 
   private _handlerUserConnect = (socket: Socket) => {
@@ -138,22 +158,20 @@ export class Server implements IServer {
     IEvents[SocketEvent.INTERNAL_DISCONNECT]
   > = (socket) => () => {
     const { id } = socket
+    console.log(`user disconnected id: ${id}`) // TODO: remove this console.log
 
-    // const user = this.userStore.getUserByID(uuid)
-    // remove the user for the Lobby?
-    // notify the interested clients: (players in the lobby, player in a match if affected)
-    // remove the user from the store
+    // 1. verify the socket id is in the player store
+    //  1.1 remove the player from the player sore
+    //  1.2 notify the clients the player has disconnected
+    // 2. verify if the player was also in the lobby
+    //  2.1 remove the player from the lobby
+    //  2.2 notify the clients a player has left the lobby
+    // 3 handle the case where a player was in a match
 
-    const player = this.playersStore.removePlayerByID(id)
+    const player = this.playersStore.getPlayerByID(id)
     if (player) {
-      console.log(`user disconnected id: ${id}`) // TODO: remove this console.log
-
-      // notify connected client that a client has disconnected
-
-      emitToAllSockets(socket)(SocketEvent.SYSTEM_PLAYER_LEFT, {
-        payload: player.serialize(),
-        type: SocketEvent.SYSTEM_PLAYER_LEFT,
-      })
+      this._removePlayerFromLobby(player)
+      this._removePlayerFromStore(player)
     }
   }
 
@@ -176,6 +194,56 @@ export class Server implements IServer {
     )
 
     this._handlerUserConnect(socket)
+  }
+
+  /**
+   * removes a IPlayer from the Lobby
+   * and notifies all the clients of such change
+   * @emits `SocketEvent.LOBBY_PLAYER_LEFT`
+   * @private
+   * @param {Human<string>} player
+   * @memberof Server
+   */
+  private _removePlayerFromLobby(player: Human<string>): void {
+    if (this.lobby.getPlayers().includes(player)) {
+      console.info(`remove player id ${player.getId()} from lobby`)
+      this.lobby.removePlayer(player)
+
+      broadcast(this.io)(SocketEvent.LOBBY_PLAYER_LEFT, {
+        payload: player.serialize(),
+        type: SocketEvent.LOBBY_PLAYER_LEFT,
+      })
+    }
+  }
+
+  /**
+   * removes a IPlayer from the playerStore
+   * and notifies all the clients of such change
+   * @event `SocketEvent.SYSTEM_PLAYER_LEFT`
+   * @private
+   * @param {Human<string>} player
+   * @memberof Server
+   */
+  private _removePlayerFromStore(player: Human<string>): void {
+    console.info(`remove player id ${player.getId()} from playerStore`)
+
+    this.playersStore.removePlayerByID(player.getId())
+    broadcast(this.io)(SocketEvent.SYSTEM_PLAYER_LEFT, {
+      payload: player.serialize(),
+      type: SocketEvent.SYSTEM_PLAYER_LEFT,
+    })
+  }
+
+  private _renamePlayer(id: string, name: string): void {
+    const player = this.playersStore.getPlayerByID(id)
+    player.setName(name)
+
+    console.log(`user id: ${id} - name changed: ${name}`) // TODO: remove this console.log
+
+    broadcast(this.io)(SocketEvent.SYSTEM_NAME_CHANGED, {
+      payload: this.playersStore.getPlayerByID(id).serialize(),
+      type: SocketEvent.SYSTEM_NAME_CHANGED,
+    })
   }
 
   private _startEmitHeartbeat(): void {
