@@ -17,25 +17,25 @@ describe('human class', () => {
 
   it('should return the `id` when `getId` method is invoked', () => {
     expect.hasAssertions()
-    expect(player1.getId()).toBe('PLAYER_1_ID')
+    expect(player1.id).toBe('PLAYER_1_ID')
   })
 
   it('should return the `name` when `getName` method is invoked', () => {
     expect.hasAssertions()
-    expect(player1.getName()).toBe('PLAYER_1_NAME')
-    expect(player3.getName()).toBe('')
+    expect(player1.name).toBe('PLAYER_1_NAME')
+    expect(player3.name).toBe('')
   })
 
   it('should allow to set the `name`', () => {
     expect.hasAssertions()
-    expect(player3.getName()).toBe('')
+    expect(player3.name).toBe('')
     expect(() => player3.setName('PLAYER_3_NAME')).not.toThrow()
-    expect(player3.getName()).toBe('PLAYER_3_NAME')
+    expect(player3.name).toBe('PLAYER_3_NAME')
   })
 
   it('should return the `HUMAN` when `getType` method is invoked', () => {
     expect.hasAssertions()
-    expect(player1.getType()).toBe(PlayerType.HUMAN)
+    expect(player1.type).toBe(PlayerType.HUMAN)
   })
 
   it('should return the `false` when `isAi` method is invoked', () => {
@@ -63,9 +63,9 @@ describe('human class', () => {
     expect(serializedPlayerObject).toHaveProperty('type')
     expect(serializedPlayerObject).toHaveProperty('name')
     expect(serializedPlayerObject).toMatchObject({
-      id: player1.getId(),
-      name: player1.getName(),
-      type: player1.getType(),
+      id: player1.id,
+      name: player1.name,
+      type: player1.type,
     })
   })
 })

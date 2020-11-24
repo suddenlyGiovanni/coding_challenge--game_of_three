@@ -126,13 +126,13 @@ export class MatchState implements IMatchState {
   public serialize(): Readonly<IMatchStateSerialized> {
     const matchStateSerialized: IMatchStateSerialized = {
       action: this.action,
-      currentTurn: this.currentTurn?.getId(),
+      currentTurn: this.currentTurn?.id,
       inputNumber: this.inputNumber,
-      nextTurn: this.nextTurn?.getId(),
+      nextTurn: this.nextTurn?.id,
       outputNumber: this.outputNumber,
       status: this.status,
       turnNumber: this.turnNumber,
-      winningPlayer: this.winningPlayer?.getId(),
+      winningPlayer: this.winningPlayer?.id,
     }
     return matchStateSerialized
   }

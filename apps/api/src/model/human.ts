@@ -7,28 +7,28 @@ import { PlayerSerialized } from '@game-of-three/contracts'
 
 export class Human<PlayerID extends string = string>
   implements IPlayer<PlayerID> {
-  private readonly id: PlayerID
+  private readonly _id: PlayerID
 
-  private name: string
+  private _name: string
 
-  private readonly type: IHUMAN
+  private readonly _type: IHUMAN
 
   public constructor(id: PlayerID, name?: string) {
-    this.id = id
-    this.name = name || ''
-    this.type = PlayerType.HUMAN
+    this._id = id
+    this._name = name || ''
+    this._type = PlayerType.HUMAN
   }
 
-  public getId(): PlayerID {
-    return this.id
+  public get id(): PlayerID {
+    return this._id
   }
 
-  public getName(): string {
-    return this.name
+  public get name(): string {
+    return this._name
   }
 
-  public getType(): IHUMAN {
-    return this.type
+  public get type(): IHUMAN {
+    return this._type
   }
 
   public isAi(): this is AI<PlayerID> {
@@ -36,18 +36,18 @@ export class Human<PlayerID extends string = string>
   }
 
   public isSame(player: IPlayer<PlayerID>): player is this {
-    return this.id === player.getId()
+    return this._id === player.id
   }
 
   public serialize(): PlayerSerialized {
     return {
-      id: this.getId(),
-      name: this.getName(),
-      type: this.getType(),
+      id: this.id,
+      name: this.name,
+      type: this.type,
     }
   }
 
   public setName(name: string): void {
-    this.name = name
+    this._name = name
   }
 }

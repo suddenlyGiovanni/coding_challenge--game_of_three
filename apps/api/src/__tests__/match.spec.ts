@@ -248,7 +248,7 @@ describe('match', () => {
       expect(() => match.notifyObservers()).not.toThrow()
       // assert
       const expectedUpdateArgument: IMatchStateStartSerialized = {
-        nextTurn: human.getId(),
+        nextTurn: human.id,
         outputNumber: 100,
         status: MatchStatus.Start,
         turnNumber: 0,

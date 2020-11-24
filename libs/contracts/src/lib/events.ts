@@ -283,24 +283,18 @@ type ActionPlayerNameChanged = Action<
  * it signal that a player has joined the lobby
  * SERVER --> --> CLIENTS
  * event: SocketEvent.LOBBY_PLAYER_JOINED
- * payload: PlayerSerialized
+ * payload: PlayerID
  */
-type ActionLobbyPlayerJoined = Action<
-  SocketEvent.LOBBY_PLAYER_JOINED,
-  PlayerSerialized
->
+type ActionLobbyPlayerJoined = Action<SocketEvent.LOBBY_PLAYER_JOINED, PlayerID>
 
 /**
  * this event is emitted by the server to all the connected clients
  * it signal that a player has left the lobby
  * SERVER --> --> CLIENTS
  * event: SocketEvent.LOBBY_PLAYER_LEFT
- * payload: PlayerSerialized
+ * payload: PlayerID
  */
-type ActionLobbyPlayerLeft = Action<
-  SocketEvent.LOBBY_PLAYER_LEFT,
-  PlayerSerialized
->
+type ActionLobbyPlayerLeft = Action<SocketEvent.LOBBY_PLAYER_LEFT, PlayerID>
 
 /**
  * this event is fired by the client to notify to the server that the client wants to start a new

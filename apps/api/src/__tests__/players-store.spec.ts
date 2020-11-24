@@ -38,8 +38,8 @@ describe('users-store', () => {
 
     playersStore.addPlayer(playerA)
     playersStore.addPlayer(playerB)
-    expect(playersStore.players.has(playerA.getId())).toBe(true)
-    expect(playersStore.players.has(playerB.getId())).toBe(true)
+    expect(playersStore.players.has(playerA.id)).toBe(true)
+    expect(playersStore.players.has(playerB.id)).toBe(true)
     expect(playersStore.size).toBe(2)
 
     // act
@@ -47,8 +47,8 @@ describe('users-store', () => {
     // assert
     expect(playersStore.size).toBe(0)
     expect(playersStore.isEmpty()).toBe(true)
-    expect(playersStore.players.has(playerA.getId())).not.toBe(true)
-    expect(playersStore.players.has(playerB.getId())).not.toBe(true)
+    expect(playersStore.players.has(playerA.id)).not.toBe(true)
+    expect(playersStore.players.has(playerB.id)).not.toBe(true)
   })
 
   it('should allow to add a human IPlayer to the UsersStore', () => {
@@ -59,8 +59,8 @@ describe('users-store', () => {
     playersStore.addPlayer(playerB)
 
     // assert
-    expect(playersStore.players.has(playerA.getId())).toBe(true)
-    expect(playersStore.players.has(playerB.getId())).toBe(true)
+    expect(playersStore.players.has(playerA.id)).toBe(true)
+    expect(playersStore.players.has(playerB.id)).toBe(true)
     expect(playersStore.size).toBe(2)
   })
 
@@ -74,10 +74,10 @@ describe('users-store', () => {
 
     // assert
     expect(playersStore.size).toBe(2)
-    expect(playersStore.players.has(playerA.getId())).toBe(true)
-    expect(playersStore.players.get(playerA.getId())).toBe(playerA)
-    expect(playersStore.players.has(playerB.getId())).toBe(true)
-    expect(playersStore.players.get(playerB.getId())).toBe(playerB)
+    expect(playersStore.players.has(playerA.id)).toBe(true)
+    expect(playersStore.players.get(playerA.id)).toBe(playerA)
+    expect(playersStore.players.has(playerB.id)).toBe(true)
+    expect(playersStore.players.get(playerB.id)).toBe(playerB)
   })
 
   it('should allow to remove a IUser from the PlayerStore', () => {
@@ -87,14 +87,14 @@ describe('users-store', () => {
     playersStore.addPlayer(playerB)
 
     // act
-    expect(playersStore.removePlayerByID(playerB.getId())).toBe(playerB)
-    expect(playersStore.removePlayerByID(playerC.getId())).toBeUndefined()
+    expect(playersStore.removePlayerByID(playerB.id)).toBe(playerB)
+    expect(playersStore.removePlayerByID(playerC.id)).toBeUndefined()
 
     // assert
     expect(playersStore.size).toBe(1)
-    expect(playersStore.players.has(playerA.getId())).toBe(true)
-    expect(playersStore.players.has(playerB.getId())).not.toBe(true)
-    expect(playersStore.players.has(playerC.getId())).not.toBe(true)
+    expect(playersStore.players.has(playerA.id)).toBe(true)
+    expect(playersStore.players.has(playerB.id)).not.toBe(true)
+    expect(playersStore.players.has(playerC.id)).not.toBe(true)
   })
 
   it('should allow to get the number users stored', () => {
@@ -114,17 +114,15 @@ describe('users-store', () => {
     expect.hasAssertions()
     // arrange
     playersStore.addPlayer(playerC)
-    expect(playersStore.getPlayerByID(playerC.getId()).getName()).toBe('')
+    expect(playersStore.getPlayerByID(playerC.id).name).toBe('')
 
     // act
-    playersStore.getPlayerByID(playerC.getId()).setName('PLAYER_C')
+    playersStore.getPlayerByID(playerC.id).setName('PLAYER_C')
 
     // assert
     expect(playersStore.size).toBe(1)
-    expect(playersStore.getPlayerByID(playerC.getId())).toBe(playerC)
-    expect(playersStore.getPlayerByID(playerC.getId()).getName()).toBe(
-      'PLAYER_C'
-    )
+    expect(playersStore.getPlayerByID(playerC.id)).toBe(playerC)
+    expect(playersStore.getPlayerByID(playerC.id).name).toBe('PLAYER_C')
   })
 
   it('should have a method to retrieve a serialized version of the store', () => {

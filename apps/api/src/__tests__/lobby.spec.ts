@@ -4,10 +4,10 @@ import type { ILobby } from '../interfaces'
 import { Human, Lobby } from '../model'
 
 describe('lobby', () => {
-  const playerIDA = new Human('PLAYER_A_ID', 'PLAYER_A').getId()
-  const playerIDB = new Human('PLAYER_B_ID', 'PLAYER_B').getId()
-  const playerIDC = new Human('PLAYER_C_ID', 'PLAYER_C').getId()
-  const playerIDD = new Human('PLAYER_D_ID', 'PLAYER_D').getId()
+  const playerIDA = new Human('PLAYER_A_ID', 'PLAYER_A').id
+  const playerIDB = new Human('PLAYER_B_ID', 'PLAYER_B').id
+  const playerIDC = new Human('PLAYER_C_ID', 'PLAYER_C').id
+  const playerIDD = new Human('PLAYER_D_ID', 'PLAYER_D').id
 
   let lobby: ILobby
   beforeEach(() => {

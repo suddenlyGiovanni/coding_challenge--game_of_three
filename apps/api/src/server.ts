@@ -73,16 +73,16 @@ export class Server implements IServer {
   private _addPlayerToLobby(playerId: PlayerID): void {
     const player = this.playersStore.getPlayerByID(playerId)
 
-    if (!this.lobby.getPlayersId().includes(player.getId())) {
-      this.lobby.addPlayerId(player.getId())
-      console.info(`add player id ${player.getId()} to the lobby`)
+    if (!this.lobby.getPlayersId().includes(player.id)) {
+      this.lobby.addPlayerId(player.id)
+      console.info(`add player id ${player.id} to the lobby`)
 
       broadcast(this.io)(SocketEvent.LOBBY_PLAYER_JOINED, {
-        payload: player.serialize(),
+        payload: player.id,
         type: SocketEvent.LOBBY_PLAYER_JOINED,
       })
     } else {
-      console.info(`can't add player id ${player.getId()} to the lobby`)
+      console.info(`can't add player id ${player.id} to the lobby`)
     }
   }
 
@@ -183,9 +183,7 @@ export class Server implements IServer {
       ),
       createSocket(SocketEvent.SYSTEM_HELLO, this._handlerEventHello),
       createSocket(SocketEvent.SYSTEM_NAME_UPDATE, this._handlerNameUpdate),
-
       createSocket(SocketEvent.MATCH_MOVE, this._handlerMatchMove),
-
       createSocket(SocketEvent.LOBBY_MAKE_MATCH, this._handlerMatchMaking),
     ] as const
 
@@ -205,12 +203,12 @@ export class Server implements IServer {
    * @memberof Server
    */
   private _removePlayerFromLobby(player: Human<string>): void {
-    if (this.lobby.getPlayersId().includes(player.getId())) {
-      console.info(`remove player id ${player.getId()} from lobby`)
-      this.lobby.removePlayerId(player.getId())
+    if (this.lobby.getPlayersId().includes(player.id)) {
+      console.info(`remove player id ${player.id} from lobby`)
+      this.lobby.removePlayerId(player.id)
 
       broadcast(this.io)(SocketEvent.LOBBY_PLAYER_LEFT, {
-        payload: player.serialize(),
+        payload: player.id,
         type: SocketEvent.LOBBY_PLAYER_LEFT,
       })
     }
@@ -225,9 +223,9 @@ export class Server implements IServer {
    * @memberof Server
    */
   private _removePlayerFromStore(player: Human<string>): void {
-    console.info(`remove player id ${player.getId()} from playerStore`)
+    console.info(`remove player id ${player.id} from playerStore`)
 
-    this.playersStore.removePlayerByID(player.getId())
+    this.playersStore.removePlayerByID(player.id)
     broadcast(this.io)(SocketEvent.SYSTEM_PLAYER_LEFT, {
       payload: player.serialize(),
       type: SocketEvent.SYSTEM_PLAYER_LEFT,

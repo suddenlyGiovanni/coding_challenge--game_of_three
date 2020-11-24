@@ -19,23 +19,23 @@ describe('ai class', () => {
     expect.hasAssertions()
     expect(uuidServiceMock).toHaveBeenCalledTimes(1)
     expect(uuidServiceMock).toHaveReturnedWith('AI_ID')
-    expect(al.getId()).toBe('AI_ID')
-    expect(al.getName()).toBe('AI')
+    expect(al.id).toBe('AI_ID')
+    expect(al.name).toBe('AI')
   })
 
   it('should return the `id` when `getId` method is invoked', () => {
     expect.hasAssertions()
-    expect(ai.getId()).toBe('AI_ID')
+    expect(ai.id).toBe('AI_ID')
   })
 
   it('should return the `name` when `getName` method is invoked', () => {
     expect.hasAssertions()
-    expect(ai.getName()).toBe('AI_NAME')
+    expect(ai.name).toBe('AI_NAME')
   })
 
   it('should return the `AI` when `getType` method is invoked', () => {
     expect.hasAssertions()
-    expect(ai.getType()).toBe(PlayerType.AI)
+    expect(ai.type).toBe(PlayerType.AI)
   })
 
   it('should return the `true` when `isAi` method is invoked', () => {
@@ -63,9 +63,9 @@ describe('ai class', () => {
     expect(serializedAIPlayerObject).toHaveProperty('type')
     expect(serializedAIPlayerObject).toHaveProperty('name')
     expect(serializedAIPlayerObject).toMatchObject({
-      id: ai.getId(),
-      name: ai.getName(),
-      type: ai.getType(),
+      id: ai.id,
+      name: ai.name,
+      type: ai.type,
     })
   })
 })

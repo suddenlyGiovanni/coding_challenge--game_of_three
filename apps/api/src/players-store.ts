@@ -28,8 +28,8 @@ export class PlayersStore implements IPlayersStore {
   }
 
   public addPlayer(player: Human): void {
-    if (!this._players.has(player.getId())) {
-      this._players.set(player.getId(), player)
+    if (!this._players.has(player.id)) {
+      this._players.set(player.id, player)
     }
   }
 

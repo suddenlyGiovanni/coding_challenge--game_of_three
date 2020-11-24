@@ -20,6 +20,7 @@ import {
 import {
   ActionWithPayload,
   IAction,
+  PlayerID,
   PlayerSerialized,
   ServerState,
   SocketEvent,
@@ -48,17 +49,17 @@ const removePlayer = (playerSerialized: PlayerSerialized) =>
 const updatePlayer = (playerSerialized: PlayerSerialized) =>
   actionCreator('[PLAYERS]-UPDATE_PLAYER', playerSerialized)
 
-const addPlayerToLobby = (playerSerialized: PlayerSerialized) =>
-  actionCreator('[LOBBY]-ADD_PLAYER', playerSerialized)
+const addPlayerToLobby = (playerId: PlayerID) =>
+  actionCreator('[LOBBY]-ADD_PLAYER', playerId)
 
-const removePlayerFromLobby = (playerSerialized: PlayerSerialized) =>
-  actionCreator('[LOBBY]-REMOVE_PLAYER', playerSerialized)
+const removePlayerFromLobby = (playerId: PlayerID) =>
+  actionCreator('[LOBBY]-REMOVE_PLAYER', playerId)
 
 type DateISOString = string
 interface State {
   readonly connected: boolean
   readonly heartbeat: DateISOString
-  readonly lobby: ReadonlyArray<PlayerSerialized>
+  readonly lobby: ReadonlyArray<PlayerID>
   readonly players: ReadonlyArray<PlayerSerialized>
 }
 
@@ -122,7 +123,9 @@ const reducer: Reducer<State, Actions> = (state, action) => {
     case '[LOBBY]-REMOVE_PLAYER':
       return {
         ...state,
-        lobby: state.lobby.slice().filter((p) => p.id !== action.payload.id),
+        lobby: state.lobby
+          .slice()
+          .filter((playerId) => playerId !== action.payload),
       }
 
     default:
@@ -167,18 +170,14 @@ export const App: VFC = () => {
 
   const handlePlayerJoinedLobby = useCallback(
     (
-      event: ActionWithPayload<
-        SocketEvent.LOBBY_PLAYER_JOINED,
-        PlayerSerialized
-      >
+      event: ActionWithPayload<SocketEvent.LOBBY_PLAYER_JOINED, PlayerID>
     ): void => dispatch(addPlayerToLobby(event.payload)),
     []
   )
 
   const handlePlayerLeftLobby = useCallback(
-    (
-      event: ActionWithPayload<SocketEvent.LOBBY_PLAYER_LEFT, PlayerSerialized>
-    ): void => dispatch(removePlayerFromLobby(event.payload)),
+    (event: ActionWithPayload<SocketEvent.LOBBY_PLAYER_LEFT, PlayerID>): void =>
+      dispatch(removePlayerFromLobby(event.payload)),
     [dispatch]
   )
 

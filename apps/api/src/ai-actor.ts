@@ -70,7 +70,7 @@ export class AIActor<PlayerID extends string>
   public update(state: IMatchStateSerialized): void {
     if (
       MatchState.isIMatchStatePlayingSerialized(state) &&
-      state.nextTurn === this.ai.getId()
+      state.nextTurn === this.ai.id
     ) {
       this.move(state)
     }
