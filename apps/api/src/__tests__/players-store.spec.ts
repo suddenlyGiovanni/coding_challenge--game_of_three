@@ -4,7 +4,7 @@ import type { IPlayersStore } from '../interfaces'
 import { Human } from '../model'
 import { PlayersStore } from '../players-store'
 
-import type { PlayerSerialized } from '@game-of-three/api-interfaces'
+import type { PlayerSerialized } from '@game-of-three/contracts'
 
 describe('users-store', () => {
   const playerA = new Human('USER_A_ID', 'PLAYER_A')

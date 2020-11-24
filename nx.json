@@ -33,7 +33,7 @@
     "api": {
       "tags": []
     },
-    "api-interfaces": {
+    "contracts": {
       "tags": []
     }
   }

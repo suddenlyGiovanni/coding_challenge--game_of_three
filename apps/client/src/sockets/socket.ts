@@ -1,6 +1,6 @@
 import { Manager } from 'socket.io-client'
 
-import type { ActionWithPayload, IEvents } from '@game-of-three/api-interfaces'
+import type { ActionWithPayload, IEvents } from '@game-of-three/contracts'
 
 interface ListenerCallback<Action> {
   (action: Action): void

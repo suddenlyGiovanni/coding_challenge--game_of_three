@@ -4,7 +4,7 @@ import {
   IAction,
   IMatchStateSerialized,
   IMatchStatus,
-} from '@game-of-three/api-interfaces'
+} from '@game-of-three/contracts'
 
 export interface IMatchState {
   readonly action?: IAction

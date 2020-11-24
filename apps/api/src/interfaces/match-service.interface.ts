@@ -1,6 +1,6 @@
 import type { IPlayer } from './player.interface'
 
-import type { IAction } from '@game-of-three/api-interfaces'
+import type { IAction } from '@game-of-three/contracts'
 
 export interface IMatchService {
   /**

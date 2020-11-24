@@ -3,7 +3,7 @@ import { PlayerType } from '../interfaces/player.interface'
 
 import type { AI } from './ai'
 
-import { PlayerSerialized } from '@game-of-three/api-interfaces'
+import { PlayerSerialized } from '@game-of-three/contracts'
 
 export class Human<PlayerID extends string = string>
   implements IPlayer<PlayerID> {

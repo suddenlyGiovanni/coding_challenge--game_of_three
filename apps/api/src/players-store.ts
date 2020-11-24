@@ -1,7 +1,7 @@
 import type { IPlayersStore, UUID } from './interfaces'
 import type { Human } from './model'
 
-import type { PlayerSerialized } from '@game-of-three/api-interfaces'
+import type { PlayerSerialized } from '@game-of-three/contracts'
 
 export class PlayersStore implements IPlayersStore {
   private static instance: PlayersStore

@@ -1,6 +1,6 @@
 import type { AI } from '../model/ai'
 
-import { PlayerSerialized } from '@game-of-three/api-interfaces'
+import { PlayerSerialized } from '@game-of-three/contracts'
 
 export type IAI = 'AI'
 export type IHUMAN = 'HUMAN'

@@ -20,7 +20,7 @@ import {
   IMatchStateStartSerialized,
   IMatchStateStopSerialized,
   MatchStatus,
-} from '@game-of-three/api-interfaces'
+} from '@game-of-three/contracts'
 
 describe('match-service', () => {
   const PLAYER_1_ID = 'PLAYER_1_ID'

@@ -18,7 +18,7 @@ import {
   IAction,
   IMatchStateSerialized,
   MatchStatus,
-} from '@game-of-three/api-interfaces'
+} from '@game-of-three/contracts'
 
 describe('ai actor', () => {
   const player1ID = 'HUMAN_PLAYER_ID'

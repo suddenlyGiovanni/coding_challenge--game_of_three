@@ -16,7 +16,7 @@ import {
   IMatchStateSerialized,
   IMatchStatus,
   MatchStatus,
-} from '@game-of-three/api-interfaces'
+} from '@game-of-three/contracts'
 
 export type IUUIDStrategy = () => string
 export type INumberGeneratorStrategy = () => number

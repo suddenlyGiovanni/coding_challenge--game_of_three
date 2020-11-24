@@ -9,7 +9,7 @@ import {
   IMatchStateStopSerialized,
   IMatchStatus,
   MatchStatus,
-} from '@game-of-three/api-interfaces'
+} from '@game-of-three/contracts'
 
 export class MatchState implements IMatchState {
   readonly action?: IAction

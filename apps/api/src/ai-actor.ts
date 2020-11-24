@@ -6,7 +6,7 @@ import {
   IAction,
   IMatchStatePlayingSerialized,
   IMatchStateSerialized,
-} from '@game-of-three/api-interfaces'
+} from '@game-of-three/contracts'
 
 /**
  * where `b`, the `divisor`

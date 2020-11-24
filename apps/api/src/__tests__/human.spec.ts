@@ -3,7 +3,7 @@ import { describe, expect, it } from '@jest/globals'
 import { IPlayer, PlayerType } from '../interfaces'
 import { Human } from '../model'
 
-import type { PlayerSerialized } from '@game-of-three/api-interfaces'
+import type { PlayerSerialized } from '@game-of-three/contracts'
 
 describe('human class', () => {
   const ID_1 = 'PLAYER_1_ID'

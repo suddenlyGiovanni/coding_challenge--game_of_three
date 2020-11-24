@@ -11,7 +11,7 @@ import {
   IAction,
   IMatchStateSerialized,
   MatchStatus,
-} from '@game-of-three/api-interfaces'
+} from '@game-of-three/contracts'
 
 export class MatchService<
   IPlayer1 extends IPlayer<string>,

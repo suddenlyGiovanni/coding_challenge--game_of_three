@@ -301,7 +301,7 @@ type ActionLobbyPlayerLeft = Action<
  * event: SocketEvent.MATCH_MAKING
  * payload: PlayerSerialized
  */
-type ActionMatchMaking = Action<SocketEvent.LOBBY_MAKE_MATCH, PlayerSerialized>
+type ActionMatchMaking = Action<SocketEvent.LOBBY_MAKE_MATCH, string>
 
 /**
  * this event is emitted by the server to a game (id) room

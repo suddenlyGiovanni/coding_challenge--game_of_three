@@ -1,6 +1,6 @@
 import type { Human } from '../model'
 
-import type { PlayerSerialized } from '@game-of-three/api-interfaces'
+import type { PlayerSerialized } from '@game-of-three/contracts'
 
 export type UUID = string
 

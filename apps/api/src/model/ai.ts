@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid'
 import type { IAI, IPlayer } from '../interfaces'
 import { PlayerType } from '../interfaces/player.interface'
 
-import { PlayerSerialized } from '@game-of-three/api-interfaces'
+import { PlayerSerialized } from '@game-of-three/contracts'
 
 export type UUIDService = () => string
 

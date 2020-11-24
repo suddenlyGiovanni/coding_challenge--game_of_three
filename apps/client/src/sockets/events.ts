@@ -1,6 +1,6 @@
 import { createSocket } from './socket'
 
-import { SocketEvent } from '@game-of-three/api-interfaces'
+import { SocketEvent } from '@game-of-three/contracts'
 
 export const socketConnect = createSocket(SocketEvent.INTERNAL_CONNECT)
 export const socketDisconnect = createSocket(SocketEvent.INTERNAL_DISCONNECT)

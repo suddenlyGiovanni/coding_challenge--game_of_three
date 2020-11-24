@@ -6,7 +6,7 @@ import type { IPlayersStore, IServer } from './interfaces'
 import { Human } from './model'
 import { PlayersStore } from './players-store'
 
-import { IEvents, SocketEvent } from '@game-of-three/api-interfaces'
+import { IEvents, SocketEvent } from '@game-of-three/contracts'
 
 export type SocketActionFn<Payload> = (
   socket: Socket
@@ -112,11 +112,10 @@ export class Server implements IServer {
     this._emitToSocket(socket)(SocketEvent.SYSTEM_INITIALIZE, actionInitialize)
   }
 
-  private _handleMatchMakingRequest: SocketActionFn<
-    [SocketEvent.LOBBY_MAKE_MATCH]
-  > = (socket) => () => {
-    const { id } = socket
-    console.log(`user id: ${id} - match making`) // TODO: remove this console.log
+  private _handleMatchMaking: SocketActionFn<
+    IEvents[SocketEvent.LOBBY_MAKE_MATCH]
+  > = (socket) => ({ payload }) => {
+    console.log(`user id: ${socket.id} - match making ${payload}`)
   }
 
   private _handleMatchMove: SocketActionFn<IEvents[SocketEvent.MATCH_MOVE]> = (
@@ -215,10 +214,7 @@ export class Server implements IServer {
 
       this._createSocket(SocketEvent.MATCH_MOVE, this._handleMatchMove),
 
-      this._createSocket(
-        SocketEvent.LOBBY_MAKE_MATCH,
-        this._handleMatchMakingRequest
-      ),
+      this._createSocket(SocketEvent.LOBBY_MAKE_MATCH, this._handleMatchMaking),
     ] as const
 
     registeredEvents.forEach(({ callback, event }) =>

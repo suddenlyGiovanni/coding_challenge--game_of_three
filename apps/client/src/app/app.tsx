@@ -20,7 +20,7 @@ import {
   IAction,
   PlayerSerialized,
   SocketEvent,
-} from '@game-of-three/api-interfaces'
+} from '@game-of-three/contracts'
 
 const actionCreator = <Type extends string, Payload>(
   type: Type,

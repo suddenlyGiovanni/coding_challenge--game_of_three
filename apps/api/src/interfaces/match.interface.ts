@@ -1,7 +1,7 @@
 import type { IMatchState } from './match-state.interface'
 import type { IPlayer } from './player.interface'
 
-import type { IMatchStatus } from '@game-of-three/api-interfaces'
+import type { IMatchStatus } from '@game-of-three/contracts'
 
 export interface IMatch<
   IPlayer1 extends IPlayer<string>,
