@@ -1,5 +1,5 @@
 import type { IAction, IMatchStateSerialized } from './match'
-import type { PlayerSerialized } from './player'
+import type { PlayerID, PlayerSerialized } from './player'
 
 /* eslint-disable @typescript-eslint/member-ordering */
 export type ISocketEvent =
@@ -236,8 +236,8 @@ type ActionPlayerJoined = Action<
  * @interface ServerState
  */
 export interface ServerState {
-  lobby: PlayerSerialized[]
-  players: PlayerSerialized[]
+  readonly lobby: readonly PlayerID[]
+  readonly players: readonly PlayerSerialized[]
 }
 
 /**

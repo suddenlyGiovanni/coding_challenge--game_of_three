@@ -16,7 +16,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@game-of-three/contracts": ["libs/contracts/src/index.ts"]
+      "@game-of-three/contracts": ["./libs/contracts/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

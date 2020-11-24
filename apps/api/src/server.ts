@@ -70,11 +70,11 @@ export class Server implements IServer {
     this.io.close()
   }
 
-  private _addPlayerToLobby(playerId: string): void {
+  private _addPlayerToLobby(playerId: PlayerID): void {
     const player = this.playersStore.getPlayerByID(playerId)
 
-    if (!this.lobby.getPlayers().includes(player)) {
-      this.lobby.addPlayer(player)
+    if (!this.lobby.getPlayersId().includes(player.getId())) {
+      this.lobby.addPlayerId(player.getId())
       console.info(`add player id ${player.getId()} to the lobby`)
 
       broadcast(this.io)(SocketEvent.LOBBY_PLAYER_JOINED, {
@@ -89,7 +89,7 @@ export class Server implements IServer {
   private _handlerClientInitializeData = (socket: Socket) => {
     const actionInitialize = {
       payload: {
-        lobby: this.lobby.getPlayers().map((p) => p.serialize()),
+        lobby: this.lobby.getPlayersId(),
         players: this.playersStore.getSerializedPlayer(),
       },
       type: SocketEvent.SYSTEM_INITIALIZE,
@@ -205,9 +205,9 @@ export class Server implements IServer {
    * @memberof Server
    */
   private _removePlayerFromLobby(player: Human<string>): void {
-    if (this.lobby.getPlayers().includes(player)) {
+    if (this.lobby.getPlayersId().includes(player.getId())) {
       console.info(`remove player id ${player.getId()} from lobby`)
-      this.lobby.removePlayer(player)
+      this.lobby.removePlayerId(player.getId())
 
       broadcast(this.io)(SocketEvent.LOBBY_PLAYER_LEFT, {
         payload: player.serialize(),

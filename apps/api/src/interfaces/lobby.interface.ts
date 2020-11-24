@@ -4,25 +4,25 @@
 - should implement the following operations: add user, remove user, start a match
 */
 
-import type { Human } from '../model/human'
+import { PlayerID } from '@game-of-three/contracts'
 
 export interface ILobby {
   /**
-   * adds a human IPlayer to the ILobby
-   * @param {Human} player
+   * adds a human PlayerID to the ILobby
+   * @param {PlayerID} playerId
    * @memberof ILobby
    */
-  addPlayer(player: Human): void
+  addPlayerId(playerId: PlayerID): void
 
   /**
-   * gets an array representation of all the human IPlayers currently in the ILobby
-   * @returns {ReadonlyArray<Readonly<Human>>}
+   * gets an array representation of all the human PlayerIDs currently in the ILobby
+   * @returns {ReadonlyArray<Readonly<PlayerID>>}
    * @memberof ILobby
    */
-  getPlayers(): ReadonlyArray<Readonly<Human>>
+  getPlayersId(): ReadonlyArray<Readonly<PlayerID>>
 
   /**
-   * gets the number of human IPlayer currently in the ILobby
+   * gets the number of human PlayerID currently in the ILobby
    * @returns {number}
    * @memberof ILobby
    */
@@ -36,11 +36,11 @@ export interface ILobby {
   isEmpty(): boolean
 
   /**
-   * removes a human IPlayer from the ILobby
-   * @param {Human} player
+   * removes a human PlayerID from the ILobby
+   * @param {PlayerID} playerId
    * @memberof ILobby
    */
-  removePlayer(player: Human): void
+  removePlayerId(playerId: PlayerID): void
 
   /**
    * reset the lobby to a pristine state
