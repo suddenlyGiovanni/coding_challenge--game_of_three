@@ -5,18 +5,25 @@ export interface ITurn<
   Player2 extends IPlayer = IPlayer
 > {
   /**
-   * gets who is playing the current turn
-   * @returns {(Player1 | Player2)}
+   * who is playing the current turn
+   * @type {(Player1 | Player2)}
    * @memberof ITurn
    */
-  getCurrent(): Player1 | Player2
+  readonly current: Player1 | Player2
 
   /**
-   * gets the number of the current turn
-   * @returns {number}
+   * who will be playing the next turn (without setting it)
+   * @type {(Player1 | Player2)}
    * @memberof ITurn
    */
-  getTurnNumber(): number
+  readonly next: Player1 | Player2
+
+  /**
+   * the number of the current turn
+   * @type {number}
+   * @memberof ITurn
+   */
+  readonly number: number
 
   /**
    * initialize the state by
@@ -31,12 +38,5 @@ export interface ITurn<
    * @returns {(Player1 | Player2)}
    * @memberof ITurn
    */
-  next(): Player1 | Player2
-
-  /**
-   * gets who will be playing the next turn (without setting it)
-   * @returns {(Player1 | Player2)}
-   * @memberof ITurn
-   */
-  peekNext(): Player1 | Player2
+  switch(): Player1 | Player2
 }

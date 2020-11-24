@@ -16,29 +16,17 @@ export class Turn<Player1 extends IPlayer, Player2 extends IPlayer>
     this.turnNumber = 0
   }
 
-  public getCurrent(): Player1 | Player2 {
+  public get current(): Player1 | Player2 {
     this.assertInt()
     return this.currentTurn
   }
 
-  public getTurnNumber(): number {
+  public get number(): number {
     this.assertInt()
     return this.turnNumber
   }
 
-  public init(): void {
-    this.currentTurn = this.player1
-    this.turnNumber = 1
-  }
-
-  public next(): Player1 | Player2 {
-    this.assertInt()
-    this.turnNumber += 1
-    this.currentTurn = this.peekNext()
-    return this.currentTurn
-  }
-
-  public peekNext(): Player1 | Player2 {
+  public get next(): Player1 | Player2 {
     this.assertInt()
     if (this.currentTurn.isSame(this.player1)) {
       return this.player2
@@ -48,10 +36,22 @@ export class Turn<Player1 extends IPlayer, Player2 extends IPlayer>
     }
   }
 
+  public init(): void {
+    this.currentTurn = this.player1
+    this.turnNumber = 1
+  }
+
+  public switch(): Player1 | Player2 {
+    this.assertInt()
+    this.turnNumber += 1
+    this.currentTurn = this.next
+    return this.currentTurn
+  }
+
   private assertInt(): void {
     if (this.turnNumber === 0 || !this.currentTurn) {
       throw new Error(
-        'Turn not initialized: remember to call init() on a newly instantiated Turn'
+        'Turn not initialized: remember to call `init()` on a newly instantiated Turn'
       )
     }
   }

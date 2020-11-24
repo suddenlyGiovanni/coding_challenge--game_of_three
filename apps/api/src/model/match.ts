@@ -75,12 +75,12 @@ export class Match<
 
   public getCurrentTurn(): IPlayer1 | IPlayer2 {
     this.assertInitialized()
-    return this.turn.getCurrent()
+    return this.turn.current
   }
 
   public getCurrentTurnNumber(): number {
     this.assertInitialized()
-    return this.turn.getTurnNumber()
+    return this.turn.number
   }
 
   public getId(): string {
@@ -119,7 +119,7 @@ export class Match<
     } else {
       this.turn.init()
       const outputNumber = this.numberGeneratorStrategy()
-      const nextTurn = this.turn.getCurrent()
+      const nextTurn = this.turn.current
       const turnNumber = 0
       const initialMatchState: IMatchState = new MatchState({
         nextTurn,
@@ -141,7 +141,7 @@ export class Match<
 
   public peekNextTurn(): IPlayer1 | IPlayer2 {
     this.assertInitialized()
-    return this.turn.peekNext()
+    return this.turn.next
   }
 
   public registerObserver(observer: IObserver<IMatchStateSerialized>): void {
@@ -160,7 +160,7 @@ export class Match<
     this.matchStateHistory.push(matchState)
 
     if (matchState.isPlaying()) {
-      this.turn.next()
+      this.turn.switch()
     }
     this.notifyObservers()
   }
