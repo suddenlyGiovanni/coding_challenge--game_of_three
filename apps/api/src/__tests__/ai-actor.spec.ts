@@ -70,7 +70,7 @@ describe('ai actor', () => {
     const action: IAction = 0
     expect(aiActor).toHaveProperty('registerObserver')
 
-    expect(aiActor).toHaveProperty('notifyObservers')
+    expect(aiActor).toHaveProperty('_notifyObservers')
 
     expect(mockUpdateA).toHaveBeenCalledTimes(0)
     expect(mockUpdateB).toHaveBeenCalledTimes(0)
@@ -79,7 +79,7 @@ describe('ai actor', () => {
     expect(() => aiActor.registerObserver(observerB)).not.toThrow()
 
     // act
-    expect(() => aiActor['notifyObservers'](action)).not.toThrow()
+    expect(() => aiActor['_notifyObservers'](action)).not.toThrow()
     expect(mockUpdateA).toHaveBeenCalledTimes(1)
     expect(mockUpdateA).toHaveBeenLastCalledWith(action)
     expect(mockUpdateB).toHaveBeenCalledTimes(1)
@@ -92,7 +92,7 @@ describe('ai actor', () => {
     expect(mockUpdateA).toHaveBeenCalledTimes(1)
     expect(mockUpdateB).toHaveBeenCalledTimes(1)
 
-    expect(() => aiActor['notifyObservers'](action)).not.toThrow()
+    expect(() => aiActor['_notifyObservers'](action)).not.toThrow()
     expect(mockUpdateA).toHaveBeenCalledTimes(1)
     expect(mockUpdateB).toHaveBeenCalledTimes(1)
   })
