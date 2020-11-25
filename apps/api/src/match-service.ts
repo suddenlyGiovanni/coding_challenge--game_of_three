@@ -13,17 +13,15 @@ import {
   MatchStatus,
 } from '@game-of-three/contracts'
 
-export class MatchService<
-  IPlayer1 extends IPlayer<string>,
-  IPlayer2 extends IPlayer<string>
-> implements IMatchService {
-  private readonly aiActor: AIActor<string>
+export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
+  implements IMatchService {
+  private readonly _aiActor: AIActor<string>
 
-  private readonly aiActorMoveObserver: IObserver<IAction> = {
-    update: (action: IAction) => this.move(this.match.getPlayers()[1], action),
+  private readonly _aiActorMoveObserver: IObserver<IAction> = {
+    update: (action: IAction) => this.move(this._match.players[1], action),
   }
 
-  private readonly match: Match<IPlayer1, IPlayer2>
+  private readonly _match: Match<IPlayer1, IPlayer2>
 
   /**
    *Creates an instance of MatchService.
@@ -36,100 +34,100 @@ export class MatchService<
     numberGeneratorStrategy?: INumberGeneratorStrategy,
     debugObserver?: IObserver<IMatchStateSerialized>
   ) {
-    this.match = new Match(...players, numberGeneratorStrategy)
+    this._match = new Match(...players, numberGeneratorStrategy)
     if (players[1].isAi()) {
-      this.aiActor = new AIActor(players[1])
+      this._aiActor = new AIActor(players[1])
       /**
        * register the Observable responsible for listening to the AiActors move.
        * said Observable will be responsible to proxy the message to the match state model
        */
-      this.aiActor.registerObserver(this.aiActorMoveObserver)
+      this._aiActor.registerObserver(this._aiActorMoveObserver)
 
       /**
        * register the AiActor to the match state changes.
        */
-      this.match.registerObserver(this.aiActor)
+      this._match.registerObserver(this._aiActor)
     }
     if (debugObserver) {
-      this.match.registerObserver(debugObserver)
+      this._match.registerObserver(debugObserver)
     }
-    this.match.init()
+    this._match.init()
   }
 
   public move(player: IPlayer, action: IAction): void {
-    this.assertMatchStatePlaying()
-    this.assertIsPlayerTurn(player)
-    const inputNumber = this.getNewInputNumber()
-    const outputNumber = this.calculateOutputNumber(inputNumber, action)
+    this._assertMatchStatePlaying()
+    this._assertIsPlayerTurn(player)
+    const inputNumber = this._getNewInputNumber()
+    const outputNumber = this._calculateOutputNumber(inputNumber, action)
 
     if (
-      this.isDivisibleByThree(inputNumber + action) &&
-      this.isPositiveInteger(outputNumber)
+      this._isDivisibleByThree(inputNumber + action) &&
+      this._isPositiveInteger(outputNumber)
     ) {
-      if (this.isEqualToOne(outputNumber)) {
+      if (this._isEqualToOne(outputNumber)) {
         // victory
         const matchStateStop: IMatchState = new MatchState({
           action,
-          currentTurn: this.match.getCurrentTurn(),
+          currentTurn: this._match.turn,
           inputNumber,
           outputNumber,
           status: MatchStatus.Stop,
-          turnNumber: this.match.getCurrentTurnNumber(),
-          winningPlayer: this.match.getCurrentTurn(),
+          turnNumber: this._match.turnNumber,
+          winningPlayer: this._match.turn,
         })
-        return this.match.setMatchState(matchStateStop)
+        return this._match.setState(matchStateStop)
       }
       // next round
       const matchStatePlaying = new MatchState({
         action,
-        currentTurn: this.match.getCurrentTurn(),
+        currentTurn: this._match.turn,
         inputNumber,
-        nextTurn: this.match.peekNextTurn(),
+        nextTurn: this._match.nextTurn,
         outputNumber,
         status: MatchStatus.Playing,
-        turnNumber: this.match.getCurrentTurnNumber(),
+        turnNumber: this._match.turnNumber,
       })
-      return this.match.setMatchState(matchStatePlaying)
+      return this._match.setState(matchStatePlaying)
     }
 
     // lost
     const matchStateStop = new MatchState({
       action,
-      currentTurn: this.match.getCurrentTurn(),
+      currentTurn: this._match.turn,
       inputNumber,
       outputNumber,
       status: MatchStatus.Stop,
-      turnNumber: this.match.getCurrentTurnNumber(),
-      winningPlayer: this.match.peekNextTurn(),
+      turnNumber: this._match.turnNumber,
+      winningPlayer: this._match.nextTurn,
     })
-    return this.match.setMatchState(matchStateStop)
+    return this._match.setState(matchStateStop)
   }
 
-  private assertIsPlayerTurn(player: IPlayer): void {
-    if (!this.isPlayerTurn(player)) {
+  private _assertIsPlayerTurn(player: IPlayer): void {
+    if (!this._isPlayerTurn(player)) {
       throw new Error('Not player turn.')
     }
   }
 
-  private assertMatchStatePlaying(): void {
-    if (this.isMatchStop()) {
+  private _assertMatchStatePlaying(): void {
+    if (this._isMatchStop()) {
       throw new Error("Match ended. Can't make a move after a match has ended")
     }
   }
 
-  private calculateOutputNumber(inputNumber: number, action: IAction): number {
+  private _calculateOutputNumber(inputNumber: number, action: IAction): number {
     return (inputNumber + action) / 3
   }
 
-  private getNewInputNumber(): number {
-    return this.match.getMatchState().outputNumber
+  private _getNewInputNumber(): number {
+    return this._match.state.outputNumber
   }
 
-  private isDivisibleByThree(number: number): boolean {
+  private _isDivisibleByThree(number: number): boolean {
     return number % 3 === 0
   }
 
-  private isEqualToOne(number: number): boolean {
+  private _isEqualToOne(number: number): boolean {
     return number === 1
   }
 
@@ -139,15 +137,15 @@ export class MatchService<
    * @returns {boolean}
    * @memberof MatchService
    */
-  private isMatchStop(): boolean {
-    return this.match.getMatchStatus() === MatchStatus.Stop
+  private _isMatchStop(): boolean {
+    return this._match.status === MatchStatus.Stop
   }
 
-  private isPlayerTurn(player: IPlayer): boolean {
-    return this.match.getCurrentTurn() === player
+  private _isPlayerTurn(player: IPlayer): boolean {
+    return this._match.turn === player
   }
 
-  private isPositiveInteger(number: number): boolean {
+  private _isPositiveInteger(number: number): boolean {
     return Number.isInteger(number) && number > 0
   }
 }

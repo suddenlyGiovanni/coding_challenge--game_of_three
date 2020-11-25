@@ -20,27 +20,25 @@ import {
 
 export type IUUIDStrategy = () => string
 export type INumberGeneratorStrategy = () => number
-export class Match<
-  IPlayer1 extends IPlayer<string>,
-  IPlayer2 extends IPlayer<string>
-> implements IMatch<IPlayer1, IPlayer2>, ISubject<IMatchStateSerialized> {
+export class Match<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
+  implements IMatch<IPlayer1, IPlayer2>, ISubject<IMatchStateSerialized> {
   public static readonly MAX = 100
 
   public static readonly MIN = 3
 
-  private readonly id: string
+  private readonly _id: string
 
-  private initialized: boolean
+  private _initialized: boolean
 
-  private readonly matchStateHistory: IMatchState[]
+  private readonly _matchStateHistory: IMatchState[]
 
-  private readonly numberGeneratorStrategy: INumberGeneratorStrategy
+  private readonly _numberGeneratorStrategy: INumberGeneratorStrategy
 
-  private readonly observers: IObserver<IMatchStateSerialized>[]
+  private readonly _observers: IObserver<IMatchStateSerialized>[]
 
-  private readonly players: readonly [IPlayer1, IPlayer2]
+  private readonly _players: readonly [IPlayer1, IPlayer2]
 
-  private readonly turn: ITurn<IPlayer1, IPlayer2>
+  private readonly _turn: ITurn<IPlayer1, IPlayer2>
 
   public constructor(
     player1: IPlayer1,
@@ -48,17 +46,17 @@ export class Match<
     numberGeneratorStrategy?: INumberGeneratorStrategy,
     uuidStrategy: IUUIDStrategy = uuid
   ) {
-    this.id = uuidStrategy()
-    this.initialized = false
-    this.players = [player1, player2] as const
-    this.turn = new Turn(player1, player2)
-    this.matchStateHistory = []
-    this.observers = []
+    this._id = uuidStrategy()
+    this._initialized = false
+    this._players = [player1, player2] as const
+    this._turn = new Turn(player1, player2)
+    this._matchStateHistory = []
+    this._observers = []
 
     if (numberGeneratorStrategy) {
-      this.numberGeneratorStrategy = numberGeneratorStrategy
+      this._numberGeneratorStrategy = numberGeneratorStrategy
     } else {
-      this.numberGeneratorStrategy = () =>
+      this._numberGeneratorStrategy = () =>
         Match.defaultNumberGeneratorStrategy(Match.MIN, Match.MAX)
     }
   }
@@ -73,53 +71,53 @@ export class Match<
     return Math.floor(Math.random() * (_max - _min + 1) + _min)
   }
 
-  public getCurrentTurn(): IPlayer1 | IPlayer2 {
-    this.assertInitialized()
-    return this.turn.current
+  public get turn(): IPlayer1 | IPlayer2 {
+    this._assertInitialized()
+    return this._turn.current
   }
 
-  public getCurrentTurnNumber(): number {
-    this.assertInitialized()
-    return this.turn.number
+  public get turnNumber(): number {
+    this._assertInitialized()
+    return this._turn.number
   }
 
-  public getId(): string {
-    return this.id
+  public get id(): string {
+    return this._id
   }
 
-  public getMatchState(): Readonly<IMatchState> {
-    this.assertInitialized()
-    const { length } = this.matchStateHistory
+  public get state(): Readonly<IMatchState> {
+    this._assertInitialized()
+    const { length } = this._matchStateHistory
 
     if (length === 0) {
       throw new Error('Empty matchStateHistory.')
     }
-    return this.matchStateHistory[length - 1]
+    return this._matchStateHistory[length - 1]
   }
 
-  public getMatchStateHistory(): readonly Readonly<IMatchState>[] {
-    this.assertInitialized()
-    return this.matchStateHistory
+  public get stateHistory(): readonly Readonly<IMatchState>[] {
+    this._assertInitialized()
+    return this._matchStateHistory
   }
 
-  public getMatchStatus(): IMatchStatus {
-    this.assertInitialized()
-    return this.getMatchState().status
+  public get status(): IMatchStatus {
+    this._assertInitialized()
+    return this.state.status
   }
 
-  public getPlayers(): readonly [IPlayer1, IPlayer2] {
-    return this.players
+  public get players(): readonly [IPlayer1, IPlayer2] {
+    return this._players
   }
 
   public init(): void {
-    if (this.initialized) {
+    if (this._initialized) {
       throw new Error(
         "Match already initialized. Can't re-initialize the Match"
       )
     } else {
-      this.turn.init()
-      const outputNumber = this.numberGeneratorStrategy()
-      const nextTurn = this.turn.current
+      this._turn.init()
+      const outputNumber = this._numberGeneratorStrategy()
+      const nextTurn = this._turn.current
       const turnNumber = 0
       const initialMatchState: IMatchState = new MatchState({
         nextTurn,
@@ -127,46 +125,46 @@ export class Match<
         status: MatchStatus.Start,
         turnNumber,
       })
-      this.matchStateHistory.push(initialMatchState)
-      this.initialized = true
+      this._matchStateHistory.push(initialMatchState)
+      this._initialized = true
       this.notifyObservers()
     }
   }
 
   public notifyObservers(): void {
-    this.observers.forEach((observer) => {
-      observer.update(this.getMatchState().serialize())
+    this._observers.forEach((observer) => {
+      observer.update(this.state.serialize())
     })
   }
 
-  public peekNextTurn(): IPlayer1 | IPlayer2 {
-    this.assertInitialized()
-    return this.turn.next
+  public get nextTurn(): IPlayer1 | IPlayer2 {
+    this._assertInitialized()
+    return this._turn.next
   }
 
   public registerObserver(observer: IObserver<IMatchStateSerialized>): void {
-    this.observers.push(observer)
+    this._observers.push(observer)
   }
 
   public removeObserver(observer: IObserver<IMatchStateSerialized>): void {
-    const index = this.observers.indexOf(observer)
+    const index = this._observers.indexOf(observer)
     if (index !== -1) {
-      this.observers.splice(index, 1)
+      this._observers.splice(index, 1)
     }
   }
 
-  public setMatchState(matchState: IMatchState): void {
-    this.assertInitialized()
-    this.matchStateHistory.push(matchState)
+  public setState(matchState: IMatchState): void {
+    this._assertInitialized()
+    this._matchStateHistory.push(matchState)
 
     if (matchState.isPlaying()) {
-      this.turn.switch()
+      this._turn.switch()
     }
     this.notifyObservers()
   }
 
-  private assertInitialized(): void {
-    if (this.initialized === false) {
+  private _assertInitialized(): void {
+    if (this._initialized === false) {
       throw new Error(
         'Match not initialize. Remember to invoke `init()` after instantiation.'
       )

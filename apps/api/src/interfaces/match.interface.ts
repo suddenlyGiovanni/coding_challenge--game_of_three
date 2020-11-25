@@ -8,32 +8,32 @@ export interface IMatch<
   IPlayer2 extends IPlayer<string>
 > {
   /**
-   * gets who is playing the current turn
-   * @returns {(IPlayer1 | IPlayer2)}
-   * @memberof IMatch
-   */
-  getCurrentTurn(): IPlayer1 | IPlayer2
-
-  /**
-   * gets the number of the current turn
-   * @returns {number}
-   * @memberof IMatch
-   */
-  getCurrentTurnNumber(): number
-
-  /**
    * get the match unique ID
    * @returns {string}
    * @memberof IMatch
    */
-  getId(): string
+  readonly id: string
+
+  /**
+   * gets who will be playing the next turn (without setting it)
+   * @returns {(IPlayer1 | IPlayer2)}
+   * @memberof IMatch
+   */
+  readonly nextTurn: IPlayer1 | IPlayer2
+
+  /**
+   * gets a tuple of the two current players
+   * @returns {readonly [IPlayer1, IPlayer2]}
+   * @memberof IMatch
+   */
+  readonly players: readonly [IPlayer1, IPlayer2]
 
   /**
    * get the current match state
    * @returns {Readonly<IMatchState>}
    * @memberof IMatch
    */
-  getMatchState(): Readonly<IMatchState>
+  readonly state: Readonly<IMatchState>
 
   /**
    * gets the history of all the match states.
@@ -41,7 +41,7 @@ export interface IMatch<
    * @returns {ReadonlyArray<Readonly<IMatchState>>}
    * @memberof IMatch
    */
-  getMatchStateHistory(): ReadonlyArray<Readonly<IMatchState>>
+  readonly stateHistory: ReadonlyArray<Readonly<IMatchState>>
 
   /**
    * gets the current match status
@@ -52,14 +52,21 @@ export interface IMatch<
    * @returns {IMatchStatus}
    * @memberof IMatch
    */
-  getMatchStatus(): IMatchStatus
+  readonly status: IMatchStatus
 
   /**
-   * gets a tuple of the two current players
-   * @returns {readonly [IPlayer1, IPlayer2]}
+   * gets who is playing the current turn
+   * @returns {(IPlayer1 | IPlayer2)}
    * @memberof IMatch
    */
-  getPlayers(): readonly [IPlayer1, IPlayer2]
+  readonly turn: IPlayer1 | IPlayer2
+
+  /**
+   * gets the number of the current turn
+   * @returns {number}
+   * @memberof IMatch
+   */
+  readonly turnNumber: number
 
   /**
    * initialize the match by:
@@ -71,16 +78,9 @@ export interface IMatch<
   init(): void
 
   /**
-   * gets who will be playing the next turn (without setting it)
-   * @returns {(IPlayer1 | IPlayer2)}
-   * @memberof IMatch
-   */
-  peekNextTurn(): IPlayer1 | IPlayer2
-
-  /**
    * set a new match state
    * @param {IMatchState} matchState
    * @memberof IMatch
    */
-  setMatchState(matchState: IMatchState): void
+  setState(matchState: IMatchState): void
 }

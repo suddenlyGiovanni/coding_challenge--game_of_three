@@ -238,11 +238,11 @@ describe('match-service', () => {
       expect(onePlayerAgainstAIMatchService).not.toBe(
         new MatchService([player1, playerAI])
       )
-      expect(onePlayerAgainstAIMatchService['aiActor']['observers']).toContain(
-        onePlayerAgainstAIMatchService['aiActorMoveObserver']
+      expect(onePlayerAgainstAIMatchService['_aiActor']['observers']).toContain(
+        onePlayerAgainstAIMatchService['_aiActorMoveObserver']
       )
-      expect(onePlayerAgainstAIMatchService['match']['observers']).toContain(
-        onePlayerAgainstAIMatchService['aiActor']
+      expect(onePlayerAgainstAIMatchService['_match']['_observers']).toContain(
+        onePlayerAgainstAIMatchService['_aiActor']
       )
     })
 

@@ -69,16 +69,12 @@ describe('match', () => {
       'Match not initialize. Remember to invoke `init()` after instantiation.'
     expect(match).toBeInstanceOf(Match)
     expect(match).not.toBe(new Match(human, ai))
-    expect(() => match.getId()).not.toThrow()
-    expect(() => match.getPlayers()).not.toThrow()
-    expect(() => match.getCurrentTurn()).toThrow(INITIALIZATION_ERROR_MESSAGE)
-    expect(() => match.getCurrentTurnNumber()).toThrow(
-      INITIALIZATION_ERROR_MESSAGE
-    )
-    expect(() => match.getMatchStateHistory()).toThrow(
-      INITIALIZATION_ERROR_MESSAGE
-    )
-    expect(() => match.peekNextTurn()).toThrow(INITIALIZATION_ERROR_MESSAGE)
+    expect(() => match.id).not.toThrow()
+    expect(() => match.players).not.toThrow()
+    expect(() => match.turn).toThrow(INITIALIZATION_ERROR_MESSAGE)
+    expect(() => match.turnNumber).toThrow(INITIALIZATION_ERROR_MESSAGE)
+    expect(() => match.stateHistory).toThrow(INITIALIZATION_ERROR_MESSAGE)
+    expect(() => match.nextTurn).toThrow(INITIALIZATION_ERROR_MESSAGE)
   })
 
   it('defaultNumberGeneratorStrategy should work correctly', () => {
@@ -95,7 +91,7 @@ describe('match', () => {
   it('uuidStrategy should work correctly', () => {
     expect.hasAssertions()
     expect(mockUUIDStrategy).toHaveBeenCalledTimes(1)
-    expect(match.getId()).toBe(
+    expect(match.id).toBe(
       ANSWER_TO_THE_ULTIMATE_QUESTION_OF_LIFE_THE_UNIVERSE_AND_EVERYTHING
     )
   })
@@ -106,18 +102,16 @@ describe('match', () => {
     match.init()
 
     // assert
-    expect(match.getPlayers()).toMatchObject([human, ai])
+    expect(match.players).toMatchObject([human, ai])
     expect(mockNumberGeneratorStrategy).toHaveBeenCalledTimes(1)
-    expect(match.getMatchStateHistory()[0].outputNumber).toBe(
-      numberGeneratorStrategy()
-    )
-    expect(() => match.getMatchStateHistory()).not.toThrow()
-    expect(() => match.getCurrentTurnNumber()).not.toThrow()
-    expect(match.getCurrentTurnNumber()).toBe(1)
-    expect(() => match.getCurrentTurn()).not.toThrow()
-    expect(() => match.peekNextTurn()).not.toThrow()
-    expect(match.getCurrentTurn()).toBe(human)
-    expect(match.peekNextTurn()).toBe(ai)
+    expect(match.stateHistory[0].outputNumber).toBe(numberGeneratorStrategy())
+    expect(() => match.stateHistory).not.toThrow()
+    expect(() => match.turnNumber).not.toThrow()
+    expect(match.turnNumber).toBe(1)
+    expect(() => match.turn).not.toThrow()
+    expect(() => match.nextTurn).not.toThrow()
+    expect(match.turn).toBe(human)
+    expect(match.nextTurn).toBe(ai)
 
     expect(() => match.init()).toThrow(
       "Match already initialized. Can't re-initialize the Match"
@@ -126,35 +120,35 @@ describe('match', () => {
 
   it('should get the players in the match', () => {
     expect.hasAssertions()
-    expect(match.getPlayers()).toHaveLength(2)
-    expect(match.getPlayers()[0]).toBe(human)
-    expect(match.getPlayers()[1]).toBe(ai)
+    expect(match.players).toHaveLength(2)
+    expect(match.players[0]).toBe(human)
+    expect(match.players[1]).toBe(ai)
   })
 
   it('should get the currently active player', () => {
     expect.hasAssertions()
     match.init()
-    expect(match.getCurrentTurn()).toBe(human)
+    expect(match.turn).toBe(human)
   })
 
   it('should get the current turn number', () => {
     expect.hasAssertions()
     match.init()
-    expect(match.getCurrentTurnNumber()).toBe(1)
+    expect(match.turnNumber).toBe(1)
   })
 
   it('should gets who will be playing the next turn (without setting it)', () => {
     expect.hasAssertions()
     match.init()
-    expect(match.peekNextTurn()).toBe(ai)
+    expect(match.nextTurn).toBe(ai)
   })
 
   it('should get the history of all the match states', () => {
     expect.hasAssertions()
     match.init()
-    expect(Array.isArray(match.getMatchStateHistory())).toBe(true)
-    expect(match.getMatchStateHistory()).toHaveLength(1)
-    expect(match.getMatchStateHistory()).toMatchObject([
+    expect(Array.isArray(match.stateHistory)).toBe(true)
+    expect(match.stateHistory).toHaveLength(1)
+    expect(match.stateHistory).toMatchObject([
       {
         nextTurn: human,
         outputNumber: numberGeneratorStrategy(),
@@ -169,7 +163,7 @@ describe('match', () => {
     // arrange
     match.init()
     match.registerObserver(observerA)
-    const [player1, player2] = match.getPlayers()
+    const [player1, player2] = match.players
     const initialMatchState: IMatchState = new MatchState({
       nextTurn: player1,
       outputNumber: 100,
@@ -185,16 +179,16 @@ describe('match', () => {
       status: MatchStatus.Playing,
       turnNumber: 1,
     })
-    expect(match.getMatchState()).toStrictEqual(initialMatchState)
+    expect(match.state).toStrictEqual(initialMatchState)
     // act
-    expect(() => match.setMatchState(injectedMatchState)).not.toThrow()
+    expect(() => match.setState(injectedMatchState)).not.toThrow()
     // assert
-    expect(match.getMatchStateHistory()).toHaveLength(2)
-    expect(match.getMatchStateHistory()).toContainEqual(initialMatchState)
-    expect(match.getMatchStateHistory()).toContainEqual(injectedMatchState)
-    expect(match.getMatchState()).toBe(injectedMatchState)
-    expect(match.getCurrentTurnNumber()).toBe(2)
-    expect(match.getCurrentTurn()).toBe(player2)
+    expect(match.stateHistory).toHaveLength(2)
+    expect(match.stateHistory).toContainEqual(initialMatchState)
+    expect(match.stateHistory).toContainEqual(injectedMatchState)
+    expect(match.state).toBe(injectedMatchState)
+    expect(match.turnNumber).toBe(2)
+    expect(match.turn).toBe(player2)
     expect(mockUpdateA).toHaveBeenCalledTimes(1)
     expect(mockUpdateA).toHaveBeenCalledWith(injectedMatchState.serialize())
   })
@@ -209,14 +203,14 @@ describe('match', () => {
 
     it('should allow to register many observers', () => {
       expect.hasAssertions()
-      expect(match['observers']).toHaveLength(0)
+      expect(match['_observers']).toHaveLength(0)
       // act
       expect(() => match.registerObserver(observerA)).not.toThrow()
       expect(() => match.registerObserver(observerB)).not.toThrow()
       // assert
-      expect(match['observers']).toHaveLength(2)
-      expect(match['observers']).toContain(observerA)
-      expect(match['observers']).toContain(observerB)
+      expect(match['_observers']).toHaveLength(2)
+      expect(match['_observers']).toContain(observerA)
+      expect(match['_observers']).toContain(observerB)
       expect(mockUpdateA).toHaveBeenCalledTimes(0)
       expect(mockUpdateB).toHaveBeenCalledTimes(0)
     })
@@ -224,16 +218,16 @@ describe('match', () => {
     it('should allow to remove an observer', () => {
       expect.hasAssertions()
       // arrange
-      expect(match['observers']).toHaveLength(0)
+      expect(match['_observers']).toHaveLength(0)
       match.registerObserver(observerA)
       match.registerObserver(observerB)
-      expect(match['observers']).toHaveLength(2)
+      expect(match['_observers']).toHaveLength(2)
       // act
       expect(() => match.removeObserver(observerA)).not.toThrow()
       // assert
-      expect(match['observers']).toHaveLength(1)
-      expect(match['observers']).toContain(observerB)
-      expect(match['observers']).not.toContain(observerA)
+      expect(match['_observers']).toHaveLength(1)
+      expect(match['_observers']).toContain(observerB)
+      expect(match['_observers']).not.toContain(observerA)
       expect(mockUpdateA).toHaveBeenCalledTimes(0)
       expect(mockUpdateB).toHaveBeenCalledTimes(0)
     })
