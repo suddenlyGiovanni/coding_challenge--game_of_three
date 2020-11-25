@@ -3,7 +3,8 @@ import { clearInterval } from 'timers'
 import { Server as IOServer, Socket } from 'socket.io'
 
 import type { ILobby, IPlayersStore, IServer } from './interfaces'
-import { Human, Lobby } from './model'
+import { MatchService } from './match-service'
+import { AI, Human, Lobby } from './model'
 import { PlayersStore } from './players-store'
 import {
   SocketActionFn,
@@ -13,7 +14,7 @@ import {
   emitToSocket,
 } from './sockets'
 
-import { IEvents, SocketEvent } from '@game-of-three/contracts'
+import { IEvents, PlayerID, SocketEvent } from '@game-of-three/contracts'
 
 export class Server implements IServer {
   public static readonly CORS_ORIGIN: string = `http://localhost:4200`
@@ -70,6 +71,14 @@ export class Server implements IServer {
     this.io.close()
   }
 
+  /**
+   * add a player to the Lobby
+   * and informs all clients that a Player has joined the lobby
+   * @emits `SocketEvent.LOBBY_PLAYER_JOINED`
+   * @private
+   * @param {PlayerID} playerId
+   * @memberof Server
+   */
   private _addPlayerToLobby(playerId: PlayerID): void {
     const player = this.playersStore.getPlayerByID(playerId)
 
@@ -86,6 +95,71 @@ export class Server implements IServer {
     }
   }
 
+  private _assertPlayerInLobby(playerId: PlayerID): void {
+    if (!this.lobby.playersId.includes(playerId)) {
+      throw new Error('Player is not in the lobby')
+    }
+  }
+
+  private _createMatch(playerID1: PlayerID) {
+    // 1. how many players are in the lobby?
+    //    IF `ONE` DO:
+    //        - remove this player from the lobby
+    //        - notify this user has left the lobby
+    //        - use matchmaking service to create a match against AI
+    //    ELSE:
+    //        - remove this player form the lobby
+    //        - de-queue next player waiting in the lobby
+    //        - notify all clients that these players are no longer in the lobby
+    //        - use matchmaking service to create a match between these two clients
+
+    this._assertPlayerInLobby(playerID1)
+
+    if (this.lobby.size < 2) {
+      // there are no other players in the lobby
+      // case where a match must be played against an AI
+      this.lobby.removePlayerId(playerID1)
+      broadcast(this.io)(SocketEvent.LOBBY_PLAYER_LEFT, {
+        payload: playerID1,
+        type: SocketEvent.LOBBY_PLAYER_LEFT,
+      })
+      const player1 = this.playersStore.getPlayerByID(playerID1)
+      const ai = AI.make()
+      new MatchService({
+        players: [player1, ai],
+        sockets: [this.io.sockets.sockets.get(playerID1)],
+      })
+    } else {
+      // case where match between two players
+      const playerID2 = this.lobby.getNextPlayerId()
+      const player1 = this.playersStore.getPlayerByID(playerID1)
+      const player2 = this.playersStore.getPlayerByID(playerID2)
+
+      broadcast(this.io)(SocketEvent.LOBBY_PLAYER_LEFT, {
+        payload: playerID1,
+        type: SocketEvent.LOBBY_PLAYER_LEFT,
+      })
+
+      broadcast(this.io)(SocketEvent.LOBBY_PLAYER_LEFT, {
+        payload: playerID2,
+        type: SocketEvent.LOBBY_PLAYER_LEFT,
+      })
+
+      const socketPlayer1 = this.io.sockets.sockets.get(playerID1)
+      const socketPlayer2 = this.io.sockets.sockets.get(playerID2)
+      new MatchService({
+        players: [player1, player2],
+        sockets: [socketPlayer1, socketPlayer2],
+      })
+    }
+  }
+
+  /**
+   * notifies newly connected client of the server state
+   * @emits `SocketEvent.SYSTEM_INITIALIZE`
+   * @private
+   * @memberof Server
+   */
   private _handlerClientInitializeData = (socket: Socket) => {
     const actionInitialize = {
       payload: {
@@ -108,7 +182,9 @@ export class Server implements IServer {
   private _handlerMatchMaking: SocketActionFn<
     IEvents[SocketEvent.LOBBY_MAKE_MATCH]
   > = (socket) => ({ type }) => {
+    const { id } = socket
     console.log(`user id: ${socket.id} - match making '${type}'`)
+    this._createMatch(id)
   }
 
   private _handlerMatchMove: SocketActionFn<IEvents[SocketEvent.MATCH_MOVE]> = (
@@ -175,6 +251,11 @@ export class Server implements IServer {
     }
   }
 
+  /**
+   * register all the event handlers to typed sockets event
+   * @private
+   * @memberof Server
+   */
   private _registerSocketToEventListeners = (socket: Socket): void => {
     const registeredEvents = [
       createSocket(
@@ -232,14 +313,14 @@ export class Server implements IServer {
     })
   }
 
-  private _renamePlayer(id: string, name: string): void {
-    const player = this.playersStore.getPlayerByID(id)
+  private _renamePlayer(playerId: PlayerID, name: string): void {
+    const player = this.playersStore.getPlayerByID(playerId)
     player.setName(name)
 
-    console.log(`user id: ${id} - name changed: ${name}`) // TODO: remove this console.log
+    console.log(`user id: ${playerId} - name changed: ${name}`) // TODO: remove this console.log
 
     broadcast(this.io)(SocketEvent.SYSTEM_NAME_CHANGED, {
-      payload: this.playersStore.getPlayerByID(id).serialize(),
+      payload: this.playersStore.getPlayerByID(playerId).serialize(),
       type: SocketEvent.SYSTEM_NAME_CHANGED,
     })
   }

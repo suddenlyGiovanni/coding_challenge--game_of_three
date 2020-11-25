@@ -55,18 +55,18 @@ describe('match-service', () => {
     let twoPlayersMatchService: MatchService<typeof player1, typeof player2>
 
     beforeEach(() => {
-      twoPlayersMatchService = new MatchService(
-        [player1, player2],
-        mockNumberGeneratorStrategy,
-        debugObserver
-      )
+      twoPlayersMatchService = new MatchService({
+        debugObserver: debugObserver,
+        numberGeneratorStrategy: mockNumberGeneratorStrategy,
+        players: [player1, player2],
+      })
     })
 
     it('should instantiate correctly', () => {
       expect.hasAssertions()
       expect(twoPlayersMatchService).toBeInstanceOf(MatchService)
       expect(twoPlayersMatchService).not.toBe(
-        new MatchService([player1, playerAI])
+        new MatchService({ players: [player1, playerAI] })
       )
     })
 
@@ -221,11 +221,11 @@ describe('match-service', () => {
     >
 
     beforeEach(() => {
-      onePlayerAgainstAIMatchService = new MatchService(
-        [player1, playerAI],
-        mockNumberGeneratorStrategy,
-        debugObserver
-      )
+      onePlayerAgainstAIMatchService = new MatchService({
+        debugObserver: debugObserver,
+        numberGeneratorStrategy: mockNumberGeneratorStrategy,
+        players: [player1, playerAI],
+      })
     })
 
     afterEach(() => {
@@ -236,7 +236,7 @@ describe('match-service', () => {
       expect.hasAssertions()
       expect(onePlayerAgainstAIMatchService).toBeInstanceOf(MatchService)
       expect(onePlayerAgainstAIMatchService).not.toBe(
-        new MatchService([player1, playerAI])
+        new MatchService({ players: [player1, playerAI] })
       )
       expect(onePlayerAgainstAIMatchService['_aiActor']['observers']).toContain(
         onePlayerAgainstAIMatchService['_aiActorMoveObserver']

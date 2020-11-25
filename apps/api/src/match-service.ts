@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/member-ordering */
+import type { Socket } from 'socket.io'
+
 import { AIActor } from './ai-actor'
 import type {
   IMatchService,
@@ -11,6 +14,7 @@ import {
   IAction,
   IMatchStateSerialized,
   MatchStatus,
+  SocketEvent,
 } from '@game-of-three/contracts'
 
 export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
@@ -23,20 +27,30 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
 
   private readonly _match: Match<IPlayer1, IPlayer2>
 
+  private readonly _sockets: [socket1: Socket, socket2?: Socket]
+
   /**
    *Creates an instance of MatchService.
    * @param {[IPlayer1, IPlayer2]} players
    * @param {INumberGeneratorStrategy} [numberGeneratorStrategy]
    * @memberof MatchService
    */
-  public constructor(
-    players: [IPlayer1, IPlayer2],
-    numberGeneratorStrategy?: INumberGeneratorStrategy,
+  public constructor({
+    sockets,
+    players: [player1, player2],
+    numberGeneratorStrategy,
+    debugObserver,
+  }: {
+    players: [player1: IPlayer1, player2: IPlayer2]
+    sockets?: [socket1: Socket, socket2?: Socket]
+    numberGeneratorStrategy?: INumberGeneratorStrategy
     debugObserver?: IObserver<IMatchStateSerialized>
-  ) {
-    this._match = new Match(...players, numberGeneratorStrategy)
-    if (players[1].isAi()) {
-      this._aiActor = new AIActor(players[1])
+  }) {
+    this._match = new Match(player1, player2, numberGeneratorStrategy)
+    this._sockets = sockets
+
+    if (player2.isAi()) {
+      this._aiActor = new AIActor(player2)
       /**
        * register the Observable responsible for listening to the AiActors move.
        * said Observable will be responsible to proxy the message to the match state model
@@ -51,6 +65,34 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
     if (debugObserver) {
       this._match.registerObserver(debugObserver)
     }
+
+    this._match.registerObserver({
+      update: (event) => {
+        console.log('new state ready to be emitted') // TODO: REMOVE ME!
+        this._sockets?.forEach((socket) => {
+          console.log('emitting state to socket ${socket.id}', event) // TODO: REMOVE ME!
+          socket.emit(SocketEvent.MATCH_NEW_STATE, {
+            payload: event,
+            type: SocketEvent.MATCH_NEW_STATE,
+          })
+        })
+      },
+    })
+
+    this._sockets?.forEach((socket) => {
+      socket.on(SocketEvent.MATCH_MOVE, (action) => {
+        const { id } = socket
+        const player = this._match.players.find((p) => p.id === id)
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        const move = action.payload as IAction // TODO: REMOVE ME!
+
+        console.log(`client id: ${id} made a move: ${move}`) // TODO: REMOVE ME!
+
+        this.move(player, move)
+      })
+    })
+
     this._match.init()
   }
 

@@ -10,6 +10,8 @@ import {
   socketMakeMatch,
   socketMatchMove,
   socketNameChanged,
+  socketNewMatch,
+  socketNewMatchState,
   socketPlayerJoined,
   socketPlayerJoinedLobby,
   socketPlayerLeft,
@@ -20,6 +22,10 @@ import {
 import {
   ActionWithPayload,
   IAction,
+  IMatchStatePlayingSerialized,
+  IMatchStateSerialized,
+  IMatchStateStartSerialized,
+  IMatchStateStopSerialized,
   PlayerID,
   PlayerSerialized,
   ServerState,
@@ -55,11 +61,15 @@ const addPlayerToLobby = (playerId: PlayerID) =>
 const removePlayerFromLobby = (playerId: PlayerID) =>
   actionCreator('[LOBBY]-REMOVE_PLAYER', playerId)
 
+const updateMatchState = (matchState: IMatchStateSerialized) =>
+  actionCreator('[MATCH]-NEW_STATE', matchState)
+
 type DateISOString = string
 interface State {
   readonly connected: boolean
   readonly heartbeat: DateISOString
   readonly lobby: ReadonlyArray<PlayerID>
+  readonly matchState: IMatchStateSerialized[]
   readonly players: ReadonlyArray<PlayerSerialized>
 }
 
@@ -67,9 +77,11 @@ const initialState: State = {
   connected: false,
   heartbeat: '',
   lobby: [],
+  matchState: [],
   players: [],
 }
 type Actions =
+  | ReturnType<typeof updateMatchState>
   | ReturnType<typeof syncHeartbeat>
   | ReturnType<typeof toggleConnected>
   | ReturnType<typeof initializePlayers>
@@ -81,6 +93,12 @@ type Actions =
 
 const reducer: Reducer<State, Actions> = (state, action) => {
   switch (action.type) {
+    case '[MATCH]-NEW_STATE':
+      return {
+        ...state,
+        matchState: [...state.matchState, action.payload],
+      }
+
     case '[HEARTBEAT]-SYNC':
       return {
         ...state,
@@ -155,6 +173,8 @@ export const App: VFC = () => {
 
     socketPlayerLeftLobby.on(handlePlayerLeftLobby)
 
+    socketNewMatchState.on(handleNewMatchState)
+
     return () => {
       socketConnect.off()
       socketDisconnect.off()
@@ -165,8 +185,28 @@ export const App: VFC = () => {
       socketNameChanged.off()
       socketPlayerJoinedLobby.off()
       socketPlayerLeftLobby.off()
+      socketNewMatchState.off()
     }
   })
+
+  const handleNewMatchState = useCallback(
+    (
+      event:
+        | ActionWithPayload<
+            SocketEvent.MATCH_NEW_STATE,
+            IMatchStateStartSerialized<string>
+          >
+        | ActionWithPayload<
+            SocketEvent.MATCH_NEW_STATE,
+            IMatchStatePlayingSerialized<string>
+          >
+        | ActionWithPayload<
+            SocketEvent.MATCH_NEW_STATE,
+            IMatchStateStopSerialized<string>
+          >
+    ): void => dispatch(updateMatchState(event.payload)),
+    [dispatch]
+  )
 
   const handlePlayerJoinedLobby = useCallback(
     (
