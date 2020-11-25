@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals'
 
-import type { ILobby } from '../interfaces'
 import { Human, Lobby } from '../model'
 
 describe('lobby', () => {
@@ -9,7 +8,7 @@ describe('lobby', () => {
   const playerIDC = new Human('PLAYER_C_ID', 'PLAYER_C').id
   const playerIDD = new Human('PLAYER_D_ID', 'PLAYER_D').id
 
-  let lobby: ILobby
+  let lobby: Lobby
   beforeEach(() => {
     lobby = Lobby.getInstance()
   })
@@ -31,23 +30,23 @@ describe('lobby', () => {
 
   it('should allow to reset the lobby to its initial pristine state', () => {
     expect.hasAssertions()
-    expect(lobby.getSize()).toBe(0)
+    expect(lobby.size).toBe(0)
 
     lobby.addPlayerId(playerIDA)
     lobby.addPlayerId(playerIDB)
     lobby.addPlayerId(playerIDC)
-    expect(lobby.getPlayersId()).toContain(playerIDA)
-    expect(lobby.getPlayersId()).toContain(playerIDB)
-    expect(lobby.getPlayersId()).toContain(playerIDC)
-    expect(lobby.getSize()).toBe(3)
+    expect(lobby.playersId).toContain(playerIDA)
+    expect(lobby.playersId).toContain(playerIDB)
+    expect(lobby.playersId).toContain(playerIDC)
+    expect(lobby.size).toBe(3)
 
     // act
     lobby.reset()
     // assert
-    expect(lobby.getSize()).toBe(0)
-    expect(lobby.getPlayersId()).not.toContain(playerIDA)
-    expect(lobby.getPlayersId()).not.toContain(playerIDB)
-    expect(lobby.getPlayersId()).not.toContain(playerIDC)
+    expect(lobby.size).toBe(0)
+    expect(lobby.playersId).not.toContain(playerIDA)
+    expect(lobby.playersId).not.toContain(playerIDB)
+    expect(lobby.playersId).not.toContain(playerIDC)
   })
 
   it('should allow to add a human IPlayer to the lobby', () => {
@@ -59,7 +58,7 @@ describe('lobby', () => {
     lobby.addPlayerId(playerIDC) // this is deliberate to check if it adds also duplicated items
 
     // assert
-    const playersId = lobby.getPlayersId()
+    const playersId = lobby.playersId
     expect(playersId).toContain(playerIDA)
     expect(playersId).toContain(playerIDB)
     expect(playersId).toContain(playerIDC)
@@ -81,7 +80,7 @@ describe('lobby', () => {
     lobby.removePlayerId(playerIDD)
 
     // assert
-    const playersId = lobby.getPlayersId()
+    const playersId = lobby.playersId
     expect(playersId).toContain(playerIDA)
     expect(playersId).not.toContain(playerIDB)
     expect(playersId).not.toContain(playerIDC)
@@ -91,14 +90,14 @@ describe('lobby', () => {
 
   it('should allow to get the number of human IPlayer currently in the lobby', () => {
     expect.hasAssertions()
-    expect(lobby.getSize()).toBe(0)
+    expect(lobby.size).toBe(0)
 
     lobby.addPlayerId(playerIDA)
     lobby.addPlayerId(playerIDB)
     lobby.addPlayerId(playerIDC)
     lobby.addPlayerId(playerIDD)
 
-    expect(lobby.getSize()).toBe(4)
+    expect(lobby.size).toBe(4)
   })
 
   it('should tell if the looby is empty', () => {
@@ -117,11 +116,11 @@ describe('lobby', () => {
     lobby.addPlayerId(playerIDD)
 
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(() => lobby.getPlayersId()).not.toThrow()
-    expect(Array.isArray(lobby.getPlayersId())).toBe(true)
-    expect(lobby.getPlayersId()).toContain(playerIDA)
-    expect(lobby.getPlayersId()).toContain(playerIDB)
-    expect(lobby.getPlayersId()).toContain(playerIDC)
-    expect(lobby.getPlayersId()).toContain(playerIDD)
+    expect(() => lobby.playersId).not.toThrow()
+    expect(Array.isArray(lobby.playersId)).toBe(true)
+    expect(lobby.playersId).toContain(playerIDA)
+    expect(lobby.playersId).toContain(playerIDB)
+    expect(lobby.playersId).toContain(playerIDC)
+    expect(lobby.playersId).toContain(playerIDD)
   })
 })
