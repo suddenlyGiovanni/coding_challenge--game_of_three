@@ -70,7 +70,7 @@ export class AIActor<PlayerID extends string>
   public update(state: IMatchStateSerialized): void {
     if (
       MatchState.isIMatchStatePlayingSerialized(state) &&
-      state.nextTurn === this.ai.id
+      state.nextTurn.id === this.ai.id
     ) {
       this._move(state)
     }
@@ -106,7 +106,8 @@ export class AIActor<PlayerID extends string>
          */
 
         const reminder = (state.outputNumber % 3) as 0 | 1 | 2
-        const action = this.remainderToActionMap.get(reminder)
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const action = this.remainderToActionMap.get(reminder)!
         return action
       })
       .then((action) => this._notifyObservers(action))

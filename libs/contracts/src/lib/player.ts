@@ -1,4 +1,4 @@
-export interface PlayerSerialized {
+export interface PlayerSerialized<PlayerID extends string = string> {
   readonly id: PlayerID
 
   readonly name: string

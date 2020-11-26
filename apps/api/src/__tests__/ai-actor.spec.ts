@@ -10,7 +10,7 @@ import {
 
 import { AIActor } from '../ai-actor'
 import type { IObserver } from '../interfaces'
-import { AI } from '../model'
+import { AI, Human } from '../model'
 
 import { flushPromises } from './helpers'
 
@@ -21,7 +21,9 @@ import {
 } from '@game-of-three/contracts'
 
 describe('ai actor', () => {
-  const player1ID = 'HUMAN_PLAYER_ID'
+  const PLAYER_1_ID = 'HUMAN_PLAYER_ID'
+  const PLAYER_1_NAME = 'HUMAN_NAME'
+  const human = new Human(PLAYER_1_ID, PLAYER_1_NAME)
   const ai = AI.make(() => 'ID_AI')
   let aiActor: AIActor<string>
   const mockUpdateA = jest.fn()
@@ -31,9 +33,9 @@ describe('ai actor', () => {
 
   const matchStateSerialized: IMatchStateSerialized = {
     action: 0,
-    currentTurn: player1ID,
+    currentTurn: human.serialize(),
     inputNumber: 12,
-    nextTurn: ai.id,
+    nextTurn: ai.serialize(),
     outputNumber: 12,
     status: MatchStatus.Playing,
     turnNumber: 2,
@@ -113,9 +115,9 @@ describe('ai actor', () => {
       expect(() =>
         aiActor.update({
           action: -1,
-          currentTurn: player1ID,
+          currentTurn: human.serialize(),
           inputNumber: 100,
-          nextTurn: ai.id,
+          nextTurn: ai.serialize(),
           outputNumber: 33,
           status: MatchStatus.Playing,
           turnNumber: 1,
@@ -128,12 +130,12 @@ describe('ai actor', () => {
       expect(() =>
         aiActor.update({
           action: -1,
-          currentTurn: player1ID,
+          currentTurn: human.serialize(),
           inputNumber: 4,
           outputNumber: 1,
           status: MatchStatus.Stop,
           turnNumber: 4,
-          winningPlayer: player1ID,
+          winningPlayer: human.serialize(),
         })
       ).not.toThrow()
 
@@ -149,9 +151,9 @@ describe('ai actor', () => {
       // act
       aiActor.update({
         action: 0,
-        currentTurn: player1ID,
+        currentTurn: human.serialize(),
         inputNumber: 33,
-        nextTurn: ai.id,
+        nextTurn: ai.serialize(),
         outputNumber: 11,
         status: MatchStatus.Playing,
         turnNumber: 4,

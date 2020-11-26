@@ -1,14 +1,15 @@
-import React from 'react'
+import React, { StrictMode } from 'react'
 import { render } from 'react-dom'
 
 import { App } from './app/app'
 
-const $container: HTMLElement = document.getElementById('root')
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+const $container: HTMLElement = document.getElementById('root')!
 
 const Element: JSX.Element = (
-  <React.StrictMode>
+  <StrictMode>
     <App />
-  </React.StrictMode>
+  </StrictMode>
 )
 
 render(Element, $container)

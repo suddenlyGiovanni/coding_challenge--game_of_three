@@ -56,7 +56,7 @@ describe('ai class', () => {
   it('should allow to be serialized', () => {
     expect.hasAssertions()
 
-    let serializedAIPlayerObject: PlayerSerialized
+    let serializedAIPlayerObject!: PlayerSerialized
     expect(() => (serializedAIPlayerObject = ai.serialize())).not.toThrow()
 
     expect(serializedAIPlayerObject).toHaveProperty('id')

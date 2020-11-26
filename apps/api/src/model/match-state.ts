@@ -8,6 +8,9 @@ import {
   IMatchStateStartSerialized,
   IMatchStateStopSerialized,
   IMatchStatus,
+  IMatchStatusPlaying,
+  IMatchStatusStart,
+  IMatchStatusStop,
   MatchStatus,
 } from '@game-of-three/contracts'
 
@@ -20,18 +23,18 @@ export class MatchState implements IMatchState {
 
   readonly nextTurn?: IPlayer
 
-  readonly outputNumber: number
+  readonly outputNumber!: number
 
-  readonly status: IMatchStatus
+  readonly status!: IMatchStatus
 
-  readonly turnNumber: number
+  readonly turnNumber!: number
 
   readonly winningPlayer?: IPlayer
 
   public constructor(state: {
     nextTurn: IPlayer
     outputNumber: number
-    status: MatchStatus.Start
+    status: IMatchStatusStart
     turnNumber: 0
   })
 
@@ -41,7 +44,7 @@ export class MatchState implements IMatchState {
     inputNumber: number
     nextTurn: IPlayer
     outputNumber: number
-    status: MatchStatus.Playing
+    status: IMatchStatusPlaying
     turnNumber: number
   })
 
@@ -50,7 +53,7 @@ export class MatchState implements IMatchState {
     currentTurn: IPlayer
     inputNumber: number
     outputNumber: number
-    status: MatchStatus.Stop
+    status: IMatchStatusStop
     turnNumber: number
     winningPlayer: IPlayer
   })
@@ -61,7 +64,7 @@ export class MatchState implements IMatchState {
     inputNumber?: number
     nextTurn?: IPlayer
     outputNumber: number
-    status: MatchStatus.Start | MatchStatus.Playing | MatchStatus.Stop
+    status: IMatchStatusStart | IMatchStatusPlaying | IMatchStatusStop
     turnNumber: 0 | number
     winningPlayer?: IPlayer
   }) {
@@ -125,15 +128,19 @@ export class MatchState implements IMatchState {
 
   public serialize(): Readonly<IMatchStateSerialized> {
     const matchStateSerialized: IMatchStateSerialized = {
-      action: this.action,
-      currentTurn: this.currentTurn?.id,
-      inputNumber: this.inputNumber,
-      nextTurn: this.nextTurn?.id,
+      ...(typeof this.action === 'number' && { action: this.action }),
+      ...(this.currentTurn && { currentTurn: this.currentTurn.serialize() }),
+      ...(typeof this.inputNumber === 'number' && {
+        inputNumber: this.inputNumber,
+      }),
+      ...(this.nextTurn && { nextTurn: this.nextTurn.serialize() }),
       outputNumber: this.outputNumber,
       status: this.status,
       turnNumber: this.turnNumber,
-      winningPlayer: this.winningPlayer?.id,
-    }
+      ...(this.winningPlayer && {
+        winningPlayer: this.winningPlayer.serialize(),
+      }),
+    } as IMatchStateSerialized
     return matchStateSerialized
   }
 }

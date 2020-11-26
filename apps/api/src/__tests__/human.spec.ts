@@ -56,8 +56,10 @@ describe('human class', () => {
   it('should allow to be serialized', () => {
     expect.hasAssertions()
 
-    let serializedPlayerObject: PlayerSerialized
-    expect(() => (serializedPlayerObject = player1.serialize())).not.toThrow()
+    let serializedPlayerObject!: PlayerSerialized
+    expect(() => {
+      serializedPlayerObject = player1.serialize()
+    }).not.toThrow()
 
     expect(serializedPlayerObject).toHaveProperty('id')
     expect(serializedPlayerObject).toHaveProperty('type')

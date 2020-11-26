@@ -114,20 +114,20 @@ describe('users-store', () => {
     expect.hasAssertions()
     // arrange
     playersStore.addPlayer(playerC)
-    expect(playersStore.getPlayerByID(playerC.id).name).toBe('')
+    expect(playersStore.getPlayerByID(playerC.id)?.name).toBe('')
 
     // act
-    playersStore.getPlayerByID(playerC.id).setName('PLAYER_C')
+    playersStore.getPlayerByID(playerC.id)?.setName('PLAYER_C')
 
     // assert
     expect(playersStore.size).toBe(1)
     expect(playersStore.getPlayerByID(playerC.id)).toBe(playerC)
-    expect(playersStore.getPlayerByID(playerC.id).name).toBe('PLAYER_C')
+    expect(playersStore.getPlayerByID(playerC.id)?.name).toBe('PLAYER_C')
   })
 
   it('should have a method to retrieve a serialized version of the store', () => {
     expect.hasAssertions()
-    let serializedStore: PlayerSerialized[]
+    let serializedStore!: PlayerSerialized[]
     playersStore.addPlayer(playerA)
     playersStore.addPlayer(playerB)
     playersStore.addPlayer(playerC)

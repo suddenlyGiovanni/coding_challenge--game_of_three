@@ -34,7 +34,7 @@ export class Server implements IServer {
 
   private static instance: Server
 
-  private heartbeatTimerID: NodeJS.Timeout
+  private heartbeatTimerID?: NodeJS.Timeout
 
   private readonly io: IOServer
 
