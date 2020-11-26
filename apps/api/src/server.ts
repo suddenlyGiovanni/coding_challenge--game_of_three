@@ -14,7 +14,18 @@ import {
   emitToSocket,
 } from './sockets'
 
-import { IEvents, PlayerID, SocketEvent } from '@game-of-three/contracts'
+import {
+  IEvents,
+  PlayerID,
+  SocketEvent,
+  actionHeartbeat,
+  actionInitialize,
+  actionLobbyPlayerJoined,
+  actionLobbyPlayerLeft,
+  actionPlayerJoined,
+  actionPlayerLeft,
+  actionPlayerNameChanged,
+} from '@game-of-three/contracts'
 
 export class Server implements IServer {
   public static readonly CORS_ORIGIN: string = `http://localhost:4200`
@@ -86,10 +97,10 @@ export class Server implements IServer {
       this.lobby.addPlayerId(player.id)
       console.info(`add player id ${player.id} to the lobby`)
 
-      broadcast(this.io)(SocketEvent.LOBBY_PLAYER_JOINED, {
-        payload: player.id,
-        type: SocketEvent.LOBBY_PLAYER_JOINED,
-      })
+      broadcast(this.io)(
+        SocketEvent.LOBBY_PLAYER_JOINED,
+        actionLobbyPlayerJoined(player.id)
+      )
     } else {
       console.info(`can't add player id ${player.id} to the lobby`)
     }
@@ -102,6 +113,7 @@ export class Server implements IServer {
   }
 
   private _createMatch(playerID1: PlayerID) {
+    const _broadcast = broadcast(this.io)
     // 1. how many players are in the lobby?
     //    IF `ONE` DO:
     //        - remove this player from the lobby
@@ -119,10 +131,10 @@ export class Server implements IServer {
       // there are no other players in the lobby
       // case where a match must be played against an AI
       this.lobby.removePlayerId(playerID1)
-      broadcast(this.io)(SocketEvent.LOBBY_PLAYER_LEFT, {
-        payload: playerID1,
-        type: SocketEvent.LOBBY_PLAYER_LEFT,
-      })
+      _broadcast(
+        SocketEvent.LOBBY_PLAYER_LEFT,
+        actionLobbyPlayerLeft(playerID1)
+      )
       const player1 = this.playersStore.getPlayerByID(playerID1)
       const ai = AI.make()
       new MatchService({
@@ -131,19 +143,20 @@ export class Server implements IServer {
       })
     } else {
       // case where match between two players
+      this.lobby.removePlayerId(playerID1)
       const playerID2 = this.lobby.getNextPlayerId()
       const player1 = this.playersStore.getPlayerByID(playerID1)
       const player2 = this.playersStore.getPlayerByID(playerID2)
 
-      broadcast(this.io)(SocketEvent.LOBBY_PLAYER_LEFT, {
-        payload: playerID1,
-        type: SocketEvent.LOBBY_PLAYER_LEFT,
-      })
+      _broadcast(
+        SocketEvent.LOBBY_PLAYER_LEFT,
+        actionLobbyPlayerLeft(playerID1)
+      )
 
-      broadcast(this.io)(SocketEvent.LOBBY_PLAYER_LEFT, {
-        payload: playerID2,
-        type: SocketEvent.LOBBY_PLAYER_LEFT,
-      })
+      _broadcast(
+        SocketEvent.LOBBY_PLAYER_LEFT,
+        actionLobbyPlayerLeft(playerID2)
+      )
 
       const socketPlayer1 = this.io.sockets.sockets.get(playerID1)
       const socketPlayer2 = this.io.sockets.sockets.get(playerID2)
@@ -161,14 +174,13 @@ export class Server implements IServer {
    * @memberof Server
    */
   private _handlerClientInitializeData = (socket: Socket) => {
-    const actionInitialize = {
-      payload: {
+    emitToSocket(socket)(
+      SocketEvent.SYSTEM_INITIALIZE,
+      actionInitialize({
         lobby: this.lobby.playersId,
         players: this.playersStore.getSerializedPlayer(),
-      },
-      type: SocketEvent.SYSTEM_INITIALIZE,
-    } as const
-    emitToSocket(socket)(SocketEvent.SYSTEM_INITIALIZE, actionInitialize)
+      })
+    )
   }
 
   private _handlerEventHello: SocketActionFn<
@@ -224,10 +236,10 @@ export class Server implements IServer {
     this._handlerClientInitializeData(socket)
 
     // notify all connected clients (except this client) that a new client has joined
-    emitToAllSockets(socket)(SocketEvent.SYSTEM_PLAYER_JOINED, {
-      payload: player.serialize(),
-      type: SocketEvent.SYSTEM_PLAYER_JOINED,
-    })
+    emitToAllSockets(socket)(
+      SocketEvent.SYSTEM_PLAYER_JOINED,
+      actionPlayerJoined(player.serialize())
+    )
   }
 
   private _handlerUserDisconnect: SocketActionFn<
@@ -288,10 +300,10 @@ export class Server implements IServer {
       console.info(`remove player id ${player.id} from lobby`)
       this.lobby.removePlayerId(player.id)
 
-      broadcast(this.io)(SocketEvent.LOBBY_PLAYER_LEFT, {
-        payload: player.id,
-        type: SocketEvent.LOBBY_PLAYER_LEFT,
-      })
+      broadcast(this.io)(
+        SocketEvent.LOBBY_PLAYER_LEFT,
+        actionLobbyPlayerLeft(player.id)
+      )
     }
   }
 
@@ -307,10 +319,10 @@ export class Server implements IServer {
     console.info(`remove player id ${player.id} from playerStore`)
 
     this.playersStore.removePlayerByID(player.id)
-    broadcast(this.io)(SocketEvent.SYSTEM_PLAYER_LEFT, {
-      payload: player.serialize(),
-      type: SocketEvent.SYSTEM_PLAYER_LEFT,
-    })
+    broadcast(this.io)(
+      SocketEvent.SYSTEM_PLAYER_LEFT,
+      actionPlayerLeft(player.serialize())
+    )
   }
 
   private _renamePlayer(playerId: PlayerID, name: string): void {
@@ -319,19 +331,17 @@ export class Server implements IServer {
 
     console.log(`user id: ${playerId} - name changed: ${name}`) // TODO: remove this console.log
 
-    broadcast(this.io)(SocketEvent.SYSTEM_NAME_CHANGED, {
-      payload: this.playersStore.getPlayerByID(playerId).serialize(),
-      type: SocketEvent.SYSTEM_NAME_CHANGED,
-    })
+    broadcast(this.io)(
+      SocketEvent.SYSTEM_NAME_CHANGED,
+      actionPlayerNameChanged(
+        this.playersStore.getPlayerByID(playerId).serialize()
+      )
+    )
   }
 
   private _startEmitHeartbeat(): void {
     const _broadcast = broadcast(this.io)
-    const action = () =>
-      ({
-        payload: new Date().toISOString(),
-        type: SocketEvent.SYSTEM_HEARTBEAT,
-      } as const)
+    const action = () => actionHeartbeat(new Date().toISOString())
 
     this.heartbeatTimerID = setInterval(
       () => _broadcast(SocketEvent.SYSTEM_HEARTBEAT, action()),

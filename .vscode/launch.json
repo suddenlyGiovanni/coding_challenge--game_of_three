@@ -1,9 +1,10 @@
 {
   "configurations": [
     {
-      "name": "Attach",
+      "name": "Debug API",
       "port": 9229,
       "request": "attach",
+      "sourceMaps": true,
       "skipFiles": ["<node_internals>/**"],
       "type": "pwa-node"
     }

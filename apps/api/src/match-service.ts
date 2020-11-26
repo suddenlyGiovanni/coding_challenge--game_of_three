@@ -15,6 +15,7 @@ import {
   IMatchStateSerialized,
   MatchStatus,
   SocketEvent,
+  actionMatchNewState,
 } from '@game-of-three/contracts'
 
 export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
@@ -67,14 +68,17 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
     }
 
     this._match.registerObserver({
-      update: (event) => {
-        console.log('new state ready to be emitted') // TODO: REMOVE ME!
+      update: (matchStateSerialized) => {
         this._sockets?.forEach((socket) => {
-          console.log('emitting state to socket ${socket.id}', event) // TODO: REMOVE ME!
-          socket.emit(SocketEvent.MATCH_NEW_STATE, {
-            payload: event,
-            type: SocketEvent.MATCH_NEW_STATE,
-          })
+          console.log(
+            `emitting state to socket ${socket.id}`,
+            matchStateSerialized
+          ) // TODO: REMOVE ME!
+
+          socket.emit(
+            SocketEvent.MATCH_NEW_STATE,
+            actionMatchNewState(matchStateSerialized)
+          )
         })
       },
     })
