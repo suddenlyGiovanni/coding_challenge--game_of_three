@@ -1,3 +1,5 @@
 export * from './lib/events'
 export * from './lib/match'
 export * from './lib/player'
+export * from './lib/actions'
+export * from './lib/actions-creators'

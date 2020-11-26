@@ -1,6 +1,6 @@
 import { Manager } from 'socket.io-client'
 
-import type { ActionWithPayload, IEvents } from '@game-of-three/contracts'
+import type { Action, IEvents } from '@game-of-three/contracts'
 
 interface ListenerCallback<Action> {
   (action: Action): void
@@ -8,9 +8,7 @@ interface ListenerCallback<Action> {
 
 export interface DataSocket<Event extends keyof IEvents> {
   emit: <Data extends IEvents[Event]>(
-    data: Data extends ActionWithPayload<Event, unknown>
-      ? Data['payload']
-      : Data
+    data: Data extends Action<Event, unknown> ? Data['payload'] : Data
   ) => void
   off: (callback?: ListenerCallback<IEvents[Event]>) => void
   on: (callback: ListenerCallback<IEvents[Event]>) => void
@@ -28,7 +26,7 @@ export function createSocket<Event extends keyof IEvents>(
 
 function emitCallback<Event extends keyof IEvents, Data>(event: Event) {
   return (data: Data): void => {
-    const action: ActionWithPayload<Event, Data> = {
+    const action: Action<Event, Data> = {
       payload: data,
       type: event,
     }

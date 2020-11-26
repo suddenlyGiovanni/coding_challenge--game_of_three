@@ -30,12 +30,8 @@ import {
   PlayerSerialized,
   ServerState,
   SocketEvent,
+  actionCreator,
 } from '@game-of-three/contracts'
-
-const actionCreator = <Type extends string, Payload>(
-  type: Type,
-  payload: Payload
-): ActionWithPayload<Type, Payload> => ({ payload, type } as const)
 
 const syncHeartbeat = (heartbeat: DateISOString) =>
   actionCreator('[HEARTBEAT]-SYNC', heartbeat)
@@ -273,12 +269,7 @@ export const App: VFC = () => {
     []
   )
 
-  const handleUpdate = (
-    e: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>
-  ): void => {
-    console.log(name)
-    socketUpdateName.emit(name)
-  }
+  const handleUpdate = (): void => socketUpdateName.emit(name)
 
   const handleAction = useCallback(
     (event: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>): void => {
@@ -288,9 +279,10 @@ export const App: VFC = () => {
     []
   )
 
-  const handleInitiateMatchMaking = useCallback(() => {
-    socketMakeMatch.emit(void 0)
-  }, [])
+  const handleInitiateMatchMaking = useCallback(
+    () => socketMakeMatch.emit(void 0),
+    []
+  )
 
   return (
     <div className="App">

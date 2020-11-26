@@ -1,5 +1,32 @@
-import type { IAction, IMatchStateSerialized } from './match'
+import { Action } from './actions'
+import {
+  actionHeartbeat,
+  actionHello,
+  actionInitialize,
+  actionLobbyPlayerJoined,
+  actionLobbyPlayerLeft,
+  actionMatchMaking,
+  actionMatchMove,
+  actionMatchNewMatch,
+  actionMatchNewState,
+  actionPlayerJoined,
+  actionPlayerLeft,
+  actionPlayerNameChanged,
+  actionUpdateName,
+} from './actions-creators'
+
 import type { PlayerID, PlayerSerialized } from './player'
+
+/**
+ * FIXME: RENAME TO SOMETHING MORE APPROPRIATE
+ * FIXME: MOVE TO A PLACE MORE APPROPRIATE
+ * @export
+ * @interface ServerState
+ */
+export interface ServerState {
+  readonly lobby: readonly PlayerID[]
+  readonly players: readonly PlayerSerialized[]
+}
 
 /* eslint-disable @typescript-eslint/member-ordering */
 export type ISocketEvent =
@@ -160,10 +187,11 @@ export enum SocketEvent {
   MATCH_NEW_STATE = 'match_new_state',
 }
 
-type ISODataString = string
-
 export interface IEvents
-  extends Record<ISocketEvent, Action<ISocketEvent, unknown> | string | void> {
+  extends Record<
+    ISocketEvent,
+    Action<ISocketEvent, unknown, unknown, boolean> | string | void
+  > {
   //#region SYSTEM RESERVED EVENTS
   [SocketEvent.INTERNAL_CONNECT]: void
   [SocketEvent.INTERNAL_CONNECTION]: void
@@ -201,21 +229,9 @@ export interface IEvents
   [SocketEvent.MATCH_NEW_STATE]: ActionMatchNewState
 }
 
-interface ActionBase<Type extends string> {
-  type: Type
-}
+type ActionHello = ReturnType<typeof actionHello>
 
-export interface ActionWithPayload<Type extends string, Payload>
-  extends ActionBase<Type> {
-  payload: Payload
-}
-
-export type Action<Type extends string, Payload> = Payload extends never
-  ? ActionBase<Type>
-  : ActionWithPayload<Type, Payload>
-
-type ActionHello = Action<SocketEvent.SYSTEM_HELLO, 'world!'>
-type ActionHeartbeat = Action<SocketEvent.SYSTEM_HEARTBEAT, ISODataString>
+type ActionHeartbeat = ReturnType<typeof actionHeartbeat>
 
 /**
  * this event is emitted by the server to all the connected clients
@@ -224,30 +240,16 @@ type ActionHeartbeat = Action<SocketEvent.SYSTEM_HEARTBEAT, ISODataString>
  * event: SocketEvent.PLAYER_JOINED
  * payload: PlayerSerialized
  */
-type ActionPlayerJoined = Action<
-  SocketEvent.SYSTEM_PLAYER_JOINED,
-  PlayerSerialized
->
-
-/**
- * FIXME: RENAME TO SOMETHING MORE APPROPRIATE
- * FIXME: MOVE TO A PLACE MORE APPROPRIATE
- * @export
- * @interface ServerState
- */
-export interface ServerState {
-  readonly lobby: readonly PlayerID[]
-  readonly players: readonly PlayerSerialized[]
-}
+type ActionPlayerJoined = ReturnType<typeof actionPlayerJoined>
 
 /**
  * this event is fired by the server to a single socket after it has established a connection
  * it provides the players state
  * SERVER --> CLIENT
  * event: SocketEvent.INITIALIZE
- * payload: PlayerSerialized[]
+ * payload: ServerState
  */
-type ActionInitialize = Action<SocketEvent.SYSTEM_INITIALIZE, ServerState>
+type ActionInitialize = ReturnType<typeof actionInitialize>
 
 /**
  * this event is emitted by the server to all the connected clients
@@ -256,7 +258,7 @@ type ActionInitialize = Action<SocketEvent.SYSTEM_INITIALIZE, ServerState>
  * event: SocketEvent.PLAYER_LEFT
  * payload: PlayerSerialized
  */
-type ActionPlayerLeft = Action<SocketEvent.SYSTEM_PLAYER_LEFT, PlayerSerialized>
+type ActionPlayerLeft = ReturnType<typeof actionPlayerLeft>
 
 /**
  * this event is fired by the client to notify to the server a player name change
@@ -264,7 +266,7 @@ type ActionPlayerLeft = Action<SocketEvent.SYSTEM_PLAYER_LEFT, PlayerSerialized>
  * event: SocketEvent.name_update
  * payload: PlayerSerialized
  */
-type ActionUpdateName = Action<SocketEvent.SYSTEM_NAME_UPDATE, string>
+type ActionUpdateName = ReturnType<typeof actionUpdateName>
 
 /**
  * this event is emitted by the server to all the connected clients
@@ -273,10 +275,7 @@ type ActionUpdateName = Action<SocketEvent.SYSTEM_NAME_UPDATE, string>
  * event: SocketEvent.name_changed
  * payload: PlayerSerialized
  */
-type ActionPlayerNameChanged = Action<
-  SocketEvent.SYSTEM_NAME_CHANGED,
-  PlayerSerialized
->
+type ActionPlayerNameChanged = ReturnType<typeof actionPlayerNameChanged>
 
 /**
  * this event is emitted by the server to all the connected clients
@@ -285,7 +284,7 @@ type ActionPlayerNameChanged = Action<
  * event: SocketEvent.LOBBY_PLAYER_JOINED
  * payload: PlayerID
  */
-type ActionLobbyPlayerJoined = Action<SocketEvent.LOBBY_PLAYER_JOINED, PlayerID>
+type ActionLobbyPlayerJoined = ReturnType<typeof actionLobbyPlayerJoined>
 
 /**
  * this event is emitted by the server to all the connected clients
@@ -294,7 +293,7 @@ type ActionLobbyPlayerJoined = Action<SocketEvent.LOBBY_PLAYER_JOINED, PlayerID>
  * event: SocketEvent.LOBBY_PLAYER_LEFT
  * payload: PlayerID
  */
-type ActionLobbyPlayerLeft = Action<SocketEvent.LOBBY_PLAYER_LEFT, PlayerID>
+type ActionLobbyPlayerLeft = ReturnType<typeof actionLobbyPlayerLeft>
 
 /**
  * this event is fired by the client to notify to the server that the client wants to start a new
@@ -303,7 +302,7 @@ type ActionLobbyPlayerLeft = Action<SocketEvent.LOBBY_PLAYER_LEFT, PlayerID>
  * event: SocketEvent.MATCH_MAKING
  * payload: void
  */
-type ActionMatchMaking = Action<SocketEvent.LOBBY_MAKE_MATCH, void>
+type ActionMatchMaking = ReturnType<typeof actionMatchMaking>
 
 /**
  * this event is emitted by the server to a game (id) room
@@ -313,10 +312,7 @@ type ActionMatchMaking = Action<SocketEvent.LOBBY_MAKE_MATCH, void>
  * event: SocketEvent.NEW_MATCH
  * payload: IMatchStateSerialized
  */
-type ActionMatchNewMatch = Action<
-  SocketEvent.MATCH_NEW_MATCH,
-  IMatchStateSerialized
->
+type ActionMatchNewMatch = ReturnType<typeof actionMatchNewMatch>
 
 /**
  * this event is fired by the client to notify the server of a game move ( -1 | 0 | 1)
@@ -324,7 +320,7 @@ type ActionMatchNewMatch = Action<
  * event: SocketEvent.MATCH_MOVE
  * payload: IAction
  */
-type ActionMatchMove = Action<SocketEvent.MATCH_MOVE, IAction>
+type ActionMatchMove = ReturnType<typeof actionMatchMove>
 
 /**
  * this event is emitted by the server to a game (id) room
@@ -334,7 +330,4 @@ type ActionMatchMove = Action<SocketEvent.MATCH_MOVE, IAction>
  * event: SocketEvent.MATCH_NEW_STATE
  * payload: IMatchStateSerialized
  */
-type ActionMatchNewState = Action<
-  SocketEvent.MATCH_NEW_STATE,
-  IMatchStateSerialized
->
+type ActionMatchNewState = ReturnType<typeof actionMatchNewState>
