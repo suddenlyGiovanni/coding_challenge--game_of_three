@@ -40,5 +40,8 @@ export const actionMatchNewMatch = (matchState: IMatchStateSerialized) =>
 export const actionMatchMove = (action: IAction) =>
   actionCreator(SocketEvent.MATCH_MOVE, action)
 
+export const actionMatchMoveError = (errorMessage: string) =>
+  actionCreator(SocketEvent.MATCH_MOVE_ERROR, errorMessage, undefined, true)
+
 export const actionMatchNewState = (matchState: IMatchStateSerialized) =>
   actionCreator(SocketEvent.MATCH_NEW_STATE, matchState)

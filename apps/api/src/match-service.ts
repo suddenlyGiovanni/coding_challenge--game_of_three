@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/member-ordering */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import type { Socket } from 'socket.io'
 
 import { AIActor } from './ai-actor'
@@ -9,26 +9,32 @@ import type {
   IPlayer,
 } from './interfaces'
 import { INumberGeneratorStrategy, Match, MatchState } from './model'
+import { SocketActionFn, createSocket, emitToSocket } from './sockets'
 
 import {
   IAction,
+  IEvents,
   IMatchStateSerialized,
   MatchStatus,
+  PlayerID,
   SocketEvent,
+  actionMatchMoveError,
   actionMatchNewState,
 } from '@game-of-three/contracts'
 
 export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
   implements IMatchService {
-  private readonly _aiActor: AIActor<string>
+  private _aiActor?: AIActor<string>
 
   private readonly _aiActorMoveObserver: IObserver<IAction> = {
     update: (action: IAction) => this.move(this._match.players[1], action),
   }
 
+  private readonly _debugObserver?: IObserver<IMatchStateSerialized<string>>
+
   private readonly _match: Match<IPlayer1, IPlayer2>
 
-  private readonly _sockets: [socket1: Socket, socket2?: Socket]
+  private readonly _sockets?: [socket1: Socket, socket2?: Socket]
 
   /**
    *Creates an instance of MatchService.
@@ -38,66 +44,37 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
    */
   public constructor({
     sockets,
-    players: [player1, player2],
+    players,
     numberGeneratorStrategy,
     debugObserver,
   }: {
+    debugObserver?: IObserver<IMatchStateSerialized>
+    numberGeneratorStrategy?: INumberGeneratorStrategy
     players: [player1: IPlayer1, player2: IPlayer2]
     sockets?: [socket1: Socket, socket2?: Socket]
-    numberGeneratorStrategy?: INumberGeneratorStrategy
-    debugObserver?: IObserver<IMatchStateSerialized>
   }) {
-    this._match = new Match(player1, player2, numberGeneratorStrategy)
+    this._match = new Match(...players, numberGeneratorStrategy)
     this._sockets = sockets
+    this._debugObserver = debugObserver
 
-    if (player2.isAi()) {
-      this._aiActor = new AIActor(player2)
-      /**
-       * register the Observable responsible for listening to the AiActors move.
-       * said Observable will be responsible to proxy the message to the match state model
-       */
-      this._aiActor.registerObserver(this._aiActorMoveObserver)
+    this._addAiActor()
 
-      /**
-       * register the AiActor to the match state changes.
-       */
-      this._match.registerObserver(this._aiActor)
-    }
-    if (debugObserver) {
-      this._match.registerObserver(debugObserver)
-    }
+    this._subscribeDebugObserverToMatchStateSubject()
 
-    this._match.registerObserver({
-      update: (matchStateSerialized) => {
-        this._sockets?.forEach((socket) => {
-          console.log(
-            `emitting state to socket ${socket.id}`,
-            matchStateSerialized
-          ) // TODO: REMOVE ME!
+    this._subscribeSocketsToMatchStateSubject()
 
-          socket.emit(
-            SocketEvent.MATCH_NEW_STATE,
-            actionMatchNewState(matchStateSerialized)
-          )
-        })
-      },
-    })
-
-    this._sockets?.forEach((socket) => {
-      socket.on(SocketEvent.MATCH_MOVE, (action) => {
-        const { id } = socket
-        const player = this._match.players.find((p) => p.id === id)
-
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        const move = action.payload as IAction // TODO: REMOVE ME!
-
-        console.log(`client id: ${id} made a move: ${move}`) // TODO: REMOVE ME!
-
-        this.move(player, move)
-      })
-    })
+    this._registerSocketToEventListeners()
 
     this._match.init()
+  }
+
+  private static _assertPlayerBelongToMatch(
+    _match: Match<IPlayer<PlayerID>, IPlayer<PlayerID>>,
+    playerId: PlayerID
+  ): void {
+    if (!_match.players.map((p) => p.id).includes(playerId)) {
+      throw new Error('PlayerID does not belong to this match ')
+    }
   }
 
   public move(player: IPlayer, action: IAction): void {
@@ -149,6 +126,28 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
     return this._match.setState(matchStateStop)
   }
 
+  /**
+   * TODO: DOCUMENT THIS METHOD
+   * @private
+   * @memberof MatchService
+   */
+  private _addAiActor() {
+    const [, player2] = this._match.players
+    if (player2.isAi()) {
+      this._aiActor = new AIActor(player2)
+      /**
+       * register the Observable responsible for listening to the AiActors move.
+       * said Observable will be responsible to proxy the message to the match state model
+       */
+      this._aiActor.registerObserver(this._aiActorMoveObserver)
+
+      /**
+       * register the AiActor to the match state changes.
+       */
+      this._match.registerObserver(this._aiActor)
+    }
+  }
+
   private _assertIsPlayerTurn(player: IPlayer): void {
     if (!this._isPlayerTurn(player)) {
       throw new Error('Not player turn.')
@@ -167,6 +166,32 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
 
   private _getNewInputNumber(): number {
     return this._match.state.outputNumber
+  }
+
+  private _handlerMatchMoveAction: SocketActionFn<
+    IEvents[SocketEvent.MATCH_MOVE]
+  > = (socket) => ({ payload: action }) => {
+    const { id } = socket
+
+    MatchService._assertPlayerBelongToMatch(this._match, id)
+
+    const player = this._match.players.find((p) => p.id === id)!
+
+    // if (this._isPlayerTurn(player)) {}  FIXME: validate event have been received by current turn player
+    const move = action // TODO: REMOVE ME!
+
+    console.log(`client id: ${id} made a move: ${move}`) // TODO: REMOVE ME!
+    try {
+      this.move(player, move)
+    } catch (error: unknown) {
+      // TODO: emit a new message notifying the player that it can not move if it is not his turn!
+      if (typeof error === 'string') {
+        emitToSocket(socket)(
+          SocketEvent.MATCH_MOVE_ERROR,
+          actionMatchMoveError(error)
+        )
+      }
+    }
   }
 
   private _isDivisibleByThree(number: number): boolean {
@@ -193,5 +218,60 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
 
   private _isPositiveInteger(number: number): boolean {
     return Number.isInteger(number) && number > 0
+  }
+
+  /**
+   * TODO: DOCUMENT THIS METHOD
+   * @private
+   * @memberof MatchService
+   */
+  private _registerSocketToEventListeners(): void {
+    this._sockets?.forEach((socket) => {
+      if (socket) {
+        const registeredEvents = [
+          createSocket(SocketEvent.MATCH_MOVE, this._handlerMatchMoveAction),
+        ] as const
+
+        registeredEvents.forEach(({ callback, event }) =>
+          socket.on(event, callback(socket))
+        )
+      }
+    })
+  }
+
+  /**
+   * TODO: DOCUMENT THIS METHOD
+   * @private
+   * @memberof MatchService
+   */
+  private _subscribeDebugObserverToMatchStateSubject(): void {
+    if (this._debugObserver) {
+      this._match.registerObserver(this._debugObserver)
+    }
+  }
+
+  /**
+   * TODO: DOCUMENT THIS METHOD
+   * @private
+   * @memberof MatchService
+   */
+  private _subscribeSocketsToMatchStateSubject(): void {
+    this._match.registerObserver({
+      update: (matchStateSerialized) => {
+        this._sockets?.forEach((socket) => {
+          if (socket) {
+            console.log(
+              `emitting state to socket ${socket.id}`,
+              matchStateSerialized
+            ) // TODO: REMOVE ME!
+
+            emitToSocket(socket)(
+              SocketEvent.MATCH_NEW_STATE,
+              actionMatchNewState(matchStateSerialized)
+            )
+          }
+        })
+      },
+    })
   }
 }

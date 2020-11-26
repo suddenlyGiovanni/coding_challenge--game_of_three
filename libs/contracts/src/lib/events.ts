@@ -7,6 +7,7 @@ import {
   actionLobbyPlayerLeft,
   actionMatchMaking,
   actionMatchMove,
+  actionMatchMoveError,
   actionMatchNewMatch,
   actionMatchNewState,
   actionPlayerJoined,
@@ -60,12 +61,11 @@ export type ISocketEvent =
   | 'match_making'
   | 'new_match'
   | 'match_move'
+  | 'match_move_error'
   | 'match_new_state'
 //#endregion
-
 export enum SocketEvent {
   //#region SYSTEM RESERVED EVENTS
-
   /**
    * Fired upon a connection from client.
    * socket (Socket) socket connection with client
@@ -169,7 +169,6 @@ export enum SocketEvent {
   INTERNAL_REMOVE_LISTENER = 'removeListener',
 
   //#endregion SYSTEM RESERVED EVENTS
-
   SYSTEM_HEARTBEAT = 'heartbeat',
 
   SYSTEM_HELLO = 'hello',
@@ -184,6 +183,7 @@ export enum SocketEvent {
   LOBBY_MAKE_MATCH = 'match_making',
   MATCH_NEW_MATCH = 'new_match',
   MATCH_MOVE = 'match_move',
+  MATCH_MOVE_ERROR = 'match_move_error',
   MATCH_NEW_STATE = 'match_new_state',
 }
 
@@ -226,6 +226,7 @@ export interface IEvents
   [SocketEvent.LOBBY_MAKE_MATCH]: ActionMatchMaking
   [SocketEvent.MATCH_NEW_MATCH]: ActionMatchNewMatch
   [SocketEvent.MATCH_MOVE]: ActionMatchMove
+  [SocketEvent.MATCH_MOVE_ERROR]: ActionMatchMoveError
   [SocketEvent.MATCH_NEW_STATE]: ActionMatchNewState
 }
 
@@ -321,6 +322,8 @@ type ActionMatchNewMatch = ReturnType<typeof actionMatchNewMatch>
  * payload: IAction
  */
 type ActionMatchMove = ReturnType<typeof actionMatchMove>
+
+type ActionMatchMoveError = ReturnType<typeof actionMatchMoveError>
 
 /**
  * this event is emitted by the server to a game (id) room
