@@ -145,6 +145,16 @@ export class Match<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
     return this._turn.next
   }
 
+  public push(matchState: IMatchState): void {
+    this._assertInitialized()
+    this._matchStateHistory.push(matchState)
+
+    if (matchState.isPlaying()) {
+      this._turn.switch()
+    }
+    this.notifyObservers()
+  }
+
   public registerObserver(observer: IObserver<IMatchStateSerialized>): void {
     this._observers.push(observer)
   }
@@ -154,20 +164,6 @@ export class Match<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
     if (index !== -1) {
       this._observers.splice(index, 1)
     }
-  }
-
-  /**
-   * FIXME: rename it to `push`
-   * @param matchState
-   */
-  public setState(matchState: IMatchState): void {
-    this._assertInitialized()
-    this._matchStateHistory.push(matchState)
-
-    if (matchState.isPlaying()) {
-      this._turn.switch()
-    }
-    this.notifyObservers()
   }
 
   private _assertInitialized(): void {

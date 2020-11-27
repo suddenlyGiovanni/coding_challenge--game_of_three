@@ -183,7 +183,7 @@ describe('match', () => {
     })
     expect(match.state).toStrictEqual(initialMatchState)
     // act
-    expect(() => match.setState(injectedMatchState)).not.toThrow()
+    expect(() => match.push(injectedMatchState)).not.toThrow()
     // assert
     expect(match.stateHistory).toHaveLength(2)
     expect(match.stateHistory).toContainEqual(initialMatchState)

@@ -82,5 +82,5 @@ export interface IMatch<
    * @param {IMatchState} matchState
    * @memberof IMatch
    */
-  setState(matchState: IMatchState): void
+  push(matchState: IMatchState): void
 }

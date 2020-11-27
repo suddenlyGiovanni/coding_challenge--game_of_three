@@ -119,7 +119,7 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
           turnNumber: this._match.turnNumber,
           winningPlayer: this._match.turn,
         })
-        return this._match.setState(matchStateStop)
+        return this._match.push(matchStateStop)
       }
       // next round
       const matchStatePlaying = new MatchState({
@@ -132,7 +132,7 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
         status: MatchStatus.Playing,
         turnNumber: this._match.turnNumber,
       })
-      return this._match.setState(matchStatePlaying)
+      return this._match.push(matchStatePlaying)
     }
 
     // lost
@@ -146,7 +146,7 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
       turnNumber: this._match.turnNumber,
       winningPlayer: this._match.nextTurn,
     })
-    return this._match.setState(matchStateStop)
+    return this._match.push(matchStateStop)
   }
 
   /**
