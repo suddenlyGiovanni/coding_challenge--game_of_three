@@ -1,6 +1,6 @@
 import type { AI } from '../model/ai'
 
-import type { PlayerSerialized } from '@game-of-three/contracts'
+import type { IEntity, PlayerSerialized } from '@game-of-three/contracts'
 
 export type IAI = 'AI'
 export type IHUMAN = 'HUMAN'
@@ -12,7 +12,8 @@ export enum PlayerType {
   AI = 'AI',
 }
 
-export interface IPlayer<PlayerID extends string = string> {
+export interface IPlayer<PlayerID extends string = string>
+  extends IEntity<PlayerID, 'Player'> {
   /**
    * gets the id of the player
    * @type {PlayerID}

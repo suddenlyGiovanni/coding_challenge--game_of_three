@@ -31,9 +31,13 @@ describe('ai actor', () => {
   const observerA: IObserver<IAction> = { update: mockUpdateA }
   const observerB: IObserver<IAction> = { update: mockUpdateB }
 
+  const mockMatchId = '1'
+
   const matchStateSerialized: IMatchStateSerialized = {
+    __type: 'MatchState',
     action: 0,
     currentTurn: human.serialize(),
+    id: mockMatchId,
     inputNumber: 12,
     nextTurn: ai.serialize(),
     outputNumber: 12,
@@ -114,8 +118,10 @@ describe('ai actor', () => {
       // act
       expect(() =>
         aiActor.update({
+          __type: 'MatchState',
           action: -1,
           currentTurn: human.serialize(),
+          id: mockMatchId,
           inputNumber: 100,
           nextTurn: ai.serialize(),
           outputNumber: 33,
@@ -129,8 +135,10 @@ describe('ai actor', () => {
 
       expect(() =>
         aiActor.update({
+          __type: 'MatchState',
           action: -1,
           currentTurn: human.serialize(),
+          id: mockMatchId,
           inputNumber: 4,
           outputNumber: 1,
           status: MatchStatus.Stop,
@@ -150,8 +158,10 @@ describe('ai actor', () => {
 
       // act
       aiActor.update({
+        __type: 'MatchState',
         action: 0,
         currentTurn: human.serialize(),
+        id: mockMatchId,
         inputNumber: 33,
         nextTurn: ai.serialize(),
         outputNumber: 11,

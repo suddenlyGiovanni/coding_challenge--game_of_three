@@ -1,3 +1,4 @@
+import type { IEntity } from './entity'
 import type { PlayerSerialized } from './player'
 
 export enum MatchStatus {
@@ -17,16 +18,16 @@ export type IMatchStatus =
 
 export type IAction = -1 | 0 | 1
 
-export interface IMatchStateStartSerialized<PlayerID extends string = string> {
+export interface IMatchStateStartSerialized<PlayerID extends string = string>
+  extends IEntity<PlayerID, 'MatchState'> {
   readonly nextTurn: PlayerSerialized<PlayerID>
   readonly outputNumber: number
   readonly status: MatchStatus.Start
   readonly turnNumber: 0
 }
 
-export interface IMatchStatePlayingSerialized<
-  PlayerID extends string = string
-> {
+export interface IMatchStatePlayingSerialized<PlayerID extends string = string>
+  extends IEntity<PlayerID, 'MatchState'> {
   readonly action: IAction
   readonly currentTurn: PlayerSerialized<PlayerID>
   readonly inputNumber: number
@@ -36,7 +37,8 @@ export interface IMatchStatePlayingSerialized<
   readonly turnNumber: number
 }
 
-export interface IMatchStateStopSerialized<PlayerID extends string = string> {
+export interface IMatchStateStopSerialized<PlayerID extends string = string>
+  extends IEntity<PlayerID, 'MatchState'> {
   readonly action: IAction
   readonly currentTurn: PlayerSerialized<PlayerID>
   readonly inputNumber: number

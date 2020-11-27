@@ -8,10 +8,12 @@ describe('turn', () => {
   let player2: IPlayer
   let turn: ITurn
 
+  const matchId = '42'
+
   beforeEach(() => {
     player1 = new Human('PLAYER_1_ID', 'PLAYER_1_NAME')
     player2 = new Human('PLAYER_2_ID', 'PLAYER_2_NAME')
-    turn = new Turn(player1, player2)
+    turn = new Turn(player1, player2, matchId)
   })
 
   it('should exist', () => {
@@ -21,7 +23,7 @@ describe('turn', () => {
 
   it('should instantiate correctly', () => {
     expect.hasAssertions()
-    const turn = new Turn(player1, player2)
+    const turn = new Turn(player1, player2, matchId)
     expect(turn).toBeInstanceOf(Turn)
   })
 

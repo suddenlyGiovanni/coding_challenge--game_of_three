@@ -2,11 +2,12 @@ import { IPlayer } from './player.interface'
 
 import {
   IAction,
+  IEntity,
   IMatchStateSerialized,
   IMatchStatus,
 } from '@game-of-three/contracts'
 
-export interface IMatchState {
+export interface IMatchState extends IEntity<string, 'MatchState'> {
   readonly action?: IAction
 
   readonly currentTurn?: IPlayer

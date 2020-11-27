@@ -26,6 +26,8 @@ export class Match<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
 
   public static readonly MIN = 3
 
+  public readonly __type: 'Match' = 'Match'
+
   private readonly _id: string
 
   private _initialized: boolean
@@ -49,7 +51,7 @@ export class Match<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
     this._id = uuidStrategy()
     this._initialized = false
     this._players = [player1, player2] as const
-    this._turn = new Turn(player1, player2)
+    this._turn = new Turn(player1, player2, this._id)
     this._matchStateHistory = []
     this._observers = []
 
@@ -120,6 +122,7 @@ export class Match<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
       const nextTurn = this._turn.current
       const turnNumber = 0
       const initialMatchState: IMatchState = new MatchState({
+        id: this.id,
         nextTurn,
         outputNumber,
         status: MatchStatus.Start,
@@ -153,6 +156,10 @@ export class Match<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
     }
   }
 
+  /**
+   * FIXME: rename it to `push`
+   * @param matchState
+   */
   public setState(matchState: IMatchState): void {
     this._assertInitialized()
     this._matchStateHistory.push(matchState)

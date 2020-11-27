@@ -1,12 +1,12 @@
 import type { IMatchState } from './match-state.interface'
 import type { IPlayer } from './player.interface'
 
-import type { IMatchStatus } from '@game-of-three/contracts'
+import type { IEntity, IMatchStatus } from '@game-of-three/contracts'
 
 export interface IMatch<
   IPlayer1 extends IPlayer<string>,
   IPlayer2 extends IPlayer<string>
-> {
+> extends IEntity<string, 'Match'> {
   /**
    * get the match unique ID
    * @returns {string}

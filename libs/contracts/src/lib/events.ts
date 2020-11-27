@@ -16,7 +16,7 @@ import {
   actionUpdateName,
 } from './actions-creators'
 
-import type { PlayerID, PlayerSerialized } from './player'
+import type { PlayerID, PlayerSerialized } from './domain/player'
 
 /**
  * FIXME: RENAME TO SOMETHING MORE APPROPRIATE

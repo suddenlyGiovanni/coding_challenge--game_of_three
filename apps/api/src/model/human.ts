@@ -7,6 +7,8 @@ import { PlayerSerialized } from '@game-of-three/contracts'
 
 export class Human<PlayerID extends string = string>
   implements IPlayer<PlayerID> {
+  public readonly __type: 'Player' = 'Player'
+
   private readonly _id: PlayerID
 
   private _name: string
@@ -41,6 +43,7 @@ export class Human<PlayerID extends string = string>
 
   public serialize(): PlayerSerialized {
     return {
+      __type: 'Player',
       id: this.id,
       name: this.name,
       type: this.type,

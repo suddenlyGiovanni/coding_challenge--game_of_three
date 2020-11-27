@@ -1,9 +1,11 @@
 import type { IPlayer } from './player.interface'
 
+import type { IEntity } from '@game-of-three/contracts'
+
 export interface ITurn<
   Player1 extends IPlayer = IPlayer,
   Player2 extends IPlayer = IPlayer
-> {
+> extends IEntity<string, 'Turn'> {
   /**
    * who is playing the current turn
    * @type {(Player1 | Player2)}

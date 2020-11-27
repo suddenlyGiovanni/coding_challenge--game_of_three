@@ -73,6 +73,8 @@ describe('match-service', () => {
     it('should not allow to move if it is not the player turn', () => {
       expect.hasAssertions()
       const initialState: IMatchStateStartSerialized = {
+        __type: 'MatchState',
+        id: twoPlayersMatchService.id,
         nextTurn: player1.serialize(),
         outputNumber: 100,
         status: MatchStatus.Start,
@@ -90,6 +92,8 @@ describe('match-service', () => {
     it('should allow to move until one player reaches one', () => {
       expect.hasAssertions()
       const initialState: IMatchStateStartSerialized = {
+        __type: 'MatchState',
+        id: twoPlayersMatchService.id,
         nextTurn: player1.serialize(),
         outputNumber: 100,
         status: MatchStatus.Start,
@@ -103,8 +107,10 @@ describe('match-service', () => {
       expect(() => twoPlayersMatchService.move(player1, -1)).not.toThrow()
       // assert
       const expectedState1: IMatchStatePlayingSerialized = {
+        __type: 'MatchState',
         action: -1,
         currentTurn: player1.serialize(),
+        id: twoPlayersMatchService.id,
         inputNumber: 100,
         nextTurn: player2.serialize(),
         outputNumber: 33,
@@ -119,8 +125,10 @@ describe('match-service', () => {
       expect(() => twoPlayersMatchService.move(player2, 0)).not.toThrow()
       // assert
       const expectedState2: IMatchStatePlayingSerialized = {
+        __type: 'MatchState',
         action: 0,
         currentTurn: player2.serialize(),
+        id: twoPlayersMatchService.id,
         inputNumber: 33,
         nextTurn: player1.serialize(),
         outputNumber: 11,
@@ -135,8 +143,10 @@ describe('match-service', () => {
       expect(() => twoPlayersMatchService.move(player1, 1)).not.toThrow()
       // assert
       const expectedState3: IMatchStatePlayingSerialized = {
+        __type: 'MatchState',
         action: 1,
         currentTurn: player1.serialize(),
+        id: twoPlayersMatchService.id,
         inputNumber: 11,
         nextTurn: player2.serialize(),
         outputNumber: 4,
@@ -151,8 +161,10 @@ describe('match-service', () => {
       expect(() => twoPlayersMatchService.move(player2, -1)).not.toThrow()
       // assert
       const expectedState4: IMatchStateStopSerialized = {
+        __type: 'MatchState',
         action: -1,
         currentTurn: player2.serialize(),
+        id: twoPlayersMatchService.id,
         inputNumber: 4,
         outputNumber: 1,
         status: MatchStatus.Stop,
@@ -171,6 +183,8 @@ describe('match-service', () => {
     it('should allow to move until a player commits an error', () => {
       expect.hasAssertions()
       const initialState: IMatchStateStartSerialized = {
+        __type: 'MatchState',
+        id: twoPlayersMatchService.id,
         nextTurn: player1.serialize(),
         outputNumber: 100,
         status: MatchStatus.Start,
@@ -185,8 +199,10 @@ describe('match-service', () => {
       expect(() => twoPlayersMatchService.move(player1, -1)).not.toThrow()
       // assert
       const expectedState1: IMatchStatePlayingSerialized = {
+        __type: 'MatchState',
         action: -1,
         currentTurn: player1.serialize(),
+        id: twoPlayersMatchService.id,
         inputNumber: 100,
         nextTurn: player2.serialize(),
         outputNumber: 33,
@@ -201,8 +217,10 @@ describe('match-service', () => {
       expect(() => twoPlayersMatchService.move(player2, 1)).not.toThrow()
       // assert
       const expectedState2: IMatchStateStopSerialized = {
+        __type: 'MatchState',
         action: 1,
         currentTurn: player2.serialize(),
+        id: twoPlayersMatchService.id,
         inputNumber: 33,
         outputNumber: 34 / 3,
         status: MatchStatus.Stop,
@@ -250,6 +268,8 @@ describe('match-service', () => {
       expect.hasAssertions()
       jest.useFakeTimers()
       const initialState: IMatchStateStartSerialized = {
+        __type: 'MatchState',
+        id: onePlayerAgainstAIMatchService.id,
         nextTurn: player1.serialize(),
         outputNumber: 100,
         status: MatchStatus.Start,
@@ -266,8 +286,10 @@ describe('match-service', () => {
       ).not.toThrow()
       // assert
       const expectedState1: IMatchStatePlayingSerialized = {
+        __type: 'MatchState',
         action: -1,
         currentTurn: player1.serialize(),
+        id: onePlayerAgainstAIMatchService.id,
         inputNumber: 100,
         nextTurn: playerAI.serialize(),
         outputNumber: 33,
@@ -283,8 +305,10 @@ describe('match-service', () => {
       await flushPromises()
       // assert
       const expectedState2: IMatchStatePlayingSerialized = {
+        __type: 'MatchState',
         action: 0,
         currentTurn: playerAI.serialize(),
+        id: onePlayerAgainstAIMatchService.id,
         inputNumber: 33,
         nextTurn: player1.serialize(),
         outputNumber: 11,
@@ -301,8 +325,10 @@ describe('match-service', () => {
       ).not.toThrow()
       // assert
       const expectedState3: IMatchStatePlayingSerialized = {
+        __type: 'MatchState',
         action: 1,
         currentTurn: player1.serialize(),
+        id: onePlayerAgainstAIMatchService.id,
         inputNumber: 11,
         nextTurn: playerAI.serialize(),
         outputNumber: 4,
@@ -318,8 +344,10 @@ describe('match-service', () => {
       await flushPromises()
       // assert
       const expectedState4: IMatchStateStopSerialized = {
+        __type: 'MatchState',
         action: -1,
         currentTurn: playerAI.serialize(),
+        id: onePlayerAgainstAIMatchService.id,
         inputNumber: 4,
         outputNumber: 1,
         status: MatchStatus.Stop,

@@ -165,6 +165,7 @@ describe('match', () => {
     match.registerObserver(observerA)
     const [player1, player2] = match.players
     const initialMatchState: IMatchState = new MatchState({
+      id: match.id,
       nextTurn: player1,
       outputNumber: 100,
       status: MatchStatus.Start,
@@ -173,6 +174,7 @@ describe('match', () => {
     const injectedMatchState: IMatchState = new MatchState({
       action: -1,
       currentTurn: player1,
+      id: match.id,
       inputNumber: 100,
       nextTurn: player2,
       outputNumber: 33,
@@ -242,6 +244,8 @@ describe('match', () => {
       expect(() => match.notifyObservers()).not.toThrow()
       // assert
       const expectedUpdateArgument: IMatchStateStartSerialized = {
+        __type: 'MatchState',
+        id: match.id,
         nextTurn: human.serialize(),
         outputNumber: 100,
         status: MatchStatus.Start,

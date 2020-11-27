@@ -14,24 +14,30 @@ import {
   MatchStatus,
 } from '@game-of-three/contracts'
 
-export class MatchState implements IMatchState {
-  readonly action?: IAction
+export class MatchState<MatchID extends string = string>
+  implements IMatchState {
+  public readonly __type: 'MatchState' = 'MatchState'
 
-  readonly currentTurn?: IPlayer
+  public readonly action?: IAction
 
-  readonly inputNumber?: number
+  public readonly currentTurn?: IPlayer
 
-  readonly nextTurn?: IPlayer
+  public readonly id: MatchID
 
-  readonly outputNumber!: number
+  public readonly inputNumber?: number
 
-  readonly status!: IMatchStatus
+  public readonly nextTurn?: IPlayer
 
-  readonly turnNumber!: number
+  public readonly outputNumber!: number
 
-  readonly winningPlayer?: IPlayer
+  public readonly status!: IMatchStatus
+
+  public readonly turnNumber!: number
+
+  public readonly winningPlayer?: IPlayer
 
   public constructor(state: {
+    id: MatchID
     nextTurn: IPlayer
     outputNumber: number
     status: IMatchStatusStart
@@ -41,6 +47,7 @@ export class MatchState implements IMatchState {
   public constructor(state: {
     action: IAction
     currentTurn: IPlayer
+    id: MatchID
     inputNumber: number
     nextTurn: IPlayer
     outputNumber: number
@@ -51,6 +58,7 @@ export class MatchState implements IMatchState {
   public constructor(state: {
     action: IAction
     currentTurn: IPlayer
+    id: MatchID
     inputNumber: number
     outputNumber: number
     status: IMatchStatusStop
@@ -61,6 +69,7 @@ export class MatchState implements IMatchState {
   public constructor(state: {
     action?: IAction
     currentTurn?: IPlayer
+    id: MatchID
     inputNumber?: number
     nextTurn?: IPlayer
     outputNumber: number
@@ -68,6 +77,8 @@ export class MatchState implements IMatchState {
     turnNumber: 0 | number
     winningPlayer?: IPlayer
   }) {
+    this.id = state.id
+
     if (state.status === MatchStatus.Start) {
       this.outputNumber = state.outputNumber
       this.status = state.status
@@ -128,6 +139,8 @@ export class MatchState implements IMatchState {
 
   public serialize(): Readonly<IMatchStateSerialized> {
     const matchStateSerialized: IMatchStateSerialized = {
+      __type: 'MatchState',
+      id: this.id,
       ...(typeof this.action === 'number' && { action: this.action }),
       ...(this.currentTurn && { currentTurn: this.currentTurn.serialize() }),
       ...(typeof this.inputNumber === 'number' && {

@@ -1,8 +1,8 @@
 import type { IPlayer } from './player.interface'
 
-import type { IAction } from '@game-of-three/contracts'
+import type { IAction, IEntity } from '@game-of-three/contracts'
 
-export interface IMatchService {
+export interface IMatchService extends IEntity<string, 'MatchService'> {
   /**
    * a game move
    * @param {IPlayer} player

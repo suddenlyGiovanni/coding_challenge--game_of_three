@@ -1,8 +1,9 @@
 import { actionCreator } from './actions'
+import type { IAction, IMatchStateSerialized } from './domain/match'
+import type { PlayerID, PlayerSerialized } from './domain/player'
 import { SocketEvent } from './events'
 import type { ServerState } from './events'
-import type { IAction, IMatchStateSerialized } from './match'
-import type { PlayerID, PlayerSerialized } from './player'
+
 export const actionHello = (payload: 'world!') =>
   actionCreator(SocketEvent.SYSTEM_HELLO, payload)
 

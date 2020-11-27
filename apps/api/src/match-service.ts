@@ -30,6 +30,10 @@ import {
 
 export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
   implements IMatchService {
+  public readonly __type: 'MatchService' = 'MatchService'
+
+  public readonly id: string
+
   private _aiActor?: AIActor<string>
 
   private readonly _aiActorMoveObserver: IObserver<IAction> = {
@@ -67,6 +71,7 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
     sockets?: [socket1: Socket, socket2?: Socket]
   }) {
     this._match = new Match(...players, numberGeneratorStrategy)
+    this.id = this._match.id
     this._sockets = sockets
     this._debugObserver = debugObserver
 
@@ -107,6 +112,7 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
         const matchStateStop: IMatchState = new MatchState({
           action,
           currentTurn: this._match.turn,
+          id: this._match.id,
           inputNumber,
           outputNumber,
           status: MatchStatus.Stop,
@@ -119,6 +125,7 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
       const matchStatePlaying = new MatchState({
         action,
         currentTurn: this._match.turn,
+        id: this._match.id,
         inputNumber,
         nextTurn: this._match.nextTurn,
         outputNumber,
@@ -132,6 +139,7 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
     const matchStateStop = new MatchState({
       action,
       currentTurn: this._match.turn,
+      id: this._match.id,
       inputNumber,
       outputNumber,
       status: MatchStatus.Stop,

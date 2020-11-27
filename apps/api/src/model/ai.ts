@@ -10,6 +10,8 @@ export type UUIDService = () => string
 export class AI<PlayerID extends string> implements IPlayer<PlayerID> {
   private static readonly NAME = 'AI'
 
+  public readonly __type: 'Player' = 'Player'
+
   private readonly _id: PlayerID
 
   private readonly _name: string
@@ -48,6 +50,7 @@ export class AI<PlayerID extends string> implements IPlayer<PlayerID> {
 
   public serialize(): PlayerSerialized {
     return {
+      __type: 'Player',
       id: this.id,
       name: this.name,
       type: this.type,
