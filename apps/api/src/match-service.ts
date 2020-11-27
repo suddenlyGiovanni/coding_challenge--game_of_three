@@ -9,9 +9,15 @@ import type {
   IPlayer,
 } from './interfaces'
 import { INumberGeneratorStrategy, Match, MatchState } from './model'
-import { SocketActionFn, createSocket, emitToSocket } from './sockets'
+import {
+  SocketActionFn,
+  WrappedServerSocket,
+  createSocket,
+  emitToSocket,
+} from './sockets'
 
 import {
+  Action,
   IAction,
   IEvents,
   IMatchStateSerialized,
@@ -36,6 +42,13 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
 
   private readonly _sockets?: [socket1: Socket, socket2?: Socket]
 
+  private readonly registeredEventsListener: readonly [
+    WrappedServerSocket<
+      SocketEvent.MATCH_MOVE,
+      Action<SocketEvent.MATCH_MOVE, IAction, never, never>
+    >
+  ]
+
   /**
    *Creates an instance of MatchService.
    * @param {[IPlayer1, IPlayer2]} players
@@ -57,13 +70,15 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
     this._sockets = sockets
     this._debugObserver = debugObserver
 
+    this.registeredEventsListener = this._registerEventHandlersToSocketEvents()
+
     this._addAiActor()
 
     this._subscribeDebugObserverToMatchStateSubject()
 
     this._subscribeSocketsToMatchStateSubject()
 
-    this._registerSocketToEventListeners()
+    this._listenToSocketEvent()
 
     this._match.init()
   }
@@ -225,18 +240,26 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
    * @private
    * @memberof MatchService
    */
-  private _registerSocketToEventListeners(): void {
+  private _listenToSocketEvent(): void {
     this._sockets?.forEach((socket) => {
       if (socket) {
-        const registeredEvents = [
-          createSocket(SocketEvent.MATCH_MOVE, this._handlerMatchMoveAction),
-        ] as const
-
-        registeredEvents.forEach(({ callback, event }) =>
+        this.registeredEventsListener.forEach(({ callback, event }) =>
           socket.on(event, callback(socket))
         )
       }
     })
+  }
+
+  /**
+   * TODO: DOCUMENT THIS METHOD
+   * @private
+   * @returns
+   * @memberof MatchService
+   */
+  private _registerEventHandlersToSocketEvents() {
+    return [
+      createSocket(SocketEvent.MATCH_MOVE, this._handlerMatchMoveAction),
+    ] as const
   }
 
   /**

@@ -14,11 +14,13 @@ export interface WrappedServerSocket<
   event: Event
 }
 
+export type EventEmitterFunction = <Event extends keyof IEvents>(
+  event: Event,
+  action: IEvents[Event]
+) => void
+
 interface Broadcast {
-  (io: IO): <Event extends keyof IEvents>(
-    event: Event,
-    action: IEvents[Event]
-  ) => void
+  (io: IO): EventEmitterFunction
 }
 
 /**
@@ -29,10 +31,7 @@ export const broadcast: Broadcast = (io) => (event, action) => {
 }
 
 interface EmitToSocket {
-  (socket: Socket): <Event extends keyof IEvents>(
-    event: Event,
-    action: IEvents[Event]
-  ) => void
+  (socket: Socket): EventEmitterFunction
 }
 
 /**
@@ -42,9 +41,7 @@ export const emitToSocket: EmitToSocket = (socket) => (event, action) => {
   socket.emit(event, action)
 }
 
-type EmitToAllSockets = (
-  socket: Socket
-) => <Event extends keyof IEvents>(event: Event, action: IEvents[Event]) => void
+type EmitToAllSockets = (socket: Socket) => EventEmitterFunction
 
 /**
  * sending to all clients except sender ('socket')
@@ -57,12 +54,7 @@ export const emitToAllSockets: EmitToAllSockets = (socket) => (
 }
 
 interface EmitToSocketId {
-  (io: IO): (
-    socketId: string
-  ) => <Event extends keyof IEvents>(
-    event: Event,
-    action: IEvents[Event]
-  ) => void
+  (io: IO): (socketId: string) => EventEmitterFunction
 }
 
 /**
@@ -76,12 +68,7 @@ export const emitToSocketId: EmitToSocketId = (io) => (socketId) => (
 }
 
 interface BroadcastToRoom {
-  (io: IO): (
-    room: string
-  ) => <Event extends keyof IEvents>(
-    event: Event,
-    action: IEvents[Event]
-  ) => void
+  (io: IO): (room: string) => EventEmitterFunction
 }
 
 /**

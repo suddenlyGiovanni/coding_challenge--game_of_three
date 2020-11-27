@@ -7,7 +7,9 @@ import { MatchService } from './match-service'
 import { AI, Human, Lobby } from './model'
 import { PlayersStore } from './players-store'
 import {
+  EventEmitterFunction,
   SocketActionFn,
+  WrappedServerSocket,
   broadcast,
   createSocket,
   emitToAllSockets,
@@ -15,6 +17,8 @@ import {
 } from './sockets'
 
 import {
+  Action,
+  IAction,
   IEvents,
   PlayerID,
   SocketEvent,
@@ -34,6 +38,8 @@ export class Server implements IServer {
 
   private static instance: Server
 
+  private readonly _broadcast: EventEmitterFunction
+
   private heartbeatTimerID?: NodeJS.Timeout
 
   private readonly io: IOServer
@@ -44,6 +50,33 @@ export class Server implements IServer {
 
   private readonly port: number
 
+  private registeredEventsListener: readonly [
+    WrappedServerSocket<
+      SocketEvent.INTERNAL_DISCONNECT,
+      | 'transport error'
+      | 'server namespace disconnect'
+      | 'client namespace disconnect'
+      | 'ping timeout'
+      | 'transport close'
+    >,
+    WrappedServerSocket<
+      SocketEvent.SYSTEM_HELLO,
+      Action<SocketEvent.SYSTEM_HELLO, 'world!', never, never>
+    >,
+    WrappedServerSocket<
+      SocketEvent.SYSTEM_NAME_UPDATE,
+      Action<SocketEvent.SYSTEM_NAME_UPDATE, string, never, never>
+    >,
+    WrappedServerSocket<
+      SocketEvent.MATCH_MOVE,
+      Action<SocketEvent.MATCH_MOVE, IAction, never, never>
+    >,
+    WrappedServerSocket<
+      SocketEvent.LOBBY_MAKE_MATCH,
+      Action<SocketEvent.LOBBY_MAKE_MATCH, never, never, never>
+    >
+  ]
+
   private constructor() {
     this.port = Number(process.env.port) || Server.PORT
     this.io = new IOServer(this.port, {
@@ -52,6 +85,8 @@ export class Server implements IServer {
       },
     })
 
+    this._broadcast = (event, action) => broadcast(this.io)(event, action)
+    this.registeredEventsListener = this._registerEventHandlersToSocketEvents()
     this.playersStore = PlayersStore.getInstance()
     this.lobby = Lobby.getInstance()
 
@@ -70,10 +105,7 @@ export class Server implements IServer {
   }
 
   public listen = (): void => {
-    this.io.on(
-      SocketEvent.INTERNAL_CONNECTION,
-      this._registerSocketToEventListeners
-    )
+    this.io.on(SocketEvent.INTERNAL_CONNECTION, this._listenToSocketEvent)
     this._startEmitHeartbeat()
   }
 
@@ -97,7 +129,7 @@ export class Server implements IServer {
       this.lobby.addPlayerId(player.id)
       console.info(`add player id ${player.id} to the lobby`)
 
-      broadcast(this.io)(
+      this._broadcast(
         SocketEvent.LOBBY_PLAYER_JOINED,
         actionLobbyPlayerJoined(player.id)
       )
@@ -113,7 +145,6 @@ export class Server implements IServer {
   }
 
   private _createMatch(playerID1: PlayerID) {
-    const _broadcast = broadcast(this.io)
     // 1. how many players are in the lobby?
     //    IF `ONE` DO:
     //        - remove this player from the lobby
@@ -131,7 +162,7 @@ export class Server implements IServer {
       // there are no other players in the lobby
       // case where a match must be played against an AI
       this.lobby.removePlayerId(playerID1)
-      _broadcast(
+      this._broadcast(
         SocketEvent.LOBBY_PLAYER_LEFT,
         actionLobbyPlayerLeft(playerID1)
       )
@@ -148,12 +179,12 @@ export class Server implements IServer {
       const player1 = this.playersStore.getPlayerByID(playerID1)
       const player2 = this.playersStore.getPlayerByID(playerID2)
 
-      _broadcast(
+      this._broadcast(
         SocketEvent.LOBBY_PLAYER_LEFT,
         actionLobbyPlayerLeft(playerID1)
       )
 
-      _broadcast(
+      this._broadcast(
         SocketEvent.LOBBY_PLAYER_LEFT,
         actionLobbyPlayerLeft(playerID2)
       )
@@ -263,13 +294,16 @@ export class Server implements IServer {
     }
   }
 
-  /**
-   * register all the event handlers to typed sockets event
-   * @private
-   * @memberof Server
-   */
-  private _registerSocketToEventListeners = (socket: Socket): void => {
-    const registeredEvents = [
+  private _listenToSocketEvent = (socket: Socket): void => {
+    this.registeredEventsListener.forEach(({ callback, event }) =>
+      socket.on(event, callback(socket))
+    )
+
+    this._handlerUserConnect(socket)
+  }
+
+  private _registerEventHandlersToSocketEvents() {
+    return [
       createSocket(
         SocketEvent.INTERNAL_DISCONNECT,
         this._handlerUserDisconnect
@@ -279,12 +313,6 @@ export class Server implements IServer {
       createSocket(SocketEvent.MATCH_MOVE, this._handlerMatchMove),
       createSocket(SocketEvent.LOBBY_MAKE_MATCH, this._handlerMatchMaking),
     ] as const
-
-    registeredEvents.forEach(({ callback, event }) =>
-      socket.on(event, callback(socket))
-    )
-
-    this._handlerUserConnect(socket)
   }
 
   /**
@@ -300,7 +328,7 @@ export class Server implements IServer {
       console.info(`remove player id ${player.id} from lobby`)
       this.lobby.removePlayerId(player.id)
 
-      broadcast(this.io)(
+      this._broadcast(
         SocketEvent.LOBBY_PLAYER_LEFT,
         actionLobbyPlayerLeft(player.id)
       )
@@ -319,7 +347,7 @@ export class Server implements IServer {
     console.info(`remove player id ${player.id} from playerStore`)
 
     this.playersStore.removePlayerByID(player.id)
-    broadcast(this.io)(
+    this._broadcast(
       SocketEvent.SYSTEM_PLAYER_LEFT,
       actionPlayerLeft(player.serialize())
     )
@@ -331,7 +359,7 @@ export class Server implements IServer {
 
     console.log(`user id: ${playerId} - name changed: ${name}`) // TODO: remove this console.log
 
-    broadcast(this.io)(
+    this._broadcast(
       SocketEvent.SYSTEM_NAME_CHANGED,
       actionPlayerNameChanged(
         this.playersStore.getPlayerByID(playerId).serialize()
@@ -340,11 +368,10 @@ export class Server implements IServer {
   }
 
   private _startEmitHeartbeat(): void {
-    const _broadcast = broadcast(this.io)
     const action = () => actionHeartbeat(new Date().toISOString())
 
     this.heartbeatTimerID = setInterval(
-      () => _broadcast(SocketEvent.SYSTEM_HEARTBEAT, action()),
+      () => this._broadcast(SocketEvent.SYSTEM_HEARTBEAT, action()),
       1000
     )
   }
