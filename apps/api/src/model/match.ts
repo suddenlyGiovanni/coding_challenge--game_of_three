@@ -12,43 +12,53 @@ import { MatchState } from '../model/match-state'
 
 import { Turn } from './turn'
 
-import {
-  IMatchStateSerialized,
-  IMatchStatus,
-  MatchStatus,
-} from '@game-of-three/contracts'
+import { IMatchStateSerialized, MatchStatus } from '@game-of-three/contracts'
 
-export type IUUIDStrategy = () => string
+export interface IUUIDStrategy {
+  <T extends string = string>(): T
+}
 export type INumberGeneratorStrategy = () => number
-export class Match<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
-  implements IMatch<IPlayer1, IPlayer2>, ISubject<IMatchStateSerialized> {
+export class Match<
+  PlayerID1 extends string = string,
+  PlayerID2 extends string = string,
+  MatchID extends string = string
+> implements
+    IMatch<PlayerID1, PlayerID2, MatchID>,
+    ISubject<IMatchStateSerialized> {
   public static readonly MAX = 100
 
   public static readonly MIN = 3
 
   public readonly __type: 'Match' = 'Match'
 
-  private readonly _id: string
+  private readonly _id: MatchID
 
   private _initialized: boolean
 
-  private readonly _matchStateHistory: IMatchState[]
+  private readonly _matchStateHistory: IMatchState<
+    MatchID,
+    PlayerID1,
+    PlayerID2
+  >[]
 
   private readonly _numberGeneratorStrategy: INumberGeneratorStrategy
 
   private readonly _observers: IObserver<IMatchStateSerialized>[]
 
-  private readonly _players: readonly [IPlayer1, IPlayer2]
+  private readonly _players: readonly [
+    player1: IPlayer<PlayerID1>,
+    player2: IPlayer<PlayerID2>
+  ]
 
-  private readonly _turn: ITurn<IPlayer1, IPlayer2>
+  private readonly _turn: ITurn<MatchID, PlayerID1, PlayerID2>
 
   public constructor(
-    player1: IPlayer1,
-    player2: IPlayer2,
+    player1: IPlayer<PlayerID1>,
+    player2: IPlayer<PlayerID2>,
     numberGeneratorStrategy?: INumberGeneratorStrategy,
     uuidStrategy: IUUIDStrategy = uuid
   ) {
-    this._id = uuidStrategy()
+    this._id = uuidStrategy<MatchID>()
     this._initialized = false
     this._players = [player1, player2] as const
     this._turn = new Turn(player1, player2, this._id)
@@ -73,7 +83,7 @@ export class Match<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
     return Math.floor(Math.random() * (_max - _min + 1) + _min)
   }
 
-  public get turn(): IPlayer1 | IPlayer2 {
+  public get turn(): IPlayer<PlayerID1> | IPlayer<PlayerID2> {
     this._assertInitialized()
     return this._turn.current
   }
@@ -83,11 +93,11 @@ export class Match<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
     return this._turn.number
   }
 
-  public get id(): string {
+  public get id(): MatchID {
     return this._id
   }
 
-  public get state(): Readonly<IMatchState> {
+  public get state(): Readonly<IMatchState<MatchID, PlayerID1, PlayerID2>> {
     this._assertInitialized()
     const { length } = this._matchStateHistory
 
@@ -97,17 +107,25 @@ export class Match<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
     return this._matchStateHistory[length - 1]
   }
 
-  public get stateHistory(): readonly Readonly<IMatchState>[] {
+  public get stateHistory(): ReadonlyArray<
+    Readonly<IMatchState<MatchID, PlayerID1, PlayerID2>>
+  > {
     this._assertInitialized()
     return this._matchStateHistory
   }
 
-  public get status(): IMatchStatus {
+  public get status():
+    | MatchStatus.Start
+    | MatchStatus.Playing
+    | MatchStatus.Stop {
     this._assertInitialized()
     return this.state.status
   }
 
-  public get players(): readonly [IPlayer1, IPlayer2] {
+  public get players(): readonly [
+    player1: IPlayer<PlayerID1>,
+    player2: IPlayer<PlayerID2>
+  ] {
     return this._players
   }
 
@@ -118,15 +136,13 @@ export class Match<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
       )
     } else {
       this._turn.init()
-      const outputNumber = this._numberGeneratorStrategy()
-      const nextTurn = this._turn.current
-      const turnNumber = 0
-      const initialMatchState: IMatchState = new MatchState({
+      const initialMatchState = new MatchState<MatchID, PlayerID1, PlayerID2>({
         id: this.id,
-        nextTurn,
-        outputNumber,
+        nextTurn: this._turn.current,
+        outputNumber: this._numberGeneratorStrategy(),
+        players: this._players,
         status: MatchStatus.Start,
-        turnNumber,
+        turnNumber: 0,
       })
       this._matchStateHistory.push(initialMatchState)
       this._initialized = true
@@ -140,12 +156,12 @@ export class Match<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
     })
   }
 
-  public get nextTurn(): IPlayer1 | IPlayer2 {
+  public get nextTurn(): IPlayer<PlayerID1> | IPlayer<PlayerID2> {
     this._assertInitialized()
     return this._turn.next
   }
 
-  public push(matchState: IMatchState): void {
+  public push(matchState: IMatchState<MatchID, PlayerID1, PlayerID2>): void {
     this._assertInitialized()
     this._matchStateHistory.push(matchState)
 

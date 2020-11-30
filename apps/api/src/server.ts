@@ -2,7 +2,7 @@ import { clearInterval } from 'timers'
 
 import { Server as IOServer, Socket } from 'socket.io'
 
-import type { ILobby, IPlayer, IPlayersStore, IServer } from './interfaces'
+import type { ILobby, IPlayersStore, IServer } from './interfaces'
 import { MatchService } from './match-service'
 import { AI, Human, Lobby } from './model'
 import { PlayersStore } from './players-store'
@@ -39,7 +39,7 @@ export class Server implements IServer {
 
   private readonly _broadcast: EventEmitterFunction
 
-  private readonly _matches: Map<string, MatchService<IPlayer, IPlayer>>
+  private readonly _matches: Map<string, MatchService>
 
   private heartbeatTimerID?: NodeJS.Timeout
 
@@ -82,7 +82,7 @@ export class Server implements IServer {
       },
     })
 
-    this._matches = new Map<string, MatchService<IPlayer, IPlayer>>()
+    this._matches = new Map<string, MatchService>()
     this._broadcast = (event, action) => broadcast(this.io)(event, action)
     this.registeredEventsListener = this._registerEventHandlersToSocketEvents()
     this.playersStore = PlayersStore.getInstance()

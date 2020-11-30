@@ -48,7 +48,7 @@ export interface IPlayer<PlayerID extends string = string>
    * @returns {boolean}
    * @memberof IPlayer
    */
-  isSame(player: IPlayer<PlayerID>): boolean
+  isSame(player: IPlayer): boolean
 
-  serialize(): PlayerSerialized
+  serialize(): PlayerSerialized<PlayerID>
 }

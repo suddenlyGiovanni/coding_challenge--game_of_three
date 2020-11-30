@@ -13,7 +13,7 @@ describe('ai class', () => {
   it('should allow for uuid Service to be injected', () => {
     expect.hasAssertions()
 
-    const uuidService: UUIDService = () => AI_ID
+    const uuidService: UUIDService<typeof AI_ID> = () => AI_ID
     const uuidServiceMock = jest.fn(uuidService)
     const al = AI.make(uuidServiceMock)
     expect.hasAssertions()

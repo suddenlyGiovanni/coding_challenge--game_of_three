@@ -1,27 +1,34 @@
 import type { IPlayer, ITurn } from '../interfaces'
 
-export class Turn<Player1 extends IPlayer, Player2 extends IPlayer>
-  implements ITurn<Player1, Player2> {
+export class Turn<
+  MatchID extends string = string,
+  PlayerID1 extends string = string,
+  PlayerID2 extends string = string
+> implements ITurn<MatchID, PlayerID1, PlayerID2> {
   public readonly __type: 'Turn' = 'Turn'
 
-  public readonly id: string
+  public readonly id: MatchID
 
-  private _current!: Player1 | Player2
+  private _current!: IPlayer<PlayerID1> | IPlayer<PlayerID2>
 
   private _number: number
 
-  private readonly _player1: Player1
+  private readonly _player1: IPlayer<PlayerID1>
 
-  private readonly _player2: Player2
+  private readonly _player2: IPlayer<PlayerID2>
 
-  public constructor(player1: Player1, player2: Player2, matchId: string) {
+  public constructor(
+    player1: IPlayer<PlayerID1>,
+    player2: IPlayer<PlayerID2>,
+    matchId: MatchID
+  ) {
     this._player1 = player1
     this._player2 = player2
     this._number = 0
     this.id = matchId
   }
 
-  public get current(): Player1 | Player2 {
+  public get current(): IPlayer<PlayerID1> | IPlayer<PlayerID2> {
     this.assertInt()
     return this._current
   }
@@ -31,7 +38,7 @@ export class Turn<Player1 extends IPlayer, Player2 extends IPlayer>
     return this._number
   }
 
-  public get next(): Player1 | Player2 {
+  public get next(): IPlayer<PlayerID1> | IPlayer<PlayerID2> {
     this.assertInt()
     return this._current.isSame(this._player1) ? this._player2 : this._player1
   }
@@ -41,7 +48,7 @@ export class Turn<Player1 extends IPlayer, Player2 extends IPlayer>
     this._number = 1
   }
 
-  public switch(): Player1 | Player2 {
+  public switch(): IPlayer<PlayerID1> | IPlayer<PlayerID2> {
     this.assertInt()
     this._number += 1
     this._current = this.next

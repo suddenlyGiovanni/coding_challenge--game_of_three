@@ -41,6 +41,7 @@ describe('ai actor', () => {
     inputNumber: 12,
     nextTurn: ai.serialize(),
     outputNumber: 12,
+    players: [human.serialize(), ai.serialize()],
     status: MatchStatus.Playing,
     turnNumber: 2,
   }
@@ -125,6 +126,7 @@ describe('ai actor', () => {
           inputNumber: 100,
           nextTurn: ai.serialize(),
           outputNumber: 33,
+          players: [human.serialize(), ai.serialize()],
           status: MatchStatus.Playing,
           turnNumber: 1,
         })
@@ -141,6 +143,7 @@ describe('ai actor', () => {
           id: mockMatchId,
           inputNumber: 4,
           outputNumber: 1,
+          players: [human.serialize(), ai.serialize()],
           status: MatchStatus.Stop,
           turnNumber: 4,
           winningPlayer: human.serialize(),
@@ -165,6 +168,7 @@ describe('ai actor', () => {
         inputNumber: 33,
         nextTurn: ai.serialize(),
         outputNumber: 11,
+        players: [human.serialize(), ai.serialize()],
         status: MatchStatus.Playing,
         turnNumber: 4,
       })

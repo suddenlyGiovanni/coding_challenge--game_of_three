@@ -41,7 +41,7 @@ export class Human<PlayerID extends string = string>
     return this._id === player.id
   }
 
-  public serialize(): PlayerSerialized {
+  public serialize(): PlayerSerialized<PlayerID> {
     return {
       __type: 'Player',
       id: this.id,

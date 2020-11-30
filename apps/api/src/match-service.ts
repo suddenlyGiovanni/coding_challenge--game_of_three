@@ -2,12 +2,7 @@
 import type { Socket } from 'socket.io'
 
 import { AIActor } from './ai-actor'
-import type {
-  IMatchService,
-  IMatchState,
-  IObserver,
-  IPlayer,
-} from './interfaces'
+import type { IMatchService, IObserver, IPlayer } from './interfaces'
 import { INumberGeneratorStrategy, Match, MatchState } from './model'
 import {
   SocketActionFn,
@@ -22,19 +17,21 @@ import {
   IEvents,
   IMatchStateSerialized,
   MatchStatus,
-  PlayerID,
   SocketEvent,
   actionMatchMoveError,
   actionMatchNewState,
 } from '@game-of-three/contracts'
 
-export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
-  implements IMatchService {
+export class MatchService<
+  PlayerID1 extends string = string,
+  PlayerID2 extends string = string,
+  MatchID extends string = string
+> implements IMatchService<MatchID, PlayerID1, PlayerID2> {
   public readonly __type: 'MatchService' = 'MatchService'
 
-  public readonly id: string
+  public readonly id: MatchID
 
-  public readonly onMatchEnd?: (matchId: string) => void
+  public readonly onMatchEnd?: (matchId: MatchID) => void
 
   private _aiActor?: AIActor<string>
 
@@ -44,7 +41,7 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
 
   private readonly _debugObserver?: IObserver<IMatchStateSerialized>
 
-  private readonly _match: Match<IPlayer1, IPlayer2>
+  private readonly _match: Match<PlayerID1, PlayerID2, MatchID>
 
   private readonly _matchEndObserver: IObserver<IMatchStateSerialized> = {
     update: () => this._isMatchStop() && this._onMatchEnd(),
@@ -87,7 +84,7 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
     debugObserver?: IObserver<IMatchStateSerialized>
     numberGeneratorStrategy?: INumberGeneratorStrategy
     onMatchEnd?: (matchId: string) => void
-    players: [player1: IPlayer1, player2: IPlayer2]
+    players: [player1: IPlayer<PlayerID1>, player2: IPlayer<PlayerID2>]
     sockets?: [socket1: Socket, socket2?: Socket]
   }) {
     this._match = new Match(...players, numberGeneratorStrategy)
@@ -105,15 +102,18 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
   }
 
   private static _assertPlayerBelongToMatch(
-    _match: Match<IPlayer<PlayerID>, IPlayer<PlayerID>>,
-    playerId: PlayerID
+    _match: Match,
+    playerId: string
   ): void {
     if (!_match.players.map((p) => p.id).includes(playerId)) {
       throw new Error('PlayerID does not belong to this match ')
     }
   }
 
-  public move(player: IPlayer, action: IAction): void {
+  public move(
+    player: IPlayer<PlayerID1> | IPlayer<PlayerID2>,
+    action: IAction
+  ): void {
     this._assertMatchStatePlaying()
     this._assertIsPlayerTurn(player)
     const inputNumber = this._getNewInputNumber()
@@ -125,12 +125,13 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
     ) {
       if (this._isEqualToOne(outputNumber)) {
         // victory
-        const matchStateStop: IMatchState = new MatchState({
+        const matchStateStop = new MatchState<MatchID, PlayerID1, PlayerID2>({
           action,
           currentTurn: this._match.turn,
           id: this._match.id,
           inputNumber,
           outputNumber,
+          players: this._match.players,
           status: MatchStatus.Stop,
           turnNumber: this._match.turnNumber,
           winningPlayer: this._match.turn,
@@ -138,13 +139,14 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
         return this._match.push(matchStateStop)
       }
       // next round
-      const matchStatePlaying = new MatchState({
+      const matchStatePlaying = new MatchState<MatchID, PlayerID1, PlayerID2>({
         action,
         currentTurn: this._match.turn,
         id: this._match.id,
         inputNumber,
         nextTurn: this._match.nextTurn,
         outputNumber,
+        players: this._match.players,
         status: MatchStatus.Playing,
         turnNumber: this._match.turnNumber,
       })
@@ -152,12 +154,13 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
     }
 
     // lost
-    const matchStateStop = new MatchState({
+    const matchStateStop = new MatchState<MatchID, PlayerID1, PlayerID2>({
       action,
       currentTurn: this._match.turn,
       id: this._match.id,
       inputNumber,
       outputNumber,
+      players: this._match.players,
       status: MatchStatus.Stop,
       turnNumber: this._match.turnNumber,
       winningPlayer: this._match.nextTurn,
@@ -261,7 +264,7 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
     })
   }
 
-  private _notifyPayersMatchHasEnded(): void {
+  private _notifyPlayersMatchHasEnded(): void {
     this._sockets?.forEach((socket) => {
       emitToSocket(socket)(SocketEvent.MATCH_END_STATE, undefined)
     })
@@ -276,11 +279,11 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
    * @private
    * @memberof MatchService
    */
-  private _onMatchEnd(): void {
+  private _onMatchEnd = (): void => {
     this._removeObserversFromMatchStateSubject() // 1.
-    this._notifyPayersMatchHasEnded() // 2.
+    this._notifyPlayersMatchHasEnded() // 2.
     this._stopListeningToPlayersEvents() // 3.
-    this.onMatchEnd(this.id) // 4.
+    this.onMatchEnd && this.onMatchEnd(this.id) // 4.
   }
 
   /**

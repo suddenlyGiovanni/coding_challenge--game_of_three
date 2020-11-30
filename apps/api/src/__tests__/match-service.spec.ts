@@ -52,7 +52,10 @@ describe('match-service', () => {
   })
 
   describe('two human players', () => {
-    let twoPlayersMatchService: MatchService<typeof player1, typeof player2>
+    let twoPlayersMatchService: MatchService<
+      typeof PLAYER_1_ID,
+      typeof PLAYER_2_ID
+    >
 
     beforeEach(() => {
       twoPlayersMatchService = new MatchService({
@@ -77,6 +80,7 @@ describe('match-service', () => {
         id: twoPlayersMatchService.id,
         nextTurn: player1.serialize(),
         outputNumber: 100,
+        players: [player1.serialize(), player2.serialize()],
         status: MatchStatus.Start,
         turnNumber: 0,
       }
@@ -96,6 +100,7 @@ describe('match-service', () => {
         id: twoPlayersMatchService.id,
         nextTurn: player1.serialize(),
         outputNumber: 100,
+        players: [player1.serialize(), player2.serialize()],
         status: MatchStatus.Start,
         turnNumber: 0,
       }
@@ -114,6 +119,7 @@ describe('match-service', () => {
         inputNumber: 100,
         nextTurn: player2.serialize(),
         outputNumber: 33,
+        players: [player1.serialize(), player2.serialize()],
         status: MatchStatus.Playing,
         turnNumber: 1,
       }
@@ -132,6 +138,7 @@ describe('match-service', () => {
         inputNumber: 33,
         nextTurn: player1.serialize(),
         outputNumber: 11,
+        players: [player1.serialize(), player2.serialize()],
         status: MatchStatus.Playing,
         turnNumber: 2,
       }
@@ -150,6 +157,7 @@ describe('match-service', () => {
         inputNumber: 11,
         nextTurn: player2.serialize(),
         outputNumber: 4,
+        players: [player1.serialize(), player2.serialize()],
         status: MatchStatus.Playing,
         turnNumber: 3,
       }
@@ -167,6 +175,7 @@ describe('match-service', () => {
         id: twoPlayersMatchService.id,
         inputNumber: 4,
         outputNumber: 1,
+        players: [player1.serialize(), player2.serialize()],
         status: MatchStatus.Stop,
         turnNumber: 4,
         winningPlayer: player2.serialize(),
@@ -187,6 +196,7 @@ describe('match-service', () => {
         id: twoPlayersMatchService.id,
         nextTurn: player1.serialize(),
         outputNumber: 100,
+        players: [player1.serialize(), player2.serialize()],
         status: MatchStatus.Start,
         turnNumber: 0,
       }
@@ -206,6 +216,7 @@ describe('match-service', () => {
         inputNumber: 100,
         nextTurn: player2.serialize(),
         outputNumber: 33,
+        players: [player1.serialize(), player2.serialize()],
         status: MatchStatus.Playing,
         turnNumber: 1,
       }
@@ -223,6 +234,7 @@ describe('match-service', () => {
         id: twoPlayersMatchService.id,
         inputNumber: 33,
         outputNumber: 34 / 3,
+        players: [player1.serialize(), player2.serialize()],
         status: MatchStatus.Stop,
         turnNumber: 2,
         winningPlayer: player1.serialize(),
@@ -233,10 +245,7 @@ describe('match-service', () => {
   })
 
   describe('a single player against an AI', () => {
-    let onePlayerAgainstAIMatchService: MatchService<
-      typeof player1,
-      typeof playerAI
-    >
+    let onePlayerAgainstAIMatchService: MatchService<typeof PLAYER_1_ID, string>
 
     beforeEach(() => {
       onePlayerAgainstAIMatchService = new MatchService({
@@ -272,6 +281,7 @@ describe('match-service', () => {
         id: onePlayerAgainstAIMatchService.id,
         nextTurn: player1.serialize(),
         outputNumber: 100,
+        players: [player1.serialize(), playerAI.serialize()],
         status: MatchStatus.Start,
         turnNumber: 0,
       }
@@ -293,6 +303,7 @@ describe('match-service', () => {
         inputNumber: 100,
         nextTurn: playerAI.serialize(),
         outputNumber: 33,
+        players: [player1.serialize(), playerAI.serialize()],
         status: MatchStatus.Playing,
         turnNumber: 1,
       }
@@ -312,6 +323,7 @@ describe('match-service', () => {
         inputNumber: 33,
         nextTurn: player1.serialize(),
         outputNumber: 11,
+        players: [player1.serialize(), playerAI.serialize()],
         status: MatchStatus.Playing,
         turnNumber: 2,
       }
@@ -332,6 +344,7 @@ describe('match-service', () => {
         inputNumber: 11,
         nextTurn: playerAI.serialize(),
         outputNumber: 4,
+        players: [player1.serialize(), playerAI.serialize()],
         status: MatchStatus.Playing,
         turnNumber: 3,
       }
@@ -350,6 +363,7 @@ describe('match-service', () => {
         id: onePlayerAgainstAIMatchService.id,
         inputNumber: 4,
         outputNumber: 1,
+        players: [player1.serialize(), playerAI.serialize()],
         status: MatchStatus.Stop,
         turnNumber: 4,
         winningPlayer: playerAI.serialize(),

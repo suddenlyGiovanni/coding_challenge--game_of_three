@@ -3,22 +3,23 @@ import type { IPlayer } from './player.interface'
 import type { IEntity } from '@game-of-three/contracts'
 
 export interface ITurn<
-  Player1 extends IPlayer = IPlayer,
-  Player2 extends IPlayer = IPlayer
-> extends IEntity<string, 'Turn'> {
+  MatchID extends string = string,
+  PlayerID1 extends string = string,
+  PlayerID2 extends string = string
+> extends IEntity<MatchID, 'Turn'> {
   /**
    * who is playing the current turn
-   * @type {(Player1 | Player2)}
+   * @type {(PlayerID1 | Player2)}
    * @memberof ITurn
    */
-  readonly current: Player1 | Player2
+  readonly current: IPlayer<PlayerID1> | IPlayer<PlayerID2>
 
   /**
    * who will be playing the next turn (without setting it)
-   * @type {(Player1 | Player2)}
+   * @type {(PlayerID1 | Player2)}
    * @memberof ITurn
    */
-  readonly next: Player1 | Player2
+  readonly next: IPlayer<PlayerID1> | IPlayer<PlayerID2>
 
   /**
    * the number of the current turn
@@ -37,8 +38,8 @@ export interface ITurn<
 
   /**
    * switch turn and then returns who's turn is
-   * @returns {(Player1 | Player2)}
+   * @returns {(PlayerID1 | Player2)}
    * @memberof ITurn
    */
-  switch(): Player1 | Player2
+  switch(): IPlayer<PlayerID1> | IPlayer<PlayerID2>
 }

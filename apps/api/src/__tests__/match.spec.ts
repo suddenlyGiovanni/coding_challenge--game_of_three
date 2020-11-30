@@ -7,7 +7,7 @@ import {
   jest,
 } from '@jest/globals'
 
-import type { IMatchState, IObserver } from '../interfaces'
+import type { IObserver } from '../interfaces'
 
 import {
   AI,
@@ -28,15 +28,16 @@ describe('match', () => {
   const PLAYER_1_ID = 'ID_HUMAN'
   const PLAYER_1_NAME = 'NAME_HUMAN'
   const PLAYER_2_ID = 'ID_AI'
-  const ANSWER_TO_THE_ULTIMATE_QUESTION_OF_LIFE_THE_UNIVERSE_AND_EVERYTHING = `42`
+  const ANSWER_TO_THE_ULTIMATE_QUESTION_OF_LIFE_THE_UNIVERSE_AND_EVERYTHING =
+    '42'
 
   const human = new Human(PLAYER_1_ID, PLAYER_1_NAME)
   const ai = AI.make(() => PLAYER_2_ID)
 
-  let match: Match<typeof human, typeof ai>
+  let match: Match
 
   const numberGeneratorStrategy: INumberGeneratorStrategy = () => 100
-  const uuidStrategy: IUUIDStrategy = () =>
+  const uuidStrategy = () =>
     ANSWER_TO_THE_ULTIMATE_QUESTION_OF_LIFE_THE_UNIVERSE_AND_EVERYTHING
 
   const mockNumberGeneratorStrategy = jest.fn(numberGeneratorStrategy)
@@ -48,7 +49,12 @@ describe('match', () => {
   const observerB: IObserver<IMatchStateSerialized> = { update: mockUpdateB }
 
   beforeEach(() => {
-    match = new Match(human, ai, mockNumberGeneratorStrategy, mockUUIDStrategy)
+    match = new Match(
+      human,
+      ai,
+      mockNumberGeneratorStrategy,
+      mockUUIDStrategy as IUUIDStrategy
+    )
   })
 
   afterEach(() => {
@@ -164,20 +170,22 @@ describe('match', () => {
     match.init()
     match.registerObserver(observerA)
     const [player1, player2] = match.players
-    const initialMatchState: IMatchState = new MatchState({
+    const initialMatchState = new MatchState({
       id: match.id,
       nextTurn: player1,
       outputNumber: 100,
+      players: [player1, player2],
       status: MatchStatus.Start,
       turnNumber: 0,
     })
-    const injectedMatchState: IMatchState = new MatchState({
+    const injectedMatchState = new MatchState({
       action: -1,
       currentTurn: player1,
       id: match.id,
       inputNumber: 100,
       nextTurn: player2,
       outputNumber: 33,
+      players: [player1, player2],
       status: MatchStatus.Playing,
       turnNumber: 1,
     })
@@ -248,6 +256,7 @@ describe('match', () => {
         id: match.id,
         nextTurn: human.serialize(),
         outputNumber: 100,
+        players: [human.serialize(), ai.serialize()],
         status: MatchStatus.Start,
         turnNumber: 0,
       }

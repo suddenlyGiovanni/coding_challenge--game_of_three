@@ -1,39 +1,43 @@
 import type { IMatchState } from './match-state.interface'
 import type { IPlayer } from './player.interface'
 
-import type { IEntity, IMatchStatus } from '@game-of-three/contracts'
+import type { IEntity, MatchStatus } from '@game-of-three/contracts'
 
 export interface IMatch<
-  IPlayer1 extends IPlayer<string>,
-  IPlayer2 extends IPlayer<string>
-> extends IEntity<string, 'Match'> {
+  PlayerID1 extends string = string,
+  PlayerID2 extends string = string,
+  MatchID extends string = string
+> extends IEntity<MatchID, 'Match'> {
   /**
    * get the match unique ID
    * @returns {string}
    * @memberof IMatch
    */
-  readonly id: string
+  readonly id: MatchID
 
   /**
    * gets who will be playing the next turn (without setting it)
-   * @returns {(IPlayer1 | IPlayer2)}
+   * @returns {(PlayerID1 | PlayerID2)}
    * @memberof IMatch
    */
-  readonly nextTurn: IPlayer1 | IPlayer2
+  readonly nextTurn: IPlayer<PlayerID1> | IPlayer<PlayerID2>
 
   /**
    * gets a tuple of the two current players
-   * @returns {readonly [IPlayer1, IPlayer2]}
+   * @returns {readonly [PlayerID1, PlayerID2]}
    * @memberof IMatch
    */
-  readonly players: readonly [IPlayer1, IPlayer2]
+  readonly players: readonly [
+    player1: IPlayer<PlayerID1>,
+    player2: IPlayer<PlayerID2>
+  ]
 
   /**
    * get the current match state
    * @returns {Readonly<IMatchState>}
    * @memberof IMatch
    */
-  readonly state: Readonly<IMatchState>
+  readonly state: Readonly<IMatchState<MatchID, PlayerID1, PlayerID2>>
 
   /**
    * gets the history of all the match states.
@@ -41,7 +45,9 @@ export interface IMatch<
    * @returns {ReadonlyArray<Readonly<IMatchState>>}
    * @memberof IMatch
    */
-  readonly stateHistory: ReadonlyArray<Readonly<IMatchState>>
+  readonly stateHistory: ReadonlyArray<
+    Readonly<IMatchState<MatchID, PlayerID1, PlayerID2>>
+  >
 
   /**
    * gets the current match status
@@ -52,14 +58,14 @@ export interface IMatch<
    * @returns {IMatchStatus}
    * @memberof IMatch
    */
-  readonly status: IMatchStatus
+  readonly status: MatchStatus.Start | MatchStatus.Playing | MatchStatus.Stop
 
   /**
    * gets who is playing the current turn
-   * @returns {(IPlayer1 | IPlayer2)}
+   * @returns {(PlayerID1 | PlayerID2)}
    * @memberof IMatch
    */
-  readonly turn: IPlayer1 | IPlayer2
+  readonly turn: IPlayer<PlayerID1> | IPlayer<PlayerID2>
 
   /**
    * gets the number of the current turn
@@ -82,5 +88,5 @@ export interface IMatch<
    * @param {IMatchState} matchState
    * @memberof IMatch
    */
-  push(matchState: IMatchState): void
+  push(matchState: IMatchState<MatchID, PlayerID1, PlayerID2>): void
 }

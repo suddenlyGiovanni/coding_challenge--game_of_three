@@ -7,77 +7,89 @@ import {
   IMatchStateSerialized,
   IMatchStateStartSerialized,
   IMatchStateStopSerialized,
-  IMatchStatus,
-  IMatchStatusPlaying,
-  IMatchStatusStart,
-  IMatchStatusStop,
   MatchStatus,
 } from '@game-of-three/contracts'
 
-export class MatchState<MatchID extends string = string>
-  implements IMatchState {
+export class MatchState<
+  MatchID extends string = string,
+  PlayerID1 extends string = string,
+  PlayerID2 extends string = string
+> implements IMatchState {
   public readonly __type: 'MatchState' = 'MatchState'
 
   public readonly action?: IAction
 
-  public readonly currentTurn?: IPlayer
+  public readonly currentTurn?: IPlayer<PlayerID1> | IPlayer<PlayerID2>
 
   public readonly id: MatchID
 
   public readonly inputNumber?: number
 
-  public readonly nextTurn?: IPlayer
+  public readonly nextTurn?: IPlayer<PlayerID1> | IPlayer<PlayerID2>
 
   public readonly outputNumber!: number
 
-  public readonly status!: IMatchStatus
+  public readonly players: readonly [
+    player1: IPlayer<PlayerID1>,
+    player2: IPlayer<PlayerID2>
+  ]
+
+  public readonly status:
+    | MatchStatus.Start
+    | MatchStatus.Playing
+    | MatchStatus.Stop
 
   public readonly turnNumber!: number
 
-  public readonly winningPlayer?: IPlayer
+  public readonly winningPlayer?: IPlayer<PlayerID1> | IPlayer<PlayerID2>
 
   public constructor(state: {
     id: MatchID
-    nextTurn: IPlayer
+    nextTurn: IPlayer<PlayerID1> | IPlayer<PlayerID2>
     outputNumber: number
-    status: IMatchStatusStart
+    players: readonly [player1: IPlayer<PlayerID1>, player2: IPlayer<PlayerID2>]
+    status: MatchStatus.Start
     turnNumber: 0
   })
 
   public constructor(state: {
     action: IAction
-    currentTurn: IPlayer
+    currentTurn: IPlayer<PlayerID1> | IPlayer<PlayerID2>
     id: MatchID
     inputNumber: number
-    nextTurn: IPlayer
+    nextTurn: IPlayer<PlayerID1> | IPlayer<PlayerID2>
     outputNumber: number
-    status: IMatchStatusPlaying
+    players: readonly [player1: IPlayer<PlayerID1>, player2: IPlayer<PlayerID2>]
+    status: MatchStatus.Playing
     turnNumber: number
   })
 
   public constructor(state: {
     action: IAction
-    currentTurn: IPlayer
+    currentTurn: IPlayer<PlayerID1> | IPlayer<PlayerID2>
     id: MatchID
     inputNumber: number
     outputNumber: number
-    status: IMatchStatusStop
+    players: readonly [player1: IPlayer<PlayerID1>, player2: IPlayer<PlayerID2>]
+    status: MatchStatus.Stop
     turnNumber: number
-    winningPlayer: IPlayer
+    winningPlayer: IPlayer<PlayerID1> | IPlayer<PlayerID2>
   })
 
   public constructor(state: {
     action?: IAction
-    currentTurn?: IPlayer
+    currentTurn?: IPlayer<PlayerID1> | IPlayer<PlayerID2>
     id: MatchID
     inputNumber?: number
-    nextTurn?: IPlayer
+    nextTurn?: IPlayer<PlayerID1> | IPlayer<PlayerID2>
     outputNumber: number
-    status: IMatchStatusStart | IMatchStatusPlaying | IMatchStatusStop
+    players: readonly [player1: IPlayer<PlayerID1>, player2: IPlayer<PlayerID2>]
+    status: MatchStatus.Start | MatchStatus.Playing | MatchStatus.Stop
     turnNumber: 0 | number
-    winningPlayer?: IPlayer
+    winningPlayer?: IPlayer<PlayerID1> | IPlayer<PlayerID2>
   }) {
     this.id = state.id
+    this.players = state.players
 
     if (state.status === MatchStatus.Start) {
       this.outputNumber = state.outputNumber
@@ -137,8 +149,10 @@ export class MatchState<MatchID extends string = string>
     return this.status === MatchStatus.Stop
   }
 
-  public serialize(): Readonly<IMatchStateSerialized> {
-    const matchStateSerialized: IMatchStateSerialized = {
+  public serialize(): Readonly<
+    IMatchStateSerialized<MatchID, PlayerID1, PlayerID2>
+  > {
+    const matchStateSerialized = ({
       __type: 'MatchState',
       id: this.id,
       ...(typeof this.action === 'number' && { action: this.action }),
@@ -148,12 +162,15 @@ export class MatchState<MatchID extends string = string>
       }),
       ...(this.nextTurn && { nextTurn: this.nextTurn.serialize() }),
       outputNumber: this.outputNumber,
+      players: this.players.map((p) => p.serialize()),
       status: this.status,
       turnNumber: this.turnNumber,
       ...(this.winningPlayer && {
         winningPlayer: this.winningPlayer.serialize(),
       }),
-    } as IMatchStateSerialized
+    } as unknown) as Readonly<
+      IMatchStateSerialized<MatchID, PlayerID1, PlayerID2>
+    >
     return matchStateSerialized
   }
 }

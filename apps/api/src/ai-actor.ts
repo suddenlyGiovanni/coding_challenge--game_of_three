@@ -19,7 +19,7 @@ import {
  */
 type Reminder = 0 | 1 | 2
 
-export class AIActor<PlayerID extends string>
+export class AIActor<PlayerID extends string = string>
   implements
     IObserver<IMatchStateSerialized>,
     Omit<ISubject<IAction>, 'notifyObservers'> {

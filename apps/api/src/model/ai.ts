@@ -5,9 +5,9 @@ import { PlayerType } from '../interfaces/player.interface'
 
 import { PlayerSerialized } from '@game-of-three/contracts'
 
-export type UUIDService = () => string
+export type UUIDService<T extends string = string> = () => T
 
-export class AI<PlayerID extends string> implements IPlayer<PlayerID> {
+export class AI<PlayerID extends string = string> implements IPlayer<PlayerID> {
   private static readonly NAME = 'AI'
 
   public readonly __type: 'Player' = 'Player'
@@ -24,8 +24,10 @@ export class AI<PlayerID extends string> implements IPlayer<PlayerID> {
     this._type = PlayerType.AI
   }
 
-  static make(uuidService: UUIDService = uuid): AI<ReturnType<UUIDService>> {
-    return new AI(uuidService(), AI.NAME)
+  static make<T extends string>(
+    uuidService: UUIDService<T> = uuid as UUIDService<T>
+  ) {
+    return new AI<T>(uuidService(), AI.NAME)
   }
 
   public get id(): PlayerID {
@@ -48,7 +50,7 @@ export class AI<PlayerID extends string> implements IPlayer<PlayerID> {
     return this._id === player.id
   }
 
-  public serialize(): PlayerSerialized {
+  public serialize(): PlayerSerialized<PlayerID> {
     return {
       __type: 'Player',
       id: this.id,
