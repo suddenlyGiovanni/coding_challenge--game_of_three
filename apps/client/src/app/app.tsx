@@ -8,9 +8,10 @@ import {
   socketHello,
   socketInitialize,
   socketMakeMatch,
+  socketMatchEnded,
+  socketMatchError,
   socketMatchMove,
   socketNameChanged,
-  socketNewMatch,
   socketNewMatchState,
   socketPlayerJoined,
   socketPlayerJoinedLobby,
@@ -20,6 +21,7 @@ import {
 } from '../sockets'
 
 import {
+  Action,
   ActionWithPayload,
   IAction,
   IMatchStatePlayingSerialized,
@@ -147,6 +149,10 @@ const reducer: Reducer<State, Actions> = (state, action) => {
   }
 }
 
+const handleMatchEnded = () => console.log('match ended')
+const handleMatchError = (
+  action: Action<SocketEvent.MATCH_MOVE_ERROR, string, any, true>
+): void => console.log(action)
 export const App: VFC = () => {
   const [state, dispatch] = useReducer(reducer, initialState)
   const [name, setName] = useState<string>('')
@@ -171,6 +177,10 @@ export const App: VFC = () => {
 
     socketNewMatchState.on(handleNewMatchState)
 
+    socketMatchEnded.on(handleMatchEnded)
+
+    socketMatchError.on(handleMatchError)
+
     return () => {
       socketConnect.off()
       socketDisconnect.off()
@@ -182,6 +192,8 @@ export const App: VFC = () => {
       socketPlayerJoinedLobby.off()
       socketPlayerLeftLobby.off()
       socketNewMatchState.off()
+      socketMatchEnded.off()
+      socketMatchError.off()
     }
   })
 

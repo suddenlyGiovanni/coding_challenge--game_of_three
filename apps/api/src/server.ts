@@ -2,7 +2,7 @@ import { clearInterval } from 'timers'
 
 import { Server as IOServer, Socket } from 'socket.io'
 
-import type { ILobby, IPlayersStore, IServer } from './interfaces'
+import type { ILobby, IPlayer, IPlayersStore, IServer } from './interfaces'
 import { MatchService } from './match-service'
 import { AI, Human, Lobby } from './model'
 import { PlayersStore } from './players-store'
@@ -18,7 +18,6 @@ import {
 
 import {
   Action,
-  IAction,
   IEvents,
   PlayerID,
   SocketEvent,
@@ -39,6 +38,8 @@ export class Server implements IServer {
   private static instance: Server
 
   private readonly _broadcast: EventEmitterFunction
+
+  private readonly _matches: Map<string, MatchService<IPlayer, IPlayer>>
 
   private heartbeatTimerID?: NodeJS.Timeout
 
@@ -68,10 +69,6 @@ export class Server implements IServer {
       Action<SocketEvent.SYSTEM_NAME_UPDATE, string, never, never>
     >,
     WrappedServerSocket<
-      SocketEvent.MATCH_MOVE,
-      Action<SocketEvent.MATCH_MOVE, IAction, never, never>
-    >,
-    WrappedServerSocket<
       SocketEvent.LOBBY_MAKE_MATCH,
       Action<SocketEvent.LOBBY_MAKE_MATCH, never, never, never>
     >
@@ -85,6 +82,7 @@ export class Server implements IServer {
       },
     })
 
+    this._matches = new Map<string, MatchService<IPlayer, IPlayer>>()
     this._broadcast = (event, action) => broadcast(this.io)(event, action)
     this.registeredEventsListener = this._registerEventHandlersToSocketEvents()
     this.playersStore = PlayersStore.getInstance()
@@ -168,10 +166,12 @@ export class Server implements IServer {
       )
       const player1 = this.playersStore.getPlayerByID(playerID1)
       const ai = AI.make()
-      new MatchService({
+      const match = new MatchService({
+        onMatchEnd: this._handleMatchEnded,
         players: [player1, ai],
         sockets: [this.io.sockets.sockets.get(playerID1)],
       })
+      this._matches.set(match.id, match)
     } else {
       // case where match between two players
       this.lobby.removePlayerId(playerID1)
@@ -191,11 +191,18 @@ export class Server implements IServer {
 
       const socketPlayer1 = this.io.sockets.sockets.get(playerID1)
       const socketPlayer2 = this.io.sockets.sockets.get(playerID2)
-      new MatchService({
+      const match = new MatchService({
+        onMatchEnd: this._handleMatchEnded,
         players: [player1, player2],
         sockets: [socketPlayer1, socketPlayer2],
       })
+
+      this._matches.set(match.id, match)
     }
+  }
+
+  private _handleMatchEnded = (matchId: string): void => {
+    this._matches.delete(matchId)
   }
 
   /**
@@ -228,15 +235,6 @@ export class Server implements IServer {
     const { id } = socket
     console.log(`user id: ${socket.id} - match making '${type}'`)
     this._createMatch(id)
-  }
-
-  private _handlerMatchMove: SocketActionFn<IEvents[SocketEvent.MATCH_MOVE]> = (
-    socket
-  ) => (action) => {
-    // route the match move to the correct match ('room')
-    const { id } = socket
-    const { payload: move } = action
-    console.log(`user id: ${id} - match move: ${move}`) // TODO: remove this console.log
   }
 
   private _handlerNameUpdate: SocketActionFn<
@@ -310,7 +308,6 @@ export class Server implements IServer {
       ),
       createSocket(SocketEvent.SYSTEM_HELLO, this._handlerEventHello),
       createSocket(SocketEvent.SYSTEM_NAME_UPDATE, this._handlerNameUpdate),
-      createSocket(SocketEvent.MATCH_MOVE, this._handlerMatchMove),
       createSocket(SocketEvent.LOBBY_MAKE_MATCH, this._handlerMatchMaking),
     ] as const
   }

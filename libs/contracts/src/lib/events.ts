@@ -63,6 +63,7 @@ export type ISocketEvent =
   | 'match_move'
   | 'match_move_error'
   | 'match_new_state'
+  | 'match_end_state'
 //#endregion
 export enum SocketEvent {
   //#region SYSTEM RESERVED EVENTS
@@ -185,6 +186,7 @@ export enum SocketEvent {
   MATCH_MOVE = 'match_move',
   MATCH_MOVE_ERROR = 'match_move_error',
   MATCH_NEW_STATE = 'match_new_state',
+  MATCH_END_STATE = 'match_end_state',
 }
 
 export interface IEvents
@@ -228,6 +230,7 @@ export interface IEvents
   [SocketEvent.MATCH_MOVE]: ActionMatchMove
   [SocketEvent.MATCH_MOVE_ERROR]: ActionMatchMoveError
   [SocketEvent.MATCH_NEW_STATE]: ActionMatchNewState
+  [SocketEvent.MATCH_END_STATE]: void
 }
 
 type ActionHello = ReturnType<typeof actionHello>

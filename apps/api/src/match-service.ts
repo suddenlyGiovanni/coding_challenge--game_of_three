@@ -34,39 +34,59 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
 
   public readonly id: string
 
+  public readonly onMatchEnd?: (matchId: string) => void
+
   private _aiActor?: AIActor<string>
 
   private readonly _aiActorMoveObserver: IObserver<IAction> = {
     update: (action: IAction) => this.move(this._match.players[1], action),
   }
 
-  private readonly _debugObserver?: IObserver<IMatchStateSerialized<string>>
+  private readonly _debugObserver?: IObserver<IMatchStateSerialized>
 
   private readonly _match: Match<IPlayer1, IPlayer2>
 
+  private readonly _matchEndObserver: IObserver<IMatchStateSerialized> = {
+    update: () => this._isMatchStop() && this._onMatchEnd(),
+  }
+
+  /**
+   * socket observer
+   * on matchState updates it proxy the changes to the player sockets
+   * @private
+   * @type {IObserver<IMatchStateSerialized>}
+   * @memberof MatchService
+   */
+  private readonly _socketObserver: IObserver<IMatchStateSerialized> = {
+    update: (matchState) => {
+      this._sockets?.forEach((socket) =>
+        emitToSocket(socket)(
+          SocketEvent.MATCH_NEW_STATE,
+          actionMatchNewState(matchState)
+        )
+      )
+    },
+  }
+
   private readonly _sockets?: [socket1: Socket, socket2?: Socket]
 
-  private readonly registeredEventsListener: readonly [
+  private readonly registeredSocketEventsListener: readonly [
     WrappedServerSocket<
       SocketEvent.MATCH_MOVE,
       Action<SocketEvent.MATCH_MOVE, IAction, never, never>
     >
   ]
 
-  /**
-   *Creates an instance of MatchService.
-   * @param {[IPlayer1, IPlayer2]} players
-   * @param {INumberGeneratorStrategy} [numberGeneratorStrategy]
-   * @memberof MatchService
-   */
   public constructor({
     sockets,
     players,
     numberGeneratorStrategy,
     debugObserver,
+    onMatchEnd,
   }: {
     debugObserver?: IObserver<IMatchStateSerialized>
     numberGeneratorStrategy?: INumberGeneratorStrategy
+    onMatchEnd?: (matchId: string) => void
     players: [player1: IPlayer1, player2: IPlayer2]
     sockets?: [socket1: Socket, socket2?: Socket]
   }) {
@@ -74,17 +94,13 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
     this.id = this._match.id
     this._sockets = sockets
     this._debugObserver = debugObserver
+    this.onMatchEnd = onMatchEnd
 
-    this.registeredEventsListener = this._registerEventHandlersToSocketEvents()
+    this.registeredSocketEventsListener = this._registerEventHandlersToSocketEvents()
 
     this._addAiActor()
-
-    this._subscribeDebugObserverToMatchStateSubject()
-
-    this._subscribeSocketsToMatchStateSubject()
-
-    this._listenToSocketEvent()
-
+    this._subscribeObserversToMatchSubject()
+    this._listenToPlayersEvents()
     this._match.init()
   }
 
@@ -158,16 +174,6 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
     const [, player2] = this._match.players
     if (player2.isAi()) {
       this._aiActor = new AIActor(player2)
-      /**
-       * register the Observable responsible for listening to the AiActors move.
-       * said Observable will be responsible to proxy the message to the match state model
-       */
-      this._aiActor.registerObserver(this._aiActorMoveObserver)
-
-      /**
-       * register the AiActor to the match state changes.
-       */
-      this._match.registerObserver(this._aiActor)
     }
   }
 
@@ -195,24 +201,14 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
     IEvents[SocketEvent.MATCH_MOVE]
   > = (socket) => ({ payload: action }) => {
     const { id } = socket
-
-    MatchService._assertPlayerBelongToMatch(this._match, id)
-
-    const player = this._match.players.find((p) => p.id === id)!
-
-    // if (this._isPlayerTurn(player)) {}  FIXME: validate event have been received by current turn player
-    const move = action // TODO: REMOVE ME!
-
-    console.log(`client id: ${id} made a move: ${move}`) // TODO: REMOVE ME!
+    const emit = emitToSocket(socket)
     try {
-      this.move(player, move)
+      MatchService._assertPlayerBelongToMatch(this._match, id)
+      this.move(this._match.players.find((player) => player.id === id)!, action)
     } catch (error: unknown) {
-      // TODO: emit a new message notifying the player that it can not move if it is not his turn!
-      if (typeof error === 'string') {
-        emitToSocket(socket)(
-          SocketEvent.MATCH_MOVE_ERROR,
-          actionMatchMoveError(error)
-        )
+      console.warn(error)
+      if (error instanceof Error) {
+        emit(SocketEvent.MATCH_MOVE_ERROR, actionMatchMoveError(error.message))
       }
     }
   }
@@ -248,14 +244,43 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
    * @private
    * @memberof MatchService
    */
-  private _listenToSocketEvent(): void {
+  private _listenToPlayersEvents(): void {
+    if (this._aiActor) {
+      /**
+       * register the Observable responsible for listening to the AiActors move.
+       * said Observable will be responsible to proxy the message to the match state model
+       */
+      this._aiActor.registerObserver(this._aiActorMoveObserver)
+    }
     this._sockets?.forEach((socket) => {
       if (socket) {
-        this.registeredEventsListener.forEach(({ callback, event }) =>
+        this.registeredSocketEventsListener.forEach(({ callback, event }) =>
           socket.on(event, callback(socket))
         )
       }
     })
+  }
+
+  private _notifyPayersMatchHasEnded(): void {
+    this._sockets?.forEach((socket) => {
+      emitToSocket(socket)(SocketEvent.MATCH_END_STATE, undefined)
+    })
+  }
+
+  /**
+   * this procedure is responsible for cleaning up after a match has ended:
+   * 1. remove removeObserver from match
+   * 2. emit a message to sockets that the match has ended
+   * 3. stop listening to sockets events
+   * 4. notify server that the game has ended and that it can be killed
+   * @private
+   * @memberof MatchService
+   */
+  private _onMatchEnd(): void {
+    this._removeObserversFromMatchStateSubject() // 1.
+    this._notifyPayersMatchHasEnded() // 2.
+    this._stopListeningToPlayersEvents() // 3.
+    this.onMatchEnd(this.id) // 4.
   }
 
   /**
@@ -267,42 +292,47 @@ export class MatchService<IPlayer1 extends IPlayer, IPlayer2 extends IPlayer>
   private _registerEventHandlersToSocketEvents() {
     return [
       createSocket(SocketEvent.MATCH_MOVE, this._handlerMatchMoveAction),
+      // add more event handlers if needed.
     ] as const
   }
 
-  /**
-   * TODO: DOCUMENT THIS METHOD
-   * @private
-   * @memberof MatchService
-   */
-  private _subscribeDebugObserverToMatchStateSubject(): void {
+  private _removeObserversFromMatchStateSubject(): void {
+    if (this._debugObserver) this._match.removeObserver(this._debugObserver)
+    if (this._aiActor) this._match.removeObserver(this._aiActor)
+    this._match.removeObserver(this._socketObserver)
+    this._match.removeObserver(this._matchEndObserver)
+  }
+
+  private _stopListeningToPlayersEvents(): void {
+    if (this._aiActor) {
+      this._aiActor.removeObserver(this._aiActorMoveObserver)
+    }
+    this._sockets?.forEach((socket) =>
+      this.registeredSocketEventsListener.forEach(({ callback, event }) => {
+        /*
+         * FIXME: this is not working because callback(socket) has no  stable reference by pointer
+         * callback is a curried function: hence a new fn is created at each invocation.
+         * Should find a way to properly remove it
+         */
+        socket.off(event, callback(socket))
+      })
+    )
+  }
+
+  private _subscribeObserversToMatchSubject(): void {
     if (this._debugObserver) {
       this._match.registerObserver(this._debugObserver)
     }
-  }
 
-  /**
-   * TODO: DOCUMENT THIS METHOD
-   * @private
-   * @memberof MatchService
-   */
-  private _subscribeSocketsToMatchStateSubject(): void {
-    this._match.registerObserver({
-      update: (matchStateSerialized) => {
-        this._sockets?.forEach((socket) => {
-          if (socket) {
-            console.log(
-              `emitting state to socket ${socket.id}`,
-              matchStateSerialized
-            ) // TODO: REMOVE ME!
+    //  register the AiActor to the match state changes.
+    if (this._aiActor) {
+      this._match.registerObserver(this._aiActor)
+    }
 
-            emitToSocket(socket)(
-              SocketEvent.MATCH_NEW_STATE,
-              actionMatchNewState(matchStateSerialized)
-            )
-          }
-        })
-      },
-    })
+    // register sockets to match state changes
+    this._match.registerObserver(this._socketObserver)
+
+    // register an on match end handler to match state changes
+    this._match.registerObserver(this._matchEndObserver)
   }
 }
