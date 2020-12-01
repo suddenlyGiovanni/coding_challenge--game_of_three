@@ -1,6 +1,18 @@
-import React, { useCallback, useEffect, useReducer, useState } from 'react'
-import type { ChangeEvent, MouseEvent, Reducer, VFC } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
+import type { ChangeEvent, MouseEvent, VFC } from 'react'
+import { useSelector } from 'react-redux'
 
+import {
+  addPlayer,
+  addPlayerToLobby,
+  initializePlayers,
+  removePlayer,
+  removePlayerFromLobby,
+  syncHeartbeat,
+  toggleConnected,
+  updateMatchState,
+  updatePlayer,
+} from '../features'
 import {
   socketConnect,
   socketDisconnect,
@@ -20,166 +32,44 @@ import {
   socketUpdateName,
 } from '../sockets'
 
-import {
-  Action,
-  ActionWithPayload,
-  IAction,
-  IMatchStatePlayingSerialized,
-  IMatchStateSerialized,
-  IMatchStateStartSerialized,
-  IMatchStateStopSerialized,
-  PlayerID,
-  PlayerSerialized,
-  ServerState,
-  SocketEvent,
-  actionCreator,
-} from '@game-of-three/contracts'
+import { RootState, useAppDispatch } from '../store'
 
-const syncHeartbeat = (heartbeat: DateISOString) =>
-  actionCreator('[HEARTBEAT]-SYNC', heartbeat)
+import { IAction } from '@game-of-three/contracts'
 
-const toggleConnected = (connected: boolean) =>
-  actionCreator('[CONNECTED]-TOGGLE', connected)
-
-const initializePlayers = (initialState: ServerState) =>
-  actionCreator('[STATE]-INITIALIZE', initialState)
-
-const addPlayer = (playerSerialized: PlayerSerialized) =>
-  actionCreator('[PLAYERS]-ADD_PLAYER', playerSerialized)
-
-const removePlayer = (playerSerialized: PlayerSerialized) =>
-  actionCreator('[PLAYERS]-REMOVE_PLAYER', playerSerialized)
-
-const updatePlayer = (playerSerialized: PlayerSerialized) =>
-  actionCreator('[PLAYERS]-UPDATE_PLAYER', playerSerialized)
-
-const addPlayerToLobby = (playerId: PlayerID) =>
-  actionCreator('[LOBBY]-ADD_PLAYER', playerId)
-
-const removePlayerFromLobby = (playerId: PlayerID) =>
-  actionCreator('[LOBBY]-REMOVE_PLAYER', playerId)
-
-const updateMatchState = (matchState: IMatchStateSerialized) =>
-  actionCreator('[MATCH]-NEW_STATE', matchState)
-
-type DateISOString = string
-interface State {
-  readonly connected: boolean
-  readonly heartbeat: DateISOString
-  readonly lobby: ReadonlyArray<PlayerID>
-  readonly matchState: IMatchStateSerialized[]
-  readonly players: ReadonlyArray<PlayerSerialized>
-}
-
-const initialState: State = {
-  connected: false,
-  heartbeat: '',
-  lobby: [],
-  matchState: [],
-  players: [],
-}
-type Actions =
-  | ReturnType<typeof updateMatchState>
-  | ReturnType<typeof syncHeartbeat>
-  | ReturnType<typeof toggleConnected>
-  | ReturnType<typeof initializePlayers>
-  | ReturnType<typeof addPlayer>
-  | ReturnType<typeof removePlayer>
-  | ReturnType<typeof updatePlayer>
-  | ReturnType<typeof addPlayerToLobby>
-  | ReturnType<typeof removePlayerFromLobby>
-
-const reducer: Reducer<State, Actions> = (state, action) => {
-  switch (action.type) {
-    case '[MATCH]-NEW_STATE':
-      return {
-        ...state,
-        matchState: [...state.matchState, action.payload],
-      }
-
-    case '[HEARTBEAT]-SYNC':
-      return {
-        ...state,
-        heartbeat: new Date(action.payload).getSeconds().toString(),
-      }
-
-    case '[CONNECTED]-TOGGLE':
-      return { ...state, connected: action.payload }
-
-    case '[STATE]-INITIALIZE':
-      return {
-        ...state,
-        lobby: [...state.lobby, ...action.payload.lobby],
-        players: [...state.players, ...action.payload.players],
-      }
-
-    case '[PLAYERS]-ADD_PLAYER':
-      return { ...state, players: [...state.players, action.payload] }
-
-    case '[PLAYERS]-UPDATE_PLAYER':
-      return {
-        ...state,
-        players: state.players
-          .slice()
-          .map((p) => (p.id === action.payload.id ? action.payload : p)),
-      }
-
-    case '[PLAYERS]-REMOVE_PLAYER':
-      return {
-        ...state,
-        players: state.players.filter((p) => p.id !== action.payload.id),
-      }
-
-    case '[LOBBY]-ADD_PLAYER':
-      return {
-        ...state,
-        lobby: [...state.lobby, action.payload],
-      }
-
-    case '[LOBBY]-REMOVE_PLAYER':
-      return {
-        ...state,
-        lobby: state.lobby
-          .slice()
-          .filter((playerId) => playerId !== action.payload),
-      }
-
-    default:
-      throw new Error('unhandled type')
-  }
-}
-
-const handleMatchEnded = () => console.log('match ended')
-const handleMatchError = (
-  action: Action<SocketEvent.MATCH_MOVE_ERROR, string, any, true>
-): void => console.log(action)
 export const App: VFC = () => {
-  const [state, dispatch] = useReducer(reducer, initialState)
+  const dispatch = useAppDispatch()
+  const state = useSelector((state: RootState) => state.system)
+
   const [name, setName] = useState<string>('')
 
   useEffect(() => {
     socketConnect.on(() => dispatch(toggleConnected(true)))
     socketDisconnect.on(() => dispatch(toggleConnected(false)))
+    socketHeartbeat.on((event) =>
+      dispatch(syncHeartbeat(new Date(event.payload).getSeconds().toString()))
+    )
 
-    socketInitialize.on(handleInitialize)
+    socketInitialize.on((event) => dispatch(initializePlayers(event.payload)))
 
-    socketPlayerJoined.on(handlePlayerJoined)
+    socketPlayerJoined.on((event) => dispatch(addPlayer(event.payload)))
 
-    socketPlayerLeft.on(handlePlayerLeft)
+    socketPlayerLeft.on((event) => dispatch(removePlayer(event.payload)))
 
-    socketNameChanged.on(handleNameChanged)
+    socketNameChanged.on((event) => dispatch(updatePlayer(event.payload)))
 
-    socketHeartbeat.on(handleHeartbeat)
+    socketPlayerJoinedLobby.on((event) =>
+      dispatch(addPlayerToLobby(event.payload))
+    )
 
-    socketPlayerJoinedLobby.on(handlePlayerJoinedLobby)
+    socketPlayerLeftLobby.on((event) =>
+      dispatch(removePlayerFromLobby(event.payload))
+    )
 
-    socketPlayerLeftLobby.on(handlePlayerLeftLobby)
+    socketNewMatchState.on((event) => dispatch(updateMatchState(event.payload)))
 
-    socketNewMatchState.on(handleNewMatchState)
+    socketMatchEnded.on(() => console.log('match ended'))
 
-    socketMatchEnded.on(handleMatchEnded)
-
-    socketMatchError.on(handleMatchError)
+    socketMatchError.on((event) => console.log(event))
 
     return () => {
       socketConnect.off()
@@ -196,81 +86,6 @@ export const App: VFC = () => {
       socketMatchError.off()
     }
   })
-
-  const handleNewMatchState = useCallback(
-    (
-      event:
-        | ActionWithPayload<
-            SocketEvent.MATCH_NEW_STATE,
-            IMatchStateStartSerialized<string>
-          >
-        | ActionWithPayload<
-            SocketEvent.MATCH_NEW_STATE,
-            IMatchStatePlayingSerialized<string>
-          >
-        | ActionWithPayload<
-            SocketEvent.MATCH_NEW_STATE,
-            IMatchStateStopSerialized<string>
-          >
-    ): void => dispatch(updateMatchState(event.payload)),
-    [dispatch]
-  )
-
-  const handlePlayerJoinedLobby = useCallback(
-    (
-      event: ActionWithPayload<SocketEvent.LOBBY_PLAYER_JOINED, PlayerID>
-    ): void => dispatch(addPlayerToLobby(event.payload)),
-    []
-  )
-
-  const handlePlayerLeftLobby = useCallback(
-    (event: ActionWithPayload<SocketEvent.LOBBY_PLAYER_LEFT, PlayerID>): void =>
-      dispatch(removePlayerFromLobby(event.payload)),
-    [dispatch]
-  )
-
-  const handleHeartbeat = useCallback(
-    (action: ActionWithPayload<SocketEvent.SYSTEM_HEARTBEAT, string>): void =>
-      dispatch(syncHeartbeat(action.payload)),
-    [dispatch]
-  )
-
-  const handleInitialize = useCallback(
-    (
-      event: ActionWithPayload<SocketEvent.SYSTEM_INITIALIZE, ServerState>
-    ): void => dispatch(initializePlayers(event.payload)),
-    [dispatch]
-  )
-
-  const handleNameChanged = useCallback(
-    (
-      action: ActionWithPayload<
-        SocketEvent.SYSTEM_NAME_CHANGED,
-        PlayerSerialized
-      >
-    ): void => dispatch(updatePlayer(action.payload)),
-    [dispatch]
-  )
-
-  const handlePlayerJoined = useCallback(
-    (
-      action: ActionWithPayload<
-        SocketEvent.SYSTEM_PLAYER_JOINED,
-        PlayerSerialized
-      >
-    ): void => dispatch(addPlayer(action.payload)),
-    [dispatch]
-  )
-
-  const handlePlayerLeft = useCallback(
-    (
-      action: ActionWithPayload<
-        SocketEvent.SYSTEM_PLAYER_LEFT,
-        PlayerSerialized
-      >
-    ): void => dispatch(removePlayer(action.payload)),
-    [dispatch]
-  )
 
   const sendMessage = useCallback(() => socketHello.emit('world!'), [])
 
