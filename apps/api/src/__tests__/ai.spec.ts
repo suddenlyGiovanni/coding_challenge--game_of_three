@@ -3,6 +3,8 @@ import { describe, expect, it, jest } from '@jest/globals'
 import { IPlayer, PlayerType } from '../interfaces'
 import { AI, UUIDService } from '../model'
 
+import type { PlayerSerialized } from '@game-of-three/contracts'
+
 describe('ai class', () => {
   const AI_ID = 'AI_ID'
   const AI_NAME = 'AI_NAME'
@@ -11,29 +13,29 @@ describe('ai class', () => {
   it('should allow for uuid Service to be injected', () => {
     expect.hasAssertions()
 
-    const uuidService: UUIDService = () => AI_ID
+    const uuidService: UUIDService<typeof AI_ID> = () => AI_ID
     const uuidServiceMock = jest.fn(uuidService)
     const al = AI.make(uuidServiceMock)
     expect.hasAssertions()
     expect(uuidServiceMock).toHaveBeenCalledTimes(1)
     expect(uuidServiceMock).toHaveReturnedWith('AI_ID')
-    expect(al.getId()).toBe('AI_ID')
-    expect(al.getName()).toBe('AI')
+    expect(al.id).toBe('AI_ID')
+    expect(al.name).toBe('AI')
   })
 
   it('should return the `id` when `getId` method is invoked', () => {
     expect.hasAssertions()
-    expect(ai.getId()).toBe('AI_ID')
+    expect(ai.id).toBe('AI_ID')
   })
 
   it('should return the `name` when `getName` method is invoked', () => {
     expect.hasAssertions()
-    expect(ai.getName()).toBe('AI_NAME')
+    expect(ai.name).toBe('AI_NAME')
   })
 
   it('should return the `AI` when `getType` method is invoked', () => {
     expect.hasAssertions()
-    expect(ai.getType()).toBe(PlayerType.AI)
+    expect(ai.type).toBe(PlayerType.AI)
   })
 
   it('should return the `true` when `isAi` method is invoked', () => {
@@ -49,5 +51,21 @@ describe('ai class', () => {
   it('should return the a false when `isSame` method is invoked with the another IPlayer', () => {
     expect.hasAssertions()
     expect(ai.isSame(new AI('ID', 'NAME'))).toBe(false)
+  })
+
+  it('should allow to be serialized', () => {
+    expect.hasAssertions()
+
+    let serializedAIPlayerObject!: PlayerSerialized
+    expect(() => (serializedAIPlayerObject = ai.serialize())).not.toThrow()
+
+    expect(serializedAIPlayerObject).toHaveProperty('id')
+    expect(serializedAIPlayerObject).toHaveProperty('type')
+    expect(serializedAIPlayerObject).toHaveProperty('name')
+    expect(serializedAIPlayerObject).toMatchObject({
+      id: ai.id,
+      name: ai.name,
+      type: ai.type,
+    })
   })
 })

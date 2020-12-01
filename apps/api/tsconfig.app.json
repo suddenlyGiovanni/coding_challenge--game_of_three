@@ -3,6 +3,8 @@
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
     "types": ["node"]
+    // "noEmit": true
+    // "strict": true
   },
   "exclude": ["**/*.spec.ts"],
   "include": ["**/*.ts"]

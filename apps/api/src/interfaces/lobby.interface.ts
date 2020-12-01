@@ -1,32 +1,33 @@
-/*
-- there could only be one instance of a Lobby at the time.
-- is responsible for registering connected users
-- should implement the following operations: add user, remove user, start a match
-*/
-
-import type { Human } from '../model/human'
+import { PlayerID } from '@game-of-three/contracts'
 
 export interface ILobby {
   /**
-   * adds a human IPlayer to the ILobby
-   * @param {Human} player
+   * gets an array representation of all the human PlayerIDs currently in the ILobby
+   * @returns {ReadonlyArray<Readonly<PlayerID>>}
    * @memberof ILobby
    */
-  addPlayer(player: Human): void
+  readonly playersId: ReadonlyArray<Readonly<PlayerID>>
 
   /**
-   * gets an array representation of all the human IPlayers currently in the ILobby
-   * @returns {ReadonlyArray<Readonly<Human>>}
-   * @memberof ILobby
-   */
-  getPlayers(): ReadonlyArray<Readonly<Human>>
-
-  /**
-   * gets the number of human IPlayer currently in the ILobby
+   * gets the number of human PlayerID currently in the ILobby
    * @returns {number}
    * @memberof ILobby
    */
-  getSize(): number
+  readonly size: number
+
+  /**
+   * adds a human PlayerID to the ILobby
+   * @param {PlayerID} playerId
+   * @memberof ILobby
+   */
+  addPlayerId(playerId: PlayerID): void
+
+  /**
+   * gets the next player waiting in the queue
+   * @returns {(undefined | PlayerID)}
+   * @memberof ILobby
+   */
+  getNextPlayerId(): undefined | PlayerID
 
   /**
    * returns true if the lobby is empty
@@ -36,11 +37,11 @@ export interface ILobby {
   isEmpty(): boolean
 
   /**
-   * removes a human IPlayer from the ILobby
-   * @param {Human} player
+   * removes a human PlayerID from the ILobby
+   * @param {PlayerID} playerId
    * @memberof ILobby
    */
-  removePlayer(player: Human): void
+  removePlayerId(playerId: PlayerID): void
 
   /**
    * reset the lobby to a pristine state

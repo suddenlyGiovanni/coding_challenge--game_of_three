@@ -1,57 +1,64 @@
 import type { IPlayer, ITurn } from '../interfaces'
 
-export class Turn<Player1 extends IPlayer, Player2 extends IPlayer>
-  implements ITurn<Player1, Player2> {
-  private currentTurn: Player1 | Player2
+export class Turn<
+  MatchID extends string = string,
+  PlayerID1 extends string = string,
+  PlayerID2 extends string = string
+> implements ITurn<MatchID, PlayerID1, PlayerID2> {
+  public readonly __type: 'Turn' = 'Turn'
 
-  private readonly player1: Player1
+  public readonly id: MatchID
 
-  private readonly player2: Player2
+  private _current!: IPlayer<PlayerID1> | IPlayer<PlayerID2>
 
-  private turnNumber: number
+  private _number: number
 
-  public constructor(player1: Player1, player2: Player2) {
-    this.player1 = player1
-    this.player2 = player2
-    this.turnNumber = 0
+  private readonly _player1: IPlayer<PlayerID1>
+
+  private readonly _player2: IPlayer<PlayerID2>
+
+  public constructor(
+    player1: IPlayer<PlayerID1>,
+    player2: IPlayer<PlayerID2>,
+    matchId: MatchID
+  ) {
+    this._player1 = player1
+    this._player2 = player2
+    this._number = 0
+    this.id = matchId
   }
 
-  public getCurrent(): Player1 | Player2 {
+  public get current(): IPlayer<PlayerID1> | IPlayer<PlayerID2> {
     this.assertInt()
-    return this.currentTurn
+    return this._current
   }
 
-  public getTurnNumber(): number {
+  public get number(): number {
     this.assertInt()
-    return this.turnNumber
+    return this._number
+  }
+
+  public get next(): IPlayer<PlayerID1> | IPlayer<PlayerID2> {
+    this.assertInt()
+    return this._current.isSame(this._player1) ? this._player2 : this._player1
   }
 
   public init(): void {
-    this.currentTurn = this.player1
-    this.turnNumber = 1
+    this._current = this._player1
+    this._number = 1
   }
 
-  public next(): Player1 | Player2 {
+  public switch(): IPlayer<PlayerID1> | IPlayer<PlayerID2> {
     this.assertInt()
-    this.turnNumber += 1
-    this.currentTurn = this.peekNext()
-    return this.currentTurn
-  }
-
-  public peekNext(): Player1 | Player2 {
-    this.assertInt()
-    if (this.currentTurn.isSame(this.player1)) {
-      return this.player2
-    }
-    if (this.currentTurn.isSame(this.player2)) {
-      return this.player1
-    }
+    this._number += 1
+    this._current = this.next
+    return this._current
   }
 
   private assertInt(): void {
-    if (this.turnNumber === 0 || !this.currentTurn) {
+    if (this._number === 0 || !this._current) {
       throw new Error(
-        'Turn not initialized: remember to call init() on a newly instantiated Turn'
+        'Turn not initialized: remember to call `init()` on a newly instantiated Turn'
       )
     }
   }

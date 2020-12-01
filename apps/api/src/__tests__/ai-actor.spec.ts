@@ -10,7 +10,7 @@ import {
 
 import { AIActor } from '../ai-actor'
 import type { IObserver } from '../interfaces'
-import { AI } from '../model'
+import { AI, Human } from '../model'
 
 import { flushPromises } from './helpers'
 
@@ -18,10 +18,12 @@ import {
   IAction,
   IMatchStateSerialized,
   MatchStatus,
-} from '@game-of-three/api-interfaces'
+} from '@game-of-three/contracts'
 
 describe('ai actor', () => {
-  const player1ID = 'HUMAN_PLAYER_ID'
+  const PLAYER_1_ID = 'HUMAN_PLAYER_ID'
+  const PLAYER_1_NAME = 'HUMAN_NAME'
+  const human = new Human(PLAYER_1_ID, PLAYER_1_NAME)
   const ai = AI.make(() => 'ID_AI')
   let aiActor: AIActor<string>
   const mockUpdateA = jest.fn()
@@ -29,12 +31,17 @@ describe('ai actor', () => {
   const observerA: IObserver<IAction> = { update: mockUpdateA }
   const observerB: IObserver<IAction> = { update: mockUpdateB }
 
+  const mockMatchId = '1'
+
   const matchStateSerialized: IMatchStateSerialized = {
+    __type: 'MatchState',
     action: 0,
-    currentTurn: player1ID,
+    currentTurn: human.serialize(),
+    id: mockMatchId,
     inputNumber: 12,
-    nextTurn: ai.getId(),
+    nextTurn: ai.serialize(),
     outputNumber: 12,
+    players: [human.serialize(), ai.serialize()],
     status: MatchStatus.Playing,
     turnNumber: 2,
   }
@@ -70,7 +77,7 @@ describe('ai actor', () => {
     const action: IAction = 0
     expect(aiActor).toHaveProperty('registerObserver')
 
-    expect(aiActor).toHaveProperty('notifyObservers')
+    expect(aiActor).toHaveProperty('_notifyObservers')
 
     expect(mockUpdateA).toHaveBeenCalledTimes(0)
     expect(mockUpdateB).toHaveBeenCalledTimes(0)
@@ -79,7 +86,7 @@ describe('ai actor', () => {
     expect(() => aiActor.registerObserver(observerB)).not.toThrow()
 
     // act
-    expect(() => aiActor['notifyObservers'](action)).not.toThrow()
+    expect(() => aiActor['_notifyObservers'](action)).not.toThrow()
     expect(mockUpdateA).toHaveBeenCalledTimes(1)
     expect(mockUpdateA).toHaveBeenLastCalledWith(action)
     expect(mockUpdateB).toHaveBeenCalledTimes(1)
@@ -92,7 +99,7 @@ describe('ai actor', () => {
     expect(mockUpdateA).toHaveBeenCalledTimes(1)
     expect(mockUpdateB).toHaveBeenCalledTimes(1)
 
-    expect(() => aiActor['notifyObservers'](action)).not.toThrow()
+    expect(() => aiActor['_notifyObservers'](action)).not.toThrow()
     expect(mockUpdateA).toHaveBeenCalledTimes(1)
     expect(mockUpdateB).toHaveBeenCalledTimes(1)
   })
@@ -112,11 +119,14 @@ describe('ai actor', () => {
       // act
       expect(() =>
         aiActor.update({
+          __type: 'MatchState',
           action: -1,
-          currentTurn: player1ID,
+          currentTurn: human.serialize(),
+          id: mockMatchId,
           inputNumber: 100,
-          nextTurn: ai.getId(),
+          nextTurn: ai.serialize(),
           outputNumber: 33,
+          players: [human.serialize(), ai.serialize()],
           status: MatchStatus.Playing,
           turnNumber: 1,
         })
@@ -127,13 +137,16 @@ describe('ai actor', () => {
 
       expect(() =>
         aiActor.update({
+          __type: 'MatchState',
           action: -1,
-          currentTurn: player1ID,
+          currentTurn: human.serialize(),
+          id: mockMatchId,
           inputNumber: 4,
           outputNumber: 1,
+          players: [human.serialize(), ai.serialize()],
           status: MatchStatus.Stop,
           turnNumber: 4,
-          winningPlayer: player1ID,
+          winningPlayer: human.serialize(),
         })
       ).not.toThrow()
 
@@ -148,11 +161,14 @@ describe('ai actor', () => {
 
       // act
       aiActor.update({
+        __type: 'MatchState',
         action: 0,
-        currentTurn: player1ID,
+        currentTurn: human.serialize(),
+        id: mockMatchId,
         inputNumber: 33,
-        nextTurn: ai.getId(),
+        nextTurn: ai.serialize(),
         outputNumber: 11,
+        players: [human.serialize(), ai.serialize()],
         status: MatchStatus.Playing,
         turnNumber: 4,
       })

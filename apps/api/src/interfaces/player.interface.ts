@@ -1,5 +1,7 @@
 import type { AI } from '../model/ai'
 
+import type { IEntity, PlayerSerialized } from '@game-of-three/contracts'
+
 export type IAI = 'AI'
 export type IHUMAN = 'HUMAN'
 
@@ -10,27 +12,28 @@ export enum PlayerType {
   AI = 'AI',
 }
 
-export interface IPlayer<PlayerID extends string = string> {
+export interface IPlayer<PlayerID extends string = string>
+  extends IEntity<PlayerID, 'Player'> {
   /**
    * gets the id of the player
-   * @returns {PlayerID} id of the player
+   * @type {PlayerID}
    * @memberof IPlayer
    */
-  getId(): PlayerID
+  readonly id: PlayerID
 
   /**
    * gets the name of the Player
    * @returns {string} the name of the player
    * @memberof IPlayer
    */
-  getName(): string
+  readonly name: string
 
   /**
    * get the player type
    * @returns {IPlayerType} either `AI` or `HUMAN`
    * @memberof IPlayer
    */
-  getType(): IPlayerType
+  readonly type: IPlayerType
 
   /**
    * checks if the player is an `AI` or `HUMAN`
@@ -45,5 +48,7 @@ export interface IPlayer<PlayerID extends string = string> {
    * @returns {boolean}
    * @memberof IPlayer
    */
-  isSame(player: IPlayer<PlayerID>): boolean
+  isSame(player: IPlayer): boolean
+
+  serialize(): PlayerSerialized<PlayerID>
 }

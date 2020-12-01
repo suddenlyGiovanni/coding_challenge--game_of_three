@@ -1,6 +1,8 @@
 import type { IPlayersStore, UUID } from './interfaces'
 import type { Human } from './model'
 
+import type { PlayerSerialized } from '@game-of-three/contracts'
+
 export class PlayersStore implements IPlayersStore {
   private static instance: PlayersStore
 
@@ -26,8 +28,8 @@ export class PlayersStore implements IPlayersStore {
   }
 
   public addPlayer(player: Human): void {
-    if (!this._players.has(player.getId())) {
-      this._players.set(player.getId(), player)
+    if (!this._players.has(player.id)) {
+      this._players.set(player.id, player)
     }
   }
 
@@ -37,6 +39,10 @@ export class PlayersStore implements IPlayersStore {
 
   public getPlayerByID(id: UUID): undefined | Human {
     return this._players.get(id)
+  }
+
+  public getSerializedPlayer(): PlayerSerialized[] {
+    return [...this._players.values()].map((player) => player.serialize())
   }
 
   public isEmpty(): boolean {

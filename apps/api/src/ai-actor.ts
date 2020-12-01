@@ -6,7 +6,7 @@ import {
   IAction,
   IMatchStatePlayingSerialized,
   IMatchStateSerialized,
-} from '@game-of-three/api-interfaces'
+} from '@game-of-three/contracts'
 
 /**
  * where `b`, the `divisor`
@@ -19,7 +19,7 @@ import {
  */
 type Reminder = 0 | 1 | 2
 
-export class AIActor<PlayerID extends string>
+export class AIActor<PlayerID extends string = string>
   implements
     IObserver<IMatchStateSerialized>,
     Omit<ISubject<IAction>, 'notifyObservers'> {
@@ -70,14 +70,14 @@ export class AIActor<PlayerID extends string>
   public update(state: IMatchStateSerialized): void {
     if (
       MatchState.isIMatchStatePlayingSerialized(state) &&
-      state.nextTurn === this.ai.getId()
+      state.nextTurn.id === this.ai.id
     ) {
-      this.move(state)
+      this._move(state)
     }
   }
 
-  private move(state: IMatchStatePlayingSerialized): void {
-    this.pause(this.randomDelayMs())
+  private _move(state: IMatchStatePlayingSerialized): void {
+    this._pause(this._randomDelayMs())
       .then(() => {
         /**
          * EUCLIDEAN DIVISION THEOREM (wikipedia):
@@ -106,14 +106,15 @@ export class AIActor<PlayerID extends string>
          */
 
         const reminder = (state.outputNumber % 3) as 0 | 1 | 2
-        const action = this.remainderToActionMap.get(reminder)
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const action = this.remainderToActionMap.get(reminder)!
         return action
       })
-      .then((action) => this.notifyObservers(action))
+      .then((action) => this._notifyObservers(action))
       .catch((error) => console.error(error))
   }
 
-  private notifyObservers(action: IAction): void {
+  private _notifyObservers(action: IAction): void {
     this.observers.forEach((observer) => {
       observer.update(action)
     })
@@ -126,7 +127,7 @@ export class AIActor<PlayerID extends string>
    * @returns {Promise<void>}
    * @memberof AIActor
    */
-  private pause(delay: number = 1000): Promise<void> {
+  private _pause(delay: number = 1000): Promise<void> {
     return new Promise((resolve) => {
       setTimeout(resolve, delay)
     })
@@ -140,7 +141,7 @@ export class AIActor<PlayerID extends string>
    * @returns {number} milliseconds
    * @memberof AIActor
    */
-  private randomDelayMs(): number {
+  private _randomDelayMs(): number {
     const min = Math.ceil(AIActor.MIN_SECONDS)
     const max = Math.floor(AIActor.MAX_SECONDS)
     return Math.floor(Math.random() * (max - min + 1) + min) * 1000

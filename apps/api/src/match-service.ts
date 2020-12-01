@@ -1,135 +1,226 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import type { Socket } from 'socket.io'
+
 import { AIActor } from './ai-actor'
-import type {
-  IMatchService,
-  IMatchState,
-  IObserver,
-  IPlayer,
-} from './interfaces'
+import type { IMatchService, IObserver, IPlayer } from './interfaces'
 import { INumberGeneratorStrategy, Match, MatchState } from './model'
+import {
+  SocketActionFn,
+  WrappedServerSocket,
+  createSocket,
+  emitToSocket,
+} from './sockets'
 
 import {
+  Action,
   IAction,
+  IEvents,
   IMatchStateSerialized,
   MatchStatus,
-} from '@game-of-three/api-interfaces'
+  SocketEvent,
+  actionMatchMoveError,
+  actionMatchNewState,
+} from '@game-of-three/contracts'
 
 export class MatchService<
-  IPlayer1 extends IPlayer<string>,
-  IPlayer2 extends IPlayer<string>
-> implements IMatchService {
-  private readonly aiActor: AIActor<string>
+  PlayerID1 extends string = string,
+  PlayerID2 extends string = string,
+  MatchID extends string = string
+> implements IMatchService<MatchID, PlayerID1, PlayerID2> {
+  public readonly __type: 'MatchService' = 'MatchService'
 
-  private readonly aiActorMoveObserver: IObserver<IAction> = {
-    update: (action: IAction) => this.move(this.match.getPlayers()[1], action),
+  public readonly id: MatchID
+
+  public readonly onMatchEnd?: (matchId: MatchID) => void
+
+  private _aiActor?: AIActor<string>
+
+  private readonly _aiActorMoveObserver: IObserver<IAction> = {
+    update: (action: IAction) => this.move(this._match.players[1], action),
   }
 
-  private readonly match: Match<IPlayer1, IPlayer2>
+  private readonly _debugObserver?: IObserver<IMatchStateSerialized>
+
+  private readonly _match: Match<PlayerID1, PlayerID2, MatchID>
+
+  private readonly _matchEndObserver: IObserver<IMatchStateSerialized> = {
+    update: () => this._isMatchStop() && this._onMatchEnd(),
+  }
 
   /**
-   *Creates an instance of MatchService.
-   * @param {[IPlayer1, IPlayer2]} players
-   * @param {INumberGeneratorStrategy} [numberGeneratorStrategy]
+   * socket observer
+   * on matchState updates it proxy the changes to the player sockets
+   * @private
+   * @type {IObserver<IMatchStateSerialized>}
    * @memberof MatchService
    */
-  public constructor(
-    players: [IPlayer1, IPlayer2],
-    numberGeneratorStrategy?: INumberGeneratorStrategy,
-    debugObserver?: IObserver<IMatchStateSerialized>
-  ) {
-    this.match = new Match(...players, numberGeneratorStrategy)
-    if (players[1].isAi()) {
-      this.aiActor = new AIActor(players[1])
-      /**
-       * register the Observable responsible for listening to the AiActors move.
-       * said Observable will be responsible to proxy the message to the match state model
-       */
-      this.aiActor.registerObserver(this.aiActorMoveObserver)
-
-      /**
-       * register the AiActor to the match state changes.
-       */
-      this.match.registerObserver(this.aiActor)
-    }
-    if (debugObserver) {
-      this.match.registerObserver(debugObserver)
-    }
-    this.match.init()
+  private readonly _socketObserver: IObserver<IMatchStateSerialized> = {
+    update: (matchState) => {
+      this._sockets?.forEach((socket) =>
+        emitToSocket(socket)(
+          SocketEvent.MATCH_NEW_STATE,
+          actionMatchNewState(matchState)
+        )
+      )
+    },
   }
 
-  public move(player: IPlayer, action: IAction): void {
-    this.assertMatchStatePlaying()
-    this.assertIsPlayerTurn(player)
-    const inputNumber = this.getNewInputNumber()
-    const outputNumber = this.calculateOutputNumber(inputNumber, action)
+  private readonly _sockets?: [socket1: Socket, socket2?: Socket]
+
+  private readonly registeredSocketEventsListener: readonly [
+    WrappedServerSocket<
+      SocketEvent.MATCH_MOVE,
+      Action<SocketEvent.MATCH_MOVE, IAction, never, never>
+    >
+  ]
+
+  public constructor({
+    sockets,
+    players,
+    numberGeneratorStrategy,
+    debugObserver,
+    onMatchEnd,
+  }: {
+    debugObserver?: IObserver<IMatchStateSerialized>
+    numberGeneratorStrategy?: INumberGeneratorStrategy
+    onMatchEnd?: (matchId: string) => void
+    players: [player1: IPlayer<PlayerID1>, player2: IPlayer<PlayerID2>]
+    sockets?: [socket1: Socket, socket2?: Socket]
+  }) {
+    this._match = new Match(...players, numberGeneratorStrategy)
+    this.id = this._match.id
+    this._sockets = sockets
+    this._debugObserver = debugObserver
+    this.onMatchEnd = onMatchEnd
+
+    this.registeredSocketEventsListener = this._registerEventHandlersToSocketEvents()
+
+    this._addAiActor()
+    this._subscribeObserversToMatchSubject()
+    this._listenToPlayersEvents()
+    this._match.init()
+  }
+
+  private static _assertPlayerBelongToMatch(
+    _match: Match,
+    playerId: string
+  ): void {
+    if (!_match.players.map((p) => p.id).includes(playerId)) {
+      throw new Error('PlayerID does not belong to this match ')
+    }
+  }
+
+  public move(
+    player: IPlayer<PlayerID1> | IPlayer<PlayerID2>,
+    action: IAction
+  ): void {
+    this._assertMatchStatePlaying()
+    this._assertIsPlayerTurn(player)
+    const inputNumber = this._getNewInputNumber()
+    const outputNumber = this._calculateOutputNumber(inputNumber, action)
 
     if (
-      this.isDivisibleByThree(inputNumber + action) &&
-      this.isPositiveInteger(outputNumber)
+      this._isDivisibleByThree(inputNumber + action) &&
+      this._isPositiveInteger(outputNumber)
     ) {
-      if (this.isEqualToOne(outputNumber)) {
+      if (this._isEqualToOne(outputNumber)) {
         // victory
-        const matchStateStop: IMatchState = new MatchState({
+        const matchStateStop = new MatchState<MatchID, PlayerID1, PlayerID2>({
           action,
-          currentTurn: this.match.getCurrentTurn(),
+          currentTurn: this._match.turn,
+          id: this._match.id,
           inputNumber,
           outputNumber,
+          players: this._match.players,
           status: MatchStatus.Stop,
-          turnNumber: this.match.getCurrentTurnNumber(),
-          winningPlayer: this.match.getCurrentTurn(),
+          turnNumber: this._match.turnNumber,
+          winningPlayer: this._match.turn,
         })
-        return this.match.setMatchState(matchStateStop)
+        return this._match.push(matchStateStop)
       }
       // next round
-      const matchStatePlaying = new MatchState({
+      const matchStatePlaying = new MatchState<MatchID, PlayerID1, PlayerID2>({
         action,
-        currentTurn: this.match.getCurrentTurn(),
+        currentTurn: this._match.turn,
+        id: this._match.id,
         inputNumber,
-        nextTurn: this.match.peekNextTurn(),
+        nextTurn: this._match.nextTurn,
         outputNumber,
+        players: this._match.players,
         status: MatchStatus.Playing,
-        turnNumber: this.match.getCurrentTurnNumber(),
+        turnNumber: this._match.turnNumber,
       })
-      return this.match.setMatchState(matchStatePlaying)
+      return this._match.push(matchStatePlaying)
     }
 
     // lost
-    const matchStateStop = new MatchState({
+    const matchStateStop = new MatchState<MatchID, PlayerID1, PlayerID2>({
       action,
-      currentTurn: this.match.getCurrentTurn(),
+      currentTurn: this._match.turn,
+      id: this._match.id,
       inputNumber,
       outputNumber,
+      players: this._match.players,
       status: MatchStatus.Stop,
-      turnNumber: this.match.getCurrentTurnNumber(),
-      winningPlayer: this.match.peekNextTurn(),
+      turnNumber: this._match.turnNumber,
+      winningPlayer: this._match.nextTurn,
     })
-    return this.match.setMatchState(matchStateStop)
+    return this._match.push(matchStateStop)
   }
 
-  private assertIsPlayerTurn(player: IPlayer): void {
-    if (!this.isPlayerTurn(player)) {
+  /**
+   * TODO: DOCUMENT THIS METHOD
+   * @private
+   * @memberof MatchService
+   */
+  private _addAiActor() {
+    const [, player2] = this._match.players
+    if (player2.isAi()) {
+      this._aiActor = new AIActor(player2)
+    }
+  }
+
+  private _assertIsPlayerTurn(player: IPlayer): void {
+    if (!this._isPlayerTurn(player)) {
       throw new Error('Not player turn.')
     }
   }
 
-  private assertMatchStatePlaying(): void {
-    if (this.isMatchStop()) {
+  private _assertMatchStatePlaying(): void {
+    if (this._isMatchStop()) {
       throw new Error("Match ended. Can't make a move after a match has ended")
     }
   }
 
-  private calculateOutputNumber(inputNumber: number, action: IAction): number {
+  private _calculateOutputNumber(inputNumber: number, action: IAction): number {
     return (inputNumber + action) / 3
   }
 
-  private getNewInputNumber(): number {
-    return this.match.getMatchState().outputNumber
+  private _getNewInputNumber(): number {
+    return this._match.state.outputNumber
   }
 
-  private isDivisibleByThree(number: number): boolean {
+  private _handlerMatchMoveAction: SocketActionFn<
+    IEvents[SocketEvent.MATCH_MOVE]
+  > = (socket) => ({ payload: action }) => {
+    const { id } = socket
+    const emit = emitToSocket(socket)
+    try {
+      MatchService._assertPlayerBelongToMatch(this._match, id)
+      this.move(this._match.players.find((player) => player.id === id)!, action)
+    } catch (error: unknown) {
+      console.warn(error)
+      if (error instanceof Error) {
+        emit(SocketEvent.MATCH_MOVE_ERROR, actionMatchMoveError(error.message))
+      }
+    }
+  }
+
+  private _isDivisibleByThree(number: number): boolean {
     return number % 3 === 0
   }
 
-  private isEqualToOne(number: number): boolean {
+  private _isEqualToOne(number: number): boolean {
     return number === 1
   }
 
@@ -139,15 +230,112 @@ export class MatchService<
    * @returns {boolean}
    * @memberof MatchService
    */
-  private isMatchStop(): boolean {
-    return this.match.getMatchStatus() === MatchStatus.Stop
+  private _isMatchStop(): boolean {
+    return this._match.status === MatchStatus.Stop
   }
 
-  private isPlayerTurn(player: IPlayer): boolean {
-    return this.match.getCurrentTurn() === player
+  private _isPlayerTurn(player: IPlayer): boolean {
+    return this._match.turn === player
   }
 
-  private isPositiveInteger(number: number): boolean {
+  private _isPositiveInteger(number: number): boolean {
     return Number.isInteger(number) && number > 0
+  }
+
+  /**
+   * TODO: DOCUMENT THIS METHOD
+   * @private
+   * @memberof MatchService
+   */
+  private _listenToPlayersEvents(): void {
+    if (this._aiActor) {
+      /**
+       * register the Observable responsible for listening to the AiActors move.
+       * said Observable will be responsible to proxy the message to the match state model
+       */
+      this._aiActor.registerObserver(this._aiActorMoveObserver)
+    }
+    this._sockets?.forEach((socket) => {
+      if (socket) {
+        this.registeredSocketEventsListener.forEach(({ callback, event }) =>
+          socket.on(event, callback(socket))
+        )
+      }
+    })
+  }
+
+  private _notifyPlayersMatchHasEnded(): void {
+    this._sockets?.forEach((socket) => {
+      emitToSocket(socket)(SocketEvent.MATCH_END_STATE, undefined)
+    })
+  }
+
+  /**
+   * this procedure is responsible for cleaning up after a match has ended:
+   * 1. remove removeObserver from match
+   * 2. emit a message to sockets that the match has ended
+   * 3. stop listening to sockets events
+   * 4. notify server that the game has ended and that it can be killed
+   * @private
+   * @memberof MatchService
+   */
+  private _onMatchEnd = (): void => {
+    this._removeObserversFromMatchStateSubject() // 1.
+    this._notifyPlayersMatchHasEnded() // 2.
+    this._stopListeningToPlayersEvents() // 3.
+    this.onMatchEnd && this.onMatchEnd(this.id) // 4.
+  }
+
+  /**
+   * TODO: DOCUMENT THIS METHOD
+   * @private
+   * @returns
+   * @memberof MatchService
+   */
+  private _registerEventHandlersToSocketEvents() {
+    return [
+      createSocket(SocketEvent.MATCH_MOVE, this._handlerMatchMoveAction),
+      // add more event handlers if needed.
+    ] as const
+  }
+
+  private _removeObserversFromMatchStateSubject(): void {
+    if (this._debugObserver) this._match.removeObserver(this._debugObserver)
+    if (this._aiActor) this._match.removeObserver(this._aiActor)
+    this._match.removeObserver(this._socketObserver)
+    this._match.removeObserver(this._matchEndObserver)
+  }
+
+  private _stopListeningToPlayersEvents(): void {
+    if (this._aiActor) {
+      this._aiActor.removeObserver(this._aiActorMoveObserver)
+    }
+    this._sockets?.forEach((socket) =>
+      this.registeredSocketEventsListener.forEach(({ callback, event }) => {
+        /*
+         * FIXME: this is not working because callback(socket) has no  stable reference by pointer
+         * callback is a curried function: hence a new fn is created at each invocation.
+         * Should find a way to properly remove it
+         */
+        socket.off(event, callback(socket))
+      })
+    )
+  }
+
+  private _subscribeObserversToMatchSubject(): void {
+    if (this._debugObserver) {
+      this._match.registerObserver(this._debugObserver)
+    }
+
+    //  register the AiActor to the match state changes.
+    if (this._aiActor) {
+      this._match.registerObserver(this._aiActor)
+    }
+
+    // register sockets to match state changes
+    this._match.registerObserver(this._socketObserver)
+
+    // register an on match end handler to match state changes
+    this._match.registerObserver(this._matchEndObserver)
   }
 }

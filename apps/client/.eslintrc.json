@@ -2,9 +2,17 @@
   "extends": [
     "plugin:@nrwl/nx/react",
     "../../.eslintrc.json",
-    "plugin:jest/all"
+    "plugin:react/recommended",
+    "plugin:jest/all",
+    "plugin:jsx-a11y/recommended",
+    "prettier/react"
   ],
-  "plugins": ["jest"],
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
+  "plugins": ["jest", "import", "jsx-a11y", "react", "react-hooks"],
   "ignorePatterns": ["!**/*"],
   "rules": {
     "react/jsx-uses-react": "off",

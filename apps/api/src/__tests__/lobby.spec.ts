@@ -1,21 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals'
 
-import type { ILobby } from '../interfaces'
 import { Human, Lobby } from '../model'
 
 describe('lobby', () => {
-  const playerA = new Human('PLAYER_A_ID', 'PLAYER_A')
-  const playerB = new Human('PLAYER_B_ID', 'PLAYER_B')
-  const playerC = new Human('PLAYER_C_ID', 'PLAYER_C')
-  const playerD = new Human('PLAYER_D_ID', 'PLAYER_D')
+  const playerIDA = new Human('PLAYER_A_ID', 'PLAYER_A').id
+  const playerIDB = new Human('PLAYER_B_ID', 'PLAYER_B').id
+  const playerIDC = new Human('PLAYER_C_ID', 'PLAYER_C').id
+  const playerIDD = new Human('PLAYER_D_ID', 'PLAYER_D').id
 
-  let lobby: ILobby
-  // eslint-disable-next-line jest/no-hooks
+  let lobby: Lobby
   beforeEach(() => {
     lobby = Lobby.getInstance()
   })
 
-  // eslint-disable-next-line jest/no-hooks
   afterEach(() => {
     lobby.reset()
   })
@@ -33,74 +30,74 @@ describe('lobby', () => {
 
   it('should allow to reset the lobby to its initial pristine state', () => {
     expect.hasAssertions()
-    expect(lobby.getSize()).toBe(0)
+    expect(lobby.size).toBe(0)
 
-    lobby.addPlayer(playerA)
-    lobby.addPlayer(playerB)
-    lobby.addPlayer(playerC)
-    expect(lobby.getPlayers()).toContain(playerA)
-    expect(lobby.getPlayers()).toContain(playerB)
-    expect(lobby.getPlayers()).toContain(playerC)
-    expect(lobby.getSize()).toBe(3)
+    lobby.addPlayerId(playerIDA)
+    lobby.addPlayerId(playerIDB)
+    lobby.addPlayerId(playerIDC)
+    expect(lobby.playersId).toContain(playerIDA)
+    expect(lobby.playersId).toContain(playerIDB)
+    expect(lobby.playersId).toContain(playerIDC)
+    expect(lobby.size).toBe(3)
 
     // act
     lobby.reset()
     // assert
-    expect(lobby.getSize()).toBe(0)
-    expect(lobby.getPlayers()).not.toContain(playerA)
-    expect(lobby.getPlayers()).not.toContain(playerB)
-    expect(lobby.getPlayers()).not.toContain(playerC)
+    expect(lobby.size).toBe(0)
+    expect(lobby.playersId).not.toContain(playerIDA)
+    expect(lobby.playersId).not.toContain(playerIDB)
+    expect(lobby.playersId).not.toContain(playerIDC)
   })
 
   it('should allow to add a human IPlayer to the lobby', () => {
     expect.hasAssertions()
     // act
-    lobby.addPlayer(playerA)
-    lobby.addPlayer(playerB)
-    lobby.addPlayer(playerC)
-    lobby.addPlayer(playerC) // this is deliberate to check if it adds also duplicated items
+    lobby.addPlayerId(playerIDA)
+    lobby.addPlayerId(playerIDB)
+    lobby.addPlayerId(playerIDC)
+    lobby.addPlayerId(playerIDC) // this is deliberate to check if it adds also duplicated items
 
     // assert
-    const players = lobby.getPlayers()
-    expect(players).toContain(playerA)
-    expect(players).toContain(playerB)
-    expect(players).toContain(playerC)
-    expect(players).toContain(playerA)
-    expect(players).not.toContain(playerD)
-    expect(players).toHaveLength(3)
+    const playersId = lobby.playersId
+    expect(playersId).toContain(playerIDA)
+    expect(playersId).toContain(playerIDB)
+    expect(playersId).toContain(playerIDC)
+    expect(playersId).toContain(playerIDA)
+    expect(playersId).not.toContain(playerIDD)
+    expect(playersId).toHaveLength(3)
   })
 
   it('should allow to remove a human IPlayer from the lobby', () => {
     expect.hasAssertions()
     // arrange
-    lobby.addPlayer(playerA)
-    lobby.addPlayer(playerB)
-    lobby.addPlayer(playerC)
+    lobby.addPlayerId(playerIDA)
+    lobby.addPlayerId(playerIDB)
+    lobby.addPlayerId(playerIDC)
 
     // act
-    lobby.removePlayer(playerB)
-    lobby.removePlayer(playerC)
-    lobby.removePlayer(playerD)
+    lobby.removePlayerId(playerIDB)
+    lobby.removePlayerId(playerIDC)
+    lobby.removePlayerId(playerIDD)
 
     // assert
-    const players = lobby.getPlayers()
-    expect(players).toContain(playerA)
-    expect(players).not.toContain(playerB)
-    expect(players).not.toContain(playerC)
-    expect(players).not.toContain(playerD)
-    expect(players).toHaveLength(1)
+    const playersId = lobby.playersId
+    expect(playersId).toContain(playerIDA)
+    expect(playersId).not.toContain(playerIDB)
+    expect(playersId).not.toContain(playerIDC)
+    expect(playersId).not.toContain(playerIDD)
+    expect(playersId).toHaveLength(1)
   })
 
   it('should allow to get the number of human IPlayer currently in the lobby', () => {
     expect.hasAssertions()
-    expect(lobby.getSize()).toBe(0)
+    expect(lobby.size).toBe(0)
 
-    lobby.addPlayer(playerA)
-    lobby.addPlayer(playerB)
-    lobby.addPlayer(playerC)
-    lobby.addPlayer(playerD)
+    lobby.addPlayerId(playerIDA)
+    lobby.addPlayerId(playerIDB)
+    lobby.addPlayerId(playerIDC)
+    lobby.addPlayerId(playerIDD)
 
-    expect(lobby.getSize()).toBe(4)
+    expect(lobby.size).toBe(4)
   })
 
   it('should tell if the looby is empty', () => {
@@ -113,17 +110,17 @@ describe('lobby', () => {
   it('should allow to gets an array representation of all the human IPlayers currently in the lobby', () => {
     expect.hasAssertions()
     // act
-    lobby.addPlayer(playerA)
-    lobby.addPlayer(playerB)
-    lobby.addPlayer(playerC)
-    lobby.addPlayer(playerD)
+    lobby.addPlayerId(playerIDA)
+    lobby.addPlayerId(playerIDB)
+    lobby.addPlayerId(playerIDC)
+    lobby.addPlayerId(playerIDD)
 
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(() => lobby.getPlayers()).not.toThrow()
-    expect(Array.isArray(lobby.getPlayers())).toBe(true)
-    expect(lobby.getPlayers()).toContain(playerA)
-    expect(lobby.getPlayers()).toContain(playerB)
-    expect(lobby.getPlayers()).toContain(playerC)
-    expect(lobby.getPlayers()).toContain(playerD)
+    expect(() => lobby.playersId).not.toThrow()
+    expect(Array.isArray(lobby.playersId)).toBe(true)
+    expect(lobby.playersId).toContain(playerIDA)
+    expect(lobby.playersId).toContain(playerIDB)
+    expect(lobby.playersId).toContain(playerIDC)
+    expect(lobby.playersId).toContain(playerIDD)
   })
 })

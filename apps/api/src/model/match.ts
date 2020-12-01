@@ -12,53 +12,63 @@ import { MatchState } from '../model/match-state'
 
 import { Turn } from './turn'
 
-import {
-  IMatchStateSerialized,
-  IMatchStatus,
-  MatchStatus,
-} from '@game-of-three/api-interfaces'
+import { IMatchStateSerialized, MatchStatus } from '@game-of-three/contracts'
 
-export type IUUIDStrategy = () => string
+export interface IUUIDStrategy {
+  <T extends string = string>(): T
+}
 export type INumberGeneratorStrategy = () => number
 export class Match<
-  IPlayer1 extends IPlayer<string>,
-  IPlayer2 extends IPlayer<string>
-> implements IMatch<IPlayer1, IPlayer2>, ISubject<IMatchStateSerialized> {
+  PlayerID1 extends string = string,
+  PlayerID2 extends string = string,
+  MatchID extends string = string
+> implements
+    IMatch<PlayerID1, PlayerID2, MatchID>,
+    ISubject<IMatchStateSerialized> {
   public static readonly MAX = 100
 
   public static readonly MIN = 3
 
-  private readonly id: string
+  public readonly __type: 'Match' = 'Match'
 
-  private initialized: boolean
+  private readonly _id: MatchID
 
-  private readonly matchStateHistory: IMatchState[]
+  private _initialized: boolean
 
-  private readonly numberGeneratorStrategy: INumberGeneratorStrategy
+  private readonly _matchStateHistory: IMatchState<
+    MatchID,
+    PlayerID1,
+    PlayerID2
+  >[]
 
-  private readonly observers: IObserver<IMatchStateSerialized>[]
+  private readonly _numberGeneratorStrategy: INumberGeneratorStrategy
 
-  private readonly players: readonly [IPlayer1, IPlayer2]
+  private readonly _observers: IObserver<IMatchStateSerialized>[]
 
-  private readonly turn: ITurn<IPlayer1, IPlayer2>
+  private readonly _players: readonly [
+    player1: IPlayer<PlayerID1>,
+    player2: IPlayer<PlayerID2>
+  ]
+
+  private readonly _turn: ITurn<MatchID, PlayerID1, PlayerID2>
 
   public constructor(
-    player1: IPlayer1,
-    player2: IPlayer2,
+    player1: IPlayer<PlayerID1>,
+    player2: IPlayer<PlayerID2>,
     numberGeneratorStrategy?: INumberGeneratorStrategy,
     uuidStrategy: IUUIDStrategy = uuid
   ) {
-    this.id = uuidStrategy()
-    this.initialized = false
-    this.players = [player1, player2] as const
-    this.turn = new Turn(player1, player2)
-    this.matchStateHistory = []
-    this.observers = []
+    this._id = uuidStrategy<MatchID>()
+    this._initialized = false
+    this._players = [player1, player2] as const
+    this._turn = new Turn(player1, player2, this._id)
+    this._matchStateHistory = []
+    this._observers = []
 
     if (numberGeneratorStrategy) {
-      this.numberGeneratorStrategy = numberGeneratorStrategy
+      this._numberGeneratorStrategy = numberGeneratorStrategy
     } else {
-      this.numberGeneratorStrategy = () =>
+      this._numberGeneratorStrategy = () =>
         Match.defaultNumberGeneratorStrategy(Match.MIN, Match.MAX)
     }
   }
@@ -73,100 +83,107 @@ export class Match<
     return Math.floor(Math.random() * (_max - _min + 1) + _min)
   }
 
-  public getCurrentTurn(): IPlayer1 | IPlayer2 {
-    this.assertInitialized()
-    return this.turn.getCurrent()
+  public get turn(): IPlayer<PlayerID1> | IPlayer<PlayerID2> {
+    this._assertInitialized()
+    return this._turn.current
   }
 
-  public getCurrentTurnNumber(): number {
-    this.assertInitialized()
-    return this.turn.getTurnNumber()
+  public get turnNumber(): number {
+    this._assertInitialized()
+    return this._turn.number
   }
 
-  public getId(): string {
-    return this.id
+  public get id(): MatchID {
+    return this._id
   }
 
-  public getMatchState(): Readonly<IMatchState> {
-    this.assertInitialized()
-    const { length } = this.matchStateHistory
+  public get state(): Readonly<IMatchState<MatchID, PlayerID1, PlayerID2>> {
+    this._assertInitialized()
+    const { length } = this._matchStateHistory
 
     if (length === 0) {
       throw new Error('Empty matchStateHistory.')
     }
-    return this.matchStateHistory[length - 1]
+    return this._matchStateHistory[length - 1]
   }
 
-  public getMatchStateHistory(): readonly Readonly<IMatchState>[] {
-    this.assertInitialized()
-    return this.matchStateHistory
+  public get stateHistory(): ReadonlyArray<
+    Readonly<IMatchState<MatchID, PlayerID1, PlayerID2>>
+  > {
+    this._assertInitialized()
+    return this._matchStateHistory
   }
 
-  public getMatchStatus(): IMatchStatus {
-    this.assertInitialized()
-    return this.getMatchState().status
+  public get status():
+    | MatchStatus.Start
+    | MatchStatus.Playing
+    | MatchStatus.Stop {
+    this._assertInitialized()
+    return this.state.status
   }
 
-  public getPlayers(): readonly [IPlayer1, IPlayer2] {
-    return this.players
+  public get players(): readonly [
+    player1: IPlayer<PlayerID1>,
+    player2: IPlayer<PlayerID2>
+  ] {
+    return this._players
   }
 
   public init(): void {
-    if (this.initialized) {
+    if (this._initialized) {
       throw new Error(
         "Match already initialized. Can't re-initialize the Match"
       )
     } else {
-      this.turn.init()
-      const outputNumber = this.numberGeneratorStrategy()
-      const nextTurn = this.turn.getCurrent()
-      const turnNumber = 0
-      const initialMatchState: IMatchState = new MatchState({
-        nextTurn,
-        outputNumber,
+      this._turn.init()
+      const initialMatchState = new MatchState<MatchID, PlayerID1, PlayerID2>({
+        id: this.id,
+        nextTurn: this._turn.current,
+        outputNumber: this._numberGeneratorStrategy(),
+        players: this._players,
         status: MatchStatus.Start,
-        turnNumber,
+        turnNumber: 0,
       })
-      this.matchStateHistory.push(initialMatchState)
-      this.initialized = true
+      this._matchStateHistory.push(initialMatchState)
+      this._initialized = true
       this.notifyObservers()
     }
   }
 
   public notifyObservers(): void {
-    this.observers.forEach((observer) => {
-      observer.update(this.getMatchState().serialize())
+    this._observers.forEach((observer) => {
+      observer.update(this.state.serialize())
     })
   }
 
-  public peekNextTurn(): IPlayer1 | IPlayer2 {
-    this.assertInitialized()
-    return this.turn.peekNext()
+  public get nextTurn(): IPlayer<PlayerID1> | IPlayer<PlayerID2> {
+    this._assertInitialized()
+    return this._turn.next
   }
 
-  public registerObserver(observer: IObserver<IMatchStateSerialized>): void {
-    this.observers.push(observer)
-  }
-
-  public removeObserver(observer: IObserver<IMatchStateSerialized>): void {
-    const index = this.observers.indexOf(observer)
-    if (index !== -1) {
-      this.observers.splice(index, 1)
-    }
-  }
-
-  public setMatchState(matchState: IMatchState): void {
-    this.assertInitialized()
-    this.matchStateHistory.push(matchState)
+  public push(matchState: IMatchState<MatchID, PlayerID1, PlayerID2>): void {
+    this._assertInitialized()
+    this._matchStateHistory.push(matchState)
 
     if (matchState.isPlaying()) {
-      this.turn.next()
+      this._turn.switch()
     }
     this.notifyObservers()
   }
 
-  private assertInitialized(): void {
-    if (this.initialized === false) {
+  public registerObserver(observer: IObserver<IMatchStateSerialized>): void {
+    this._observers.push(observer)
+  }
+
+  public removeObserver(observer: IObserver<IMatchStateSerialized>): void {
+    const index = this._observers.indexOf(observer)
+    if (index !== -1) {
+      this._observers.splice(index, 1)
+    }
+  }
+
+  private _assertInitialized(): void {
+    if (this._initialized === false) {
       throw new Error(
         'Match not initialize. Remember to invoke `init()` after instantiation.'
       )
