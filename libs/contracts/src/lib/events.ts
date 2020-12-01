@@ -26,6 +26,7 @@ import type { PlayerID, PlayerSerialized } from './domain/player'
  */
 export interface ServerState {
   readonly lobby: readonly PlayerID[]
+  readonly player: PlayerSerialized
   readonly players: readonly PlayerSerialized[]
 }
 
