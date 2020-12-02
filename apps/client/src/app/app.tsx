@@ -2,92 +2,111 @@ import React, { useCallback, useEffect, useState } from 'react'
 import type { ChangeEvent, MouseEvent, VFC } from 'react'
 import { useSelector } from 'react-redux'
 
+import { toggleConnected } from '../features/connection'
+import { syncHeartbeat } from '../features/heartbeat'
+import { initialize } from '../features/initialize/initialize.action'
+import { addPlayerToLobby, removePlayerFromLobby } from '../features/lobby'
+import { matchMove, matchNewGame, matchNewState } from '../features/match'
+import { playerUpdateName } from '../features/player'
 import {
-  addPlayer,
-  addPlayerToLobby,
-  initializePlayers,
-  removePlayer,
-  removePlayerFromLobby,
-  syncHeartbeat,
-  toggleConnected,
-  updateMatchState,
-  updatePlayer,
-} from '../features'
-import {
-  socketConnect,
-  socketDisconnect,
-  socketHeartbeat,
-  socketHello,
-  socketInitialize,
-  socketMakeMatch,
-  socketMatchEnded,
-  socketMatchError,
-  socketMatchMove,
-  socketNameChanged,
-  socketNewMatchState,
-  socketPlayerJoined,
-  socketPlayerJoinedLobby,
-  socketPlayerLeft,
-  socketPlayerLeftLobby,
-  socketUpdateName,
-} from '../sockets'
+  playersAddOne,
+  playersRemoveOne,
+  playersUpdateOne,
+} from '../features/players'
 
+import { socketService } from '../socket-service'
 import { RootState, useAppDispatch } from '../store'
 
 import { IAction } from '@game-of-three/contracts'
 
 export const App: VFC = () => {
   const dispatch = useAppDispatch()
-  const state = useSelector((state: RootState) => state.system)
+  const state = useSelector((state: RootState) => state)
 
   const [name, setName] = useState<string>('')
 
   useEffect(() => {
-    socketConnect.on(() => dispatch(toggleConnected(true)))
-    socketDisconnect.on(() => dispatch(toggleConnected(false)))
-    socketHeartbeat.on((event) =>
+    const connectionObservable = socketService.onConnection()
+    const disconnectionObservable = socketService.onDisconnection()
+    const heartbeatObservable = socketService.onHeartbeat()
+    const initializeObservable = socketService.onInitialize()
+    const matchEndedObservable = socketService.onMatchEnded()
+    const matchErrorObservable = socketService.onMatchError()
+    const newMatchStateObservable = socketService.onNewMatchState()
+    const playerJoinedObservable = socketService.onPlayerJoined()
+    const playerJoinedLobbyObservable = socketService.onPlayerJoinedLobby()
+    const playerLeftObservable = socketService.onPlayerLeft()
+    const playerLeftLobbyObservable = socketService.onPlayerLeftLobby()
+    const nameChangedObservable = socketService.onNameChanged()
+
+    const connectionSubscription = connectionObservable.subscribe(() => {
+      console.log('connection event')
+      dispatch(toggleConnected(true))
+    })
+
+    const disconnectionSubscription = disconnectionObservable.subscribe(
+      (reason) => {
+        console.log(`disconnection event. reason ${reason}`)
+        dispatch(toggleConnected(false))
+      }
+    )
+
+    const heartbeatSubscription = heartbeatObservable.subscribe((event) => {
       dispatch(syncHeartbeat(new Date(event.payload).getSeconds().toString()))
+    })
+
+    const initializeSubscription = initializeObservable.subscribe((event) => {
+      dispatch(initialize(event.payload))
+    })
+
+    const matchEndedSubscription = matchEndedObservable.subscribe(() =>
+      console.log('match ended')
     )
 
-    socketInitialize.on((event) => dispatch(initializePlayers(event.payload)))
-
-    socketPlayerJoined.on((event) => dispatch(addPlayer(event.payload)))
-
-    socketPlayerLeft.on((event) => dispatch(removePlayer(event.payload)))
-
-    socketNameChanged.on((event) => dispatch(updatePlayer(event.payload)))
-
-    socketPlayerJoinedLobby.on((event) =>
-      dispatch(addPlayerToLobby(event.payload))
+    const matchErrorSubscription = matchErrorObservable.subscribe((event) =>
+      console.log(event)
     )
 
-    socketPlayerLeftLobby.on((event) =>
-      dispatch(removePlayerFromLobby(event.payload))
+    const newMatchStateSubscription = newMatchStateObservable.subscribe(
+      (event) => dispatch(matchNewState(event.payload))
     )
 
-    socketNewMatchState.on((event) => dispatch(updateMatchState(event.payload)))
+    const playerJoinedSubscription = playerJoinedObservable.subscribe((event) =>
+      dispatch(playersAddOne(event.payload))
+    )
 
-    socketMatchEnded.on(() => console.log('match ended'))
+    const playerLeftSubscription = playerLeftObservable.subscribe((event) =>
+      dispatch(playersRemoveOne(event.payload))
+    )
+    const nameChangedSubscription = nameChangedObservable.subscribe((event) =>
+      dispatch(playersUpdateOne(event.payload))
+    )
 
-    socketMatchError.on((event) => console.log(event))
+    const playerJoinedLobbySubscription = playerJoinedLobbyObservable.subscribe(
+      (event) => dispatch(addPlayerToLobby(event.payload))
+    )
+
+    const playerLeftLobbySubscription = playerLeftLobbyObservable.subscribe(
+      (event) => dispatch(removePlayerFromLobby(event.payload))
+    )
 
     return () => {
-      socketConnect.off()
-      socketDisconnect.off()
-      socketHeartbeat.off()
-      socketPlayerJoined.off()
-      socketPlayerLeft.off()
-      socketInitialize.off()
-      socketNameChanged.off()
-      socketPlayerJoinedLobby.off()
-      socketPlayerLeftLobby.off()
-      socketNewMatchState.off()
-      socketMatchEnded.off()
-      socketMatchError.off()
+      connectionSubscription.unsubscribe()
+      disconnectionSubscription.unsubscribe()
+      heartbeatSubscription.unsubscribe()
+      initializeSubscription.unsubscribe()
+      matchEndedSubscription.unsubscribe()
+      matchErrorSubscription.unsubscribe()
+      newMatchStateSubscription.unsubscribe()
+      playerJoinedSubscription.unsubscribe()
+      playerLeftSubscription.unsubscribe()
+      nameChangedSubscription.unsubscribe()
+      playerJoinedLobbySubscription.unsubscribe()
+      playerLeftLobbySubscription.unsubscribe()
     }
-  })
+  }, [dispatch])
 
-  const sendMessage = useCallback(() => socketHello.emit('world!'), [])
+  const sendMessage = useCallback(() => socketService.emitHello('world!'), [])
 
   const handleInputChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>): void => {
@@ -96,27 +115,23 @@ export const App: VFC = () => {
     []
   )
 
-  const handleUpdate = (): void => socketUpdateName.emit(name)
+  const handleUpdate = () => dispatch(playerUpdateName(name))
 
   const handleAction = useCallback(
     (event: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>): void => {
       const action = Number(event.currentTarget.dataset['action']) as IAction
-      socketMatchMove.emit(action)
+      dispatch(matchMove(action))
     },
-    []
+    [dispatch]
   )
 
   const handleInitiateMatchMaking = useCallback(
-    () => socketMakeMatch.emit(void 0),
-    []
+    () => dispatch(matchNewGame()),
+    [dispatch]
   )
 
   return (
     <div className="App">
-      <header className="App-header">
-        <p>Connected: {`${String(state.connected)}`}</p>
-        <p>Last message: {state.heartbeat}</p>
-      </header>
       <main>
         <section>
           <label htmlFor="name">Name</label>

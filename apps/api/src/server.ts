@@ -216,6 +216,7 @@ export class Server implements IServer {
       SocketEvent.SYSTEM_INITIALIZE,
       actionInitialize({
         lobby: this.lobby.playersId,
+        player: this.playersStore.getPlayerByID(socket.id).serialize(),
         players: this.playersStore.getSerializedPlayer(),
       })
     )
@@ -369,7 +370,7 @@ export class Server implements IServer {
 
     this.heartbeatTimerID = setInterval(
       () => this._broadcast(SocketEvent.SYSTEM_HEARTBEAT, action()),
-      1000
+      1000 * 10
     )
   }
 
