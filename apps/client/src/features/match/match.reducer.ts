@@ -2,9 +2,9 @@ import { createReducer } from '@reduxjs/toolkit'
 
 import { matchNewState } from './match.actions'
 
-import { IMatchStateSerialized } from '@game-of-three/contracts'
+import { IMatchEntity } from '@game-of-three/contracts'
 
-type State = IMatchStateSerialized<string, string, string>[]
+type State = IMatchEntity<string, string, string>[]
 
 const initialState: State = []
 

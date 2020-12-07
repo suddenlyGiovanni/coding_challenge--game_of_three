@@ -8,9 +8,9 @@ import {
   playersUpdateOne,
 } from './players.actions'
 
-import { PlayerSerialized } from '@game-of-three/contracts'
+import { IPlayerEntity } from '@game-of-three/contracts'
 
-type State = ReadonlyArray<PlayerSerialized>
+type State = ReadonlyArray<IPlayerEntity>
 
 const initialState: State = []
 

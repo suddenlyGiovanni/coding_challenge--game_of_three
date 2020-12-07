@@ -3,7 +3,7 @@ import { IPlayer } from './player.interface'
 import {
   IAction,
   IEntity,
-  IMatchStateSerialized,
+  IMatchEntity,
   MatchStatus,
 } from '@game-of-three/contracts'
 
@@ -38,5 +38,5 @@ export interface IMatchState<
 
   isStopped(): boolean
 
-  serialize(): Readonly<IMatchStateSerialized<MatchID, PlayerID1, PlayerID2>>
+  serialize(): Readonly<IMatchEntity<MatchID, PlayerID1, PlayerID2>>
 }

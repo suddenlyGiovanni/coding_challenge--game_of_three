@@ -3,7 +3,7 @@ import { PlayerType } from '../interfaces/player.interface'
 
 import type { AI } from './ai'
 
-import { PlayerSerialized } from '@game-of-three/contracts'
+import { IPlayerEntity } from '@game-of-three/contracts'
 
 export class Human<PlayerID extends string = string>
   implements IPlayer<PlayerID> {
@@ -41,7 +41,7 @@ export class Human<PlayerID extends string = string>
     return this._id === player.id
   }
 
-  public serialize(): PlayerSerialized<PlayerID> {
+  public serialize(): IPlayerEntity<PlayerID> {
     return {
       __type: 'Player',
       id: this.id,

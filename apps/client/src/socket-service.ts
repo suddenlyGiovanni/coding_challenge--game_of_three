@@ -3,30 +3,30 @@ import { Observable, fromEvent } from 'rxjs'
 import { Manager, ManagerOptions, Socket } from 'socket.io-client'
 
 import {
-  Action,
   IAction,
+  IEventPayload,
   IEvents,
-  IMatchStateSerialized,
-  PlayerSerialized,
-  ServerState,
+  IMatchEntity,
+  IPlayerEntity,
+  IServerState,
   SocketEvent,
-  actionHello,
-  actionMatchMaking,
-  actionMatchMove,
-  actionUpdateName,
+  eventHello,
+  eventMatchMaking,
+  eventMatchMove,
+  eventUpdateName,
 } from '@game-of-three/contracts'
 
-interface ListenerCallback<Action> {
-  (action: Action): void
-}
+// interface ListenerCallback<Action> {
+//   (action: Action): void
+// }
 
-export interface DataSocket<Event extends keyof IEvents> {
-  emit: <Data extends IEvents[Event]>(
-    data: Data extends Action<Event, unknown> ? Data['payload'] : Data
-  ) => void
-  off: (callback?: ListenerCallback<IEvents[Event]>) => void
-  on: (callback: ListenerCallback<IEvents[Event]>) => void
-}
+// export interface DataSocket<Event extends keyof IEvents> {
+//   emit: <Data extends IEvents[Event]>(
+//     data: Data extends EventPayload<Event, unknown> ? Data['payload'] : Data
+//   ) => void
+//   off: (callback?: ListenerCallback<IEvents[Event]>) => void
+//   on: (callback: ListenerCallback<IEvents[Event]>) => void
+// }
 
 export class SocketService {
   private readonly _opts?: Partial<ManagerOptions>
@@ -55,19 +55,19 @@ export class SocketService {
   }
 
   public emitHello = (payload: 'world!'): void => {
-    this.emit(SocketEvent.SYSTEM_HELLO, actionHello(payload))
+    this.emit(SocketEvent.SYSTEM_HELLO, eventHello(payload))
   }
 
   public emitMakeMatch = (): void => {
-    this.emit(SocketEvent.LOBBY_MAKE_MATCH, actionMatchMaking())
+    this.emit(SocketEvent.LOBBY_MAKE_MATCH, eventMatchMaking())
   }
 
   public emitMatchMove = (action: IAction): void => {
-    this.emit(SocketEvent.MATCH_MOVE, actionMatchMove(action))
+    this.emit(SocketEvent.MATCH_MOVE, eventMatchMove(action))
   }
 
   public emitNameUpdated = (name: string): void => {
-    this.emit(SocketEvent.SYSTEM_NAME_UPDATE, actionUpdateName(name))
+    this.emit(SocketEvent.SYSTEM_NAME_UPDATE, eventUpdateName(name))
   }
 
   public init(): this {
@@ -98,7 +98,7 @@ export class SocketService {
   }
 
   public onHeartbeat = (): Observable<
-    Action<SocketEvent.SYSTEM_HEARTBEAT, string>
+    IEventPayload<SocketEvent.SYSTEM_HEARTBEAT, string>
   > => {
     return fromEvent<IEvents[SocketEvent.SYSTEM_HEARTBEAT]>(
       this.socket,
@@ -107,7 +107,7 @@ export class SocketService {
   }
 
   public onInitialize = (): Observable<
-    Action<SocketEvent.SYSTEM_INITIALIZE, ServerState>
+    IEventPayload<SocketEvent.SYSTEM_INITIALIZE, IServerState>
   > => {
     return fromEvent<IEvents[SocketEvent.SYSTEM_INITIALIZE]>(
       this.socket,
@@ -123,7 +123,7 @@ export class SocketService {
   }
 
   public onMatchError = (): Observable<
-    Action<SocketEvent.MATCH_MOVE_ERROR, string, any, true>
+    IEventPayload<SocketEvent.MATCH_MOVE_ERROR, string, any, true>
   > => {
     return fromEvent<IEvents[SocketEvent.MATCH_MOVE_ERROR]>(
       this.socket,
@@ -132,7 +132,7 @@ export class SocketService {
   }
 
   public onNameChanged = (): Observable<
-    Action<SocketEvent.SYSTEM_NAME_CHANGED, PlayerSerialized<string>>
+    IEventPayload<SocketEvent.SYSTEM_NAME_CHANGED, IPlayerEntity<string>>
   > => {
     return fromEvent<IEvents[SocketEvent.SYSTEM_NAME_CHANGED]>(
       this.socket,
@@ -141,9 +141,9 @@ export class SocketService {
   }
 
   public onNewMatchState = (): Observable<
-    Action<
+    IEventPayload<
       SocketEvent.MATCH_NEW_STATE,
-      IMatchStateSerialized<string, string, string>
+      IMatchEntity<string, string, string>
     >
   > => {
     return fromEvent<IEvents[SocketEvent.MATCH_NEW_STATE]>(
@@ -153,7 +153,7 @@ export class SocketService {
   }
 
   public onPlayerJoined = (): Observable<
-    Action<SocketEvent.SYSTEM_PLAYER_JOINED, PlayerSerialized>
+    IEventPayload<SocketEvent.SYSTEM_PLAYER_JOINED, IPlayerEntity>
   > => {
     return fromEvent<IEvents[SocketEvent.SYSTEM_PLAYER_JOINED]>(
       this.socket,
@@ -162,7 +162,7 @@ export class SocketService {
   }
 
   public onPlayerJoinedLobby = (): Observable<
-    Action<SocketEvent.LOBBY_PLAYER_JOINED, string>
+    IEventPayload<SocketEvent.LOBBY_PLAYER_JOINED, string>
   > => {
     return fromEvent<IEvents[SocketEvent.LOBBY_PLAYER_JOINED]>(
       this.socket,
@@ -171,7 +171,7 @@ export class SocketService {
   }
 
   public onPlayerLeft = (): Observable<
-    Action<SocketEvent.SYSTEM_PLAYER_LEFT, PlayerSerialized>
+    IEventPayload<SocketEvent.SYSTEM_PLAYER_LEFT, IPlayerEntity>
   > => {
     return fromEvent<IEvents[SocketEvent.SYSTEM_PLAYER_LEFT]>(
       this.socket,
@@ -180,7 +180,7 @@ export class SocketService {
   }
 
   public onPlayerLeftLobby = (): Observable<
-    Action<SocketEvent.LOBBY_PLAYER_LEFT, string>
+    IEventPayload<SocketEvent.LOBBY_PLAYER_LEFT, string>
   > => {
     return fromEvent<IEvents[SocketEvent.LOBBY_PLAYER_LEFT]>(
       this.socket,

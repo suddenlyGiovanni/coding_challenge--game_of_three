@@ -12,14 +12,14 @@ import {
 } from './sockets'
 
 import {
-  Action,
   IAction,
+  IEventPayload,
   IEvents,
-  IMatchStateSerialized,
+  IMatchEntity,
   MatchStatus,
   SocketEvent,
-  actionMatchMoveError,
-  actionMatchNewState,
+  eventMatchMoveError,
+  eventMatchNewState,
 } from '@game-of-three/contracts'
 
 export class MatchService<
@@ -39,11 +39,11 @@ export class MatchService<
     update: (action: IAction) => this.move(this._match.players[1], action),
   }
 
-  private readonly _debugObserver?: IObserver<IMatchStateSerialized>
+  private readonly _debugObserver?: IObserver<IMatchEntity>
 
   private readonly _match: Match<PlayerID1, PlayerID2, MatchID>
 
-  private readonly _matchEndObserver: IObserver<IMatchStateSerialized> = {
+  private readonly _matchEndObserver: IObserver<IMatchEntity> = {
     update: () => this._isMatchStop() && this._onMatchEnd(),
   }
 
@@ -51,15 +51,15 @@ export class MatchService<
    * socket observer
    * on matchState updates it proxy the changes to the player sockets
    * @private
-   * @type {IObserver<IMatchStateSerialized>}
+   * @type {IObserver<IMatchEntity>}
    * @memberof MatchService
    */
-  private readonly _socketObserver: IObserver<IMatchStateSerialized> = {
+  private readonly _socketObserver: IObserver<IMatchEntity> = {
     update: (matchState) => {
       this._sockets?.forEach((socket) =>
         emitToSocket(socket)(
           SocketEvent.MATCH_NEW_STATE,
-          actionMatchNewState(matchState)
+          eventMatchNewState(matchState)
         )
       )
     },
@@ -70,7 +70,7 @@ export class MatchService<
   private readonly registeredSocketEventsListener: readonly [
     WrappedServerSocket<
       SocketEvent.MATCH_MOVE,
-      Action<SocketEvent.MATCH_MOVE, IAction, never, never>
+      IEventPayload<SocketEvent.MATCH_MOVE, IAction, never, never>
     >
   ]
 
@@ -81,7 +81,7 @@ export class MatchService<
     debugObserver,
     onMatchEnd,
   }: {
-    debugObserver?: IObserver<IMatchStateSerialized>
+    debugObserver?: IObserver<IMatchEntity>
     numberGeneratorStrategy?: INumberGeneratorStrategy
     onMatchEnd?: (matchId: string) => void
     players: [player1: IPlayer<PlayerID1>, player2: IPlayer<PlayerID2>]
@@ -211,7 +211,7 @@ export class MatchService<
     } catch (error: unknown) {
       console.warn(error)
       if (error instanceof Error) {
-        emit(SocketEvent.MATCH_MOVE_ERROR, actionMatchMoveError(error.message))
+        emit(SocketEvent.MATCH_MOVE_ERROR, eventMatchMoveError(error.message))
       }
     }
   }

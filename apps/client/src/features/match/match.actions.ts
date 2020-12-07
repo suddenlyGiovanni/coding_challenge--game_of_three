@@ -2,13 +2,13 @@ import { AnyAction, createAction } from '@reduxjs/toolkit'
 
 import { withPayloadType } from '../utils'
 
-import type { IAction, IMatchStateSerialized } from '@game-of-three/contracts'
+import type { IAction, IMatchEntity } from '@game-of-three/contracts'
 
 export const matchNewGame = createAction('MATCH/NEW_MATCH')
 
 export const matchNewState = createAction(
   'SOCKET/MATCH/NEW_STATE',
-  withPayloadType<IMatchStateSerialized<string, string, string>>()
+  withPayloadType<IMatchEntity<string, string, string>>()
 )
 
 export const matchMove = createAction('MATCH/MOVE', withPayloadType<IAction>())

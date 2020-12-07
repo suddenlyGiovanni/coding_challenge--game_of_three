@@ -2,7 +2,7 @@ import { createAction } from '@reduxjs/toolkit'
 
 import { withPayloadType } from '../utils'
 
-import type { PlayerSerialized } from '@game-of-three/contracts'
+import type { IPlayerEntity } from '@game-of-three/contracts'
 
 export const playerUpdateName = createAction(
   'PLAYER/UPDATE_NAME',
@@ -11,5 +11,5 @@ export const playerUpdateName = createAction(
 
 export const playerUpdate = createAction(
   'PLAYER/UPDATE',
-  withPayloadType<PlayerSerialized>()
+  withPayloadType<IPlayerEntity>()
 )

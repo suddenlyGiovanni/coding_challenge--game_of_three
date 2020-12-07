@@ -14,11 +14,7 @@ import { AI, Human } from '../model'
 
 import { flushPromises } from './helpers'
 
-import {
-  IAction,
-  IMatchStateSerialized,
-  MatchStatus,
-} from '@game-of-three/contracts'
+import { IAction, IMatchEntity, MatchStatus } from '@game-of-three/contracts'
 
 describe('ai actor', () => {
   const PLAYER_1_ID = 'HUMAN_PLAYER_ID'
@@ -33,7 +29,7 @@ describe('ai actor', () => {
 
   const mockMatchId = '1'
 
-  const matchStateSerialized: IMatchStateSerialized = {
+  const matchStateSerialized: IMatchEntity = {
     __type: 'MatchState',
     action: 0,
     currentTurn: human.serialize(),
