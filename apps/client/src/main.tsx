@@ -3,7 +3,8 @@ import { render } from 'react-dom'
 import { Provider as ReduxProvider } from 'react-redux'
 
 import { App } from './app/app'
-import { store } from './store'
+import socketService from './services/socket-service'
+import store from './store'
 
 const $container: HTMLElement = document.getElementById('root')
 

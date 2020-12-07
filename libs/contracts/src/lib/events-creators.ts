@@ -33,7 +33,7 @@ const eventPayloadCreator: EventPayloadCreator = (
   } as const
 }
 
-type ISODataString = string
+export type ISODataString = string
 
 export const eventMatchNewState = (matchState: IMatchEntity) =>
   eventPayloadCreator(SocketEvent.MATCH_NEW_STATE, matchState)

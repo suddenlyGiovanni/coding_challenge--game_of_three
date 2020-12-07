@@ -370,7 +370,7 @@ export class Server implements IServer {
 
     this.heartbeatTimerID = setInterval(
       () => this._broadcast(SocketEvent.SYSTEM_HEARTBEAT, action()),
-      1000 * 10
+      1000 * 60
     )
   }
 

@@ -1,12 +1,20 @@
-import type { AnyAction, Middleware } from '@reduxjs/toolkit'
+// eslint-disable-next-line import/no-unresolved
+import type { AppDispatch, RootAction, RootState } from '@MyTypes'
+import type { Dispatch, Middleware, MiddlewareAPI } from '@reduxjs/toolkit'
 
-import type { RootState } from '../../store'
+export const traceMiddleware: Middleware = (
+  storeAPI: MiddlewareAPI<AppDispatch, RootState>
+) => (next: Dispatch<RootAction>) => (action: RootAction): unknown => {
+  console.group('Redux trace middleware')
 
-export const traceMiddleware: Middleware<unknown, RootState> = (storeAPI) => (
-  next
-) => (action: AnyAction) => {
-  console.log('dispatching', action)
-  const result = next(action)
-  console.log('next state', storeAPI.getState())
+  console.info('dispatching')
+  console.dir(action)
+
+  const result = next(action) as unknown
+  console.info('next state')
+  console.dir(storeAPI.getState())
+
+  console.groupEnd()
+
   return result
 }
