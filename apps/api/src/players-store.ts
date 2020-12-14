@@ -1,7 +1,7 @@
 import type { IPlayersStore, UUID } from './interfaces'
 import type { Human } from './model'
 
-import type { PlayerSerialized } from '@game-of-three/contracts'
+import type { IPlayerEntity } from '@game-of-three/contracts'
 
 export class PlayersStore implements IPlayersStore {
   private static instance: PlayersStore
@@ -41,7 +41,7 @@ export class PlayersStore implements IPlayersStore {
     return this._players.get(id)
   }
 
-  public getSerializedPlayer(): PlayerSerialized[] {
+  public getSerializedPlayer(): IPlayerEntity[] {
     return [...this._players.values()].map((player) => player.serialize())
   }
 

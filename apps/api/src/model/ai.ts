@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid'
 import type { IAI, IPlayer } from '../interfaces'
 import { PlayerType } from '../interfaces/player.interface'
 
-import { PlayerSerialized } from '@game-of-three/contracts'
+import { IPlayerEntity } from '@game-of-three/contracts'
 
 export type UUIDService<T extends string = string> = () => T
 
@@ -50,7 +50,7 @@ export class AI<PlayerID extends string = string> implements IPlayer<PlayerID> {
     return this._id === player.id
   }
 
-  public serialize(): PlayerSerialized<PlayerID> {
+  public serialize(): IPlayerEntity<PlayerID> {
     return {
       __type: 'Player',
       id: this.id,

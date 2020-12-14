@@ -3,10 +3,10 @@ import type { IMatchState, IPlayer } from '../interfaces'
 
 import {
   IAction,
-  IMatchStatePlayingSerialized,
-  IMatchStateSerialized,
-  IMatchStateStartSerialized,
-  IMatchStateStopSerialized,
+  IMatchEntity,
+  IMatchEntityPlaying,
+  IMatchEntityStart,
+  IMatchEntityStop,
   MatchStatus,
 } from '@game-of-three/contracts'
 
@@ -120,20 +120,20 @@ export class MatchState<
   }
 
   public static isIMatchStatePlayingSerialized(
-    state: Readonly<IMatchStateSerialized>
-  ): state is IMatchStatePlayingSerialized {
+    state: Readonly<IMatchEntity>
+  ): state is IMatchEntityPlaying {
     return state.status === MatchStatus.Playing
   }
 
   public static isIMatchStateStartSerialized(
-    state: Readonly<IMatchStateSerialized>
-  ): state is IMatchStateStartSerialized {
+    state: Readonly<IMatchEntity>
+  ): state is IMatchEntityStart {
     return state.status === MatchStatus.Start
   }
 
   public static isIMatchStateStopSerialized(
-    state: Readonly<IMatchStateSerialized>
-  ): state is IMatchStateStopSerialized {
+    state: Readonly<IMatchEntity>
+  ): state is IMatchEntityStop {
     return state.status === MatchStatus.Stop
   }
 
@@ -149,9 +149,7 @@ export class MatchState<
     return this.status === MatchStatus.Stop
   }
 
-  public serialize(): Readonly<
-    IMatchStateSerialized<MatchID, PlayerID1, PlayerID2>
-  > {
+  public serialize(): Readonly<IMatchEntity<MatchID, PlayerID1, PlayerID2>> {
     const matchStateSerialized = ({
       __type: 'MatchState',
       id: this.id,
@@ -168,9 +166,7 @@ export class MatchState<
       ...(this.winningPlayer && {
         winningPlayer: this.winningPlayer.serialize(),
       }),
-    } as unknown) as Readonly<
-      IMatchStateSerialized<MatchID, PlayerID1, PlayerID2>
-    >
+    } as unknown) as Readonly<IMatchEntity<MatchID, PlayerID1, PlayerID2>>
     return matchStateSerialized
   }
 }
