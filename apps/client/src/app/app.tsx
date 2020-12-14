@@ -1,5 +1,3 @@
-// eslint-disable-next-line import/no-unresolved
-import type { RootState } from '@MyTypes'
 import React, { useCallback, useState } from 'react'
 import type { ChangeEvent, MouseEvent, VFC } from 'react'
 import { useSelector } from 'react-redux'
@@ -10,7 +8,7 @@ import * as messagesFeature from '../features/messages'
 import * as systemFeature from '../features/system'
 import { useAppDispatch } from '../store'
 
-import { IAction } from '@game-of-three/contracts'
+import { assertIsAction } from '@game-of-three/contracts'
 
 const User: VFC = () => {
   const dispatch = useAppDispatch()
@@ -76,7 +74,8 @@ const MatchActionsControls: VFC = () => {
 
   const handleAction = useCallback(
     (event: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>): void => {
-      const action = Number(event.currentTarget.dataset['action']) as IAction
+      const action = Number(event.currentTarget.dataset['action'])
+      assertIsAction(action)
       dispatch(matchFeatures.actions.matchMove(action))
     },
     [dispatch]

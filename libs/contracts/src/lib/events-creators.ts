@@ -27,9 +27,9 @@ const eventPayloadCreator: EventPayloadCreator = (
 ) => {
   return {
     type,
-    ...(payload && { payload }),
-    ...(meta && { meta }),
-    ...(error && { error }),
+    ...(payload !== undefined && { payload }),
+    ...(meta !== undefined && { meta }),
+    ...(error !== undefined && { error }),
   } as const
 }
 

@@ -12,14 +12,18 @@ import {
 } from './sockets'
 
 import {
+  MatchStatus,
+  SocketEvent,
+  assertIsAction,
+  eventMatchMoveError,
+  eventMatchNewState,
+} from '@game-of-three/contracts'
+
+import type {
   IAction,
   IEventPayload,
   IEvents,
   IMatchEntity,
-  MatchStatus,
-  SocketEvent,
-  eventMatchMoveError,
-  eventMatchNewState,
 } from '@game-of-three/contracts'
 
 export class MatchService<
@@ -207,6 +211,7 @@ export class MatchService<
     const emit = emitToSocket(socket)
     try {
       MatchService._assertPlayerBelongToMatch(this._match, id)
+      assertIsAction(action)
       this.move(this._match.players.find((player) => player.id === id)!, action)
     } catch (error: unknown) {
       console.warn(error)

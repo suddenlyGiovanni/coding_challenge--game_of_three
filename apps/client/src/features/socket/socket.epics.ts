@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 // eslint-disable-next-line import/no-unresolved
 import type { RootEpic } from '@MyTypes'
 
 import { combineEpics, ofType } from 'redux-observable'
-import { filter, ignoreElements, map, mapTo } from 'rxjs/operators'
+import { filter, ignoreElements, map, mapTo, tap } from 'rxjs/operators'
 
 import socketService from '../../services/socket-service'
 
@@ -16,22 +15,63 @@ import * as messagesFeature from '../messages'
 import * as socketFeature from '../socket'
 import * as systemFeature from '../system'
 
+import { SocketEvent } from '@game-of-three/contracts'
+
 //#region SocketService Observers:
+const socketEvents$ = socketService.onEvent()
 const internalConnection$ = socketService.onInternalConnection()
 const internalDisconnection$ = socketService.onInternalDisconnection()
-const systemHeartbeat$ = socketService.onSystemHeartbeat()
-const systemInitialize$ = socketService.onSystemInitialize()
-const systemPlayerJoined$ = socketService.onSystemPlayerJoined()
-const systemPlayerLeft$ = socketService.onSystemPlayerLeft()
-const systemPlayerUpdated$ = socketService.onSystemPlayerUpdated()
-const lobbyPlayerJoined$ = socketService.onLobbyPlayerJoined()
-const lobbyPlayerLeft$ = socketService.onLobbyPlayerLeft()
-const matchNewState$ = socketService.onMatchNewState()
-const matchEnded$ = socketService.onMatchEnded()
-const matchError$ = socketService.onMatchError()
 //#endregion
 
 //#region OBSERVER SUBSCRIPTIONS
+
+socketEvents$.subscribe((e) => {
+  switch (e[0]) {
+    case SocketEvent.SYSTEM_HEARTBEAT:
+      store.dispatch(socketFeature.socketActions.systemHeartbeat(e[1]))
+      break
+
+    case SocketEvent.SYSTEM_INITIALIZE:
+      store.dispatch(socketFeature.socketActions.systemInitialize(e[1]))
+      break
+
+    case SocketEvent.SYSTEM_PLAYER_JOINED:
+      store.dispatch(socketFeature.socketActions.systemPlayerJoined(e[1]))
+      break
+
+    case SocketEvent.SYSTEM_PLAYER_LEFT:
+      store.dispatch(socketFeature.socketActions.systemPlayerLeft(e[1]))
+      break
+
+    case SocketEvent.SYSTEM_NAME_CHANGED:
+      store.dispatch(socketFeature.socketActions.systemPlayerUpdated(e[1]))
+      break
+
+    case SocketEvent.LOBBY_PLAYER_JOINED:
+      store.dispatch(socketFeature.socketActions.lobbyPlayerJoined(e[1]))
+      break
+
+    case SocketEvent.LOBBY_PLAYER_LEFT:
+      store.dispatch(socketFeature.socketActions.lobbyPlayerLeft(e[1]))
+      break
+
+    case SocketEvent.MATCH_NEW_STATE:
+      store.dispatch(socketFeature.socketActions.matchNewState(e[1]))
+      break
+
+    case SocketEvent.MATCH_END_STATE:
+      store.dispatch(socketFeature.socketActions.matchEnded(e[1]))
+      break
+
+    case SocketEvent.MATCH_MOVE_ERROR:
+      store.dispatch(socketFeature.socketActions.matchError(e[1]))
+      break
+
+    default:
+      console.warn(e)
+      break
+  }
+})
 
 internalConnection$.subscribe(() =>
   store.dispatch(socketFeature.socketActions.internalConnection())
@@ -39,45 +79,6 @@ internalConnection$.subscribe(() =>
 
 internalDisconnection$.subscribe((event) =>
   store.dispatch(socketFeature.socketActions.internalDisconnect(event))
-)
-
-systemHeartbeat$.subscribe((event) =>
-  store.dispatch(socketFeature.socketActions.systemHeartbeat(event))
-)
-systemInitialize$.subscribe((event) =>
-  store.dispatch(socketFeature.socketActions.systemInitialize(event))
-)
-
-systemPlayerJoined$.subscribe((event) =>
-  store.dispatch(socketFeature.socketActions.systemPlayerJoined(event))
-)
-
-systemPlayerLeft$.subscribe((event) =>
-  store.dispatch(socketFeature.socketActions.systemPlayerLeft(event))
-)
-
-systemPlayerUpdated$.subscribe((event) =>
-  store.dispatch(socketFeature.socketActions.systemPlayerUpdated(event))
-)
-
-lobbyPlayerJoined$.subscribe((event) =>
-  store.dispatch(socketFeature.socketActions.lobbyPlayerJoined(event))
-)
-
-lobbyPlayerLeft$.subscribe((event) =>
-  store.dispatch(socketFeature.socketActions.lobbyPlayerLeft(event))
-)
-
-matchNewState$.subscribe((event) =>
-  store.dispatch(socketFeature.socketActions.matchNewState(event))
-)
-
-matchEnded$.subscribe((event) =>
-  store.dispatch(socketFeature.socketActions.matchEnded(event))
-)
-
-matchError$.subscribe((event) =>
-  store.dispatch(socketFeature.socketActions.matchError(event))
 )
 
 //#endregion
@@ -174,6 +175,7 @@ const messagesEpic: RootEpic = (actions$, _$, { socketService }) =>
 const matchMoveEpic: RootEpic = (actions$, _$, { socketService }) =>
   actions$.pipe(
     filter(matchFeature.isMatchMove),
+    tap((x) => console.log(x)),
     map((action) => {
       socketService.emitMatchMove(action.payload)
       return action

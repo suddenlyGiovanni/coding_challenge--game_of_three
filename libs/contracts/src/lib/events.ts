@@ -17,8 +17,9 @@ import type {
 } from './events-creators'
 
 /* eslint-disable @typescript-eslint/member-ordering */
-export type ISocketEvent =
-  //#region  SYSTEM RESERVED EVENTS
+
+//#region SYSTEM RESERVED EVENTS
+type SystemSocketEvents =
   | 'connect'
   | 'connection'
   | 'disconnect'
@@ -34,8 +35,10 @@ export type ISocketEvent =
   | 'pong'
   | 'newListener'
   | 'removeListener'
-  //#endregion SYSTEM RESERVED EVENTS
-  //#region CUSTOM EVENTS
+//#endregion SYSTEM RESERVED EVENTS
+
+//#region CUSTOM EVENTS
+type CustomSocketEvents =
   | 'SYSTEM_HEARTBEAT'
   | 'SYSTEM_HELLO'
   | 'SYSTEM_PLAYER_JOINED'
@@ -52,6 +55,7 @@ export type ISocketEvent =
   | 'MATCH_NEW_STATE'
   | 'MATCH_END_STATE'
 //#endregion
+export type ISocketEvent = SystemSocketEvents | CustomSocketEvents
 export enum SocketEvent {
   //#region SYSTEM RESERVED EVENTS
   /**
@@ -176,12 +180,8 @@ export enum SocketEvent {
   MATCH_END_STATE = 'MATCH_END_STATE',
 }
 
-export interface IEvents
-  extends Record<
-    ISocketEvent,
-    IEventPayload<ISocketEvent, unknown, unknown, boolean> | string | void
-  > {
-  //#region SYSTEM RESERVED EVENTS
+export interface ISystemSocketEvent
+  extends Record<SystemSocketEvents, unknown> {
   [SocketEvent.INTERNAL_CONNECT]: void
   [SocketEvent.INTERNAL_CONNECTION]: void
   [SocketEvent.INTERNAL_DISCONNECT]:
@@ -202,7 +202,13 @@ export interface IEvents
   [SocketEvent.INTERNAL_PONG]: void
   [SocketEvent.INTERNAL_NEW_LISTENER]: void
   [SocketEvent.INTERNAL_REMOVE_LISTENER]: void
-  //#endregion SYSTEM RESERVED EVENTS
+}
+
+export interface ICustomSocketEvents
+  extends Record<
+    CustomSocketEvents,
+    IEventPayload<CustomSocketEvents, unknown, unknown, boolean> | void
+  > {
   [SocketEvent.SYSTEM_HEARTBEAT]: IEventHeartbeat
   [SocketEvent.SYSTEM_HELLO]: IEventHello
   [SocketEvent.SYSTEM_PLAYER_JOINED]: IEventPlayerJoined
@@ -217,5 +223,7 @@ export interface IEvents
   [SocketEvent.MATCH_MOVE]: IEventMatchMove
   [SocketEvent.MATCH_MOVE_ERROR]: IEventMatchMoveError
   [SocketEvent.MATCH_NEW_STATE]: IEventMatchNewState
-  [SocketEvent.MATCH_END_STATE]: void
+  [SocketEvent.MATCH_END_STATE]: void // FIXME: use an event creator
 }
+
+export interface IEvents extends ISystemSocketEvent, ICustomSocketEvents {}

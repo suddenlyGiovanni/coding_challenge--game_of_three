@@ -18,6 +18,20 @@ export type IMatchStatus =
 
 export type IAction = -1 | 0 | 1
 
+export function isAction(action: unknown): action is IAction {
+  return (
+    typeof action === 'number' &&
+    (action === -1 || action === 0 || action === 1)
+  )
+}
+
+export function assertIsAction(action: unknown): asserts action is IAction {
+  if (!isAction(action))
+    throw new Error(
+      `does not extends type IAction = -1 | 0 | 1.\naction: ${String(action)}`
+    )
+}
+
 export interface IMatchEntityStart<
   MatchID extends string = string,
   PlayerID1 extends string = string,
