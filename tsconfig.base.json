@@ -2,7 +2,6 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "compileOnSave": false,
   "compilerOptions": {
-    // "strict": true,
     "rootDir": ".",
     "sourceMap": true,
     "declaration": false,
@@ -19,9 +18,9 @@
     "baseUrl": ".",
     "pretty": true,
     "paths": {
-      "@game-of-three/contracts": ["./libs/contracts/src/index.ts"]
+      "@game-of-three/contracts": ["./libs/contracts/src/index.ts"],
+      "@game-of-three/ui": ["libs/ui/src/index.ts"]
     }
-    // "noEmit": true
   },
   "exclude": ["node_modules", "tmp"]
 }
