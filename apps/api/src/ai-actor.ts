@@ -4,8 +4,8 @@ import { AI, MatchState } from './model'
 
 import {
   IAction,
-  IMatchStatePlayingSerialized,
-  IMatchStateSerialized,
+  IMatchEntity,
+  IMatchEntityPlaying,
 } from '@game-of-three/contracts'
 
 /**
@@ -21,7 +21,7 @@ type Reminder = 0 | 1 | 2
 
 export class AIActor<PlayerID extends string = string>
   implements
-    IObserver<IMatchStateSerialized>,
+    IObserver<IMatchEntity>,
     Omit<ISubject<IAction>, 'notifyObservers'> {
   static MAX_SECONDS = 4
 
@@ -67,7 +67,7 @@ export class AIActor<PlayerID extends string = string>
    * @param {IMatchState} state
    * @memberof AIActor
    */
-  public update(state: IMatchStateSerialized): void {
+  public update(state: IMatchEntity): void {
     if (
       MatchState.isIMatchStatePlayingSerialized(state) &&
       state.nextTurn.id === this.ai.id
@@ -76,7 +76,7 @@ export class AIActor<PlayerID extends string = string>
     }
   }
 
-  private _move(state: IMatchStatePlayingSerialized): void {
+  private _move(state: IMatchEntityPlaying): void {
     this._pause(this._randomDelayMs())
       .then(() => {
         /**

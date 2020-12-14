@@ -19,8 +19,8 @@ import {
 } from '../model'
 
 import {
-  IMatchStateSerialized,
-  IMatchStateStartSerialized,
+  IMatchEntity,
+  IMatchEntityStart,
   MatchStatus,
 } from '@game-of-three/contracts'
 
@@ -45,8 +45,8 @@ describe('match', () => {
   const mockUpdateA = jest.fn()
   const mockUpdateB = jest.fn()
 
-  const observerA: IObserver<IMatchStateSerialized> = { update: mockUpdateA }
-  const observerB: IObserver<IMatchStateSerialized> = { update: mockUpdateB }
+  const observerA: IObserver<IMatchEntity> = { update: mockUpdateA }
+  const observerB: IObserver<IMatchEntity> = { update: mockUpdateB }
 
   beforeEach(() => {
     match = new Match(
@@ -251,7 +251,7 @@ describe('match', () => {
       // act
       expect(() => match.notifyObservers()).not.toThrow()
       // assert
-      const expectedUpdateArgument: IMatchStateStartSerialized = {
+      const expectedUpdateArgument: IMatchEntityStart = {
         __type: 'MatchState',
         id: match.id,
         nextTurn: human.serialize(),

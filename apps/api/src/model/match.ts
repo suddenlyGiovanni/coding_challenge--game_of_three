@@ -12,7 +12,7 @@ import { MatchState } from '../model/match-state'
 
 import { Turn } from './turn'
 
-import { IMatchStateSerialized, MatchStatus } from '@game-of-three/contracts'
+import { IMatchEntity, MatchStatus } from '@game-of-three/contracts'
 
 export interface IUUIDStrategy {
   <T extends string = string>(): T
@@ -22,9 +22,7 @@ export class Match<
   PlayerID1 extends string = string,
   PlayerID2 extends string = string,
   MatchID extends string = string
-> implements
-    IMatch<PlayerID1, PlayerID2, MatchID>,
-    ISubject<IMatchStateSerialized> {
+> implements IMatch<PlayerID1, PlayerID2, MatchID>, ISubject<IMatchEntity> {
   public static readonly MAX = 100
 
   public static readonly MIN = 3
@@ -43,7 +41,7 @@ export class Match<
 
   private readonly _numberGeneratorStrategy: INumberGeneratorStrategy
 
-  private readonly _observers: IObserver<IMatchStateSerialized>[]
+  private readonly _observers: IObserver<IMatchEntity>[]
 
   private readonly _players: readonly [
     player1: IPlayer<PlayerID1>,
@@ -171,11 +169,11 @@ export class Match<
     this.notifyObservers()
   }
 
-  public registerObserver(observer: IObserver<IMatchStateSerialized>): void {
+  public registerObserver(observer: IObserver<IMatchEntity>): void {
     this._observers.push(observer)
   }
 
-  public removeObserver(observer: IObserver<IMatchStateSerialized>): void {
+  public removeObserver(observer: IObserver<IMatchEntity>): void {
     const index = this._observers.indexOf(observer)
     if (index !== -1) {
       this._observers.splice(index, 1)

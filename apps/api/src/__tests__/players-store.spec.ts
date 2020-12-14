@@ -4,7 +4,7 @@ import type { IPlayersStore } from '../interfaces'
 import { Human } from '../model'
 import { PlayersStore } from '../players-store'
 
-import type { PlayerSerialized } from '@game-of-three/contracts'
+import type { IPlayerEntity } from '@game-of-three/contracts'
 
 describe('users-store', () => {
   const playerA = new Human('USER_A_ID', 'PLAYER_A')
@@ -127,7 +127,7 @@ describe('users-store', () => {
 
   it('should have a method to retrieve a serialized version of the store', () => {
     expect.hasAssertions()
-    let serializedStore!: PlayerSerialized[]
+    let serializedStore!: IPlayerEntity[]
     playersStore.addPlayer(playerA)
     playersStore.addPlayer(playerB)
     playersStore.addPlayer(playerC)

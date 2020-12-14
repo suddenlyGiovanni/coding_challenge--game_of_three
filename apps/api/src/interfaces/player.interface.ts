@@ -1,6 +1,6 @@
 import type { AI } from '../model/ai'
 
-import type { IEntity, PlayerSerialized } from '@game-of-three/contracts'
+import type { IEntity, IPlayerEntity } from '@game-of-three/contracts'
 
 export type IAI = 'AI'
 export type IHUMAN = 'HUMAN'
@@ -50,5 +50,5 @@ export interface IPlayer<PlayerID extends string = string>
    */
   isSame(player: IPlayer): boolean
 
-  serialize(): PlayerSerialized<PlayerID>
+  serialize(): IPlayerEntity<PlayerID>
 }

@@ -1,6 +1,6 @@
 import type { IEntity } from './entity'
 
-export interface PlayerSerialized<PlayerID extends string = string>
+export interface IPlayerEntity<PlayerID extends string = string>
   extends IEntity<PlayerID, 'Player'> {
   readonly id: PlayerID
 

@@ -17,17 +17,17 @@ import {
 } from './sockets'
 
 import {
-  Action,
+  IEventPayload,
   IEvents,
   PlayerID,
   SocketEvent,
-  actionHeartbeat,
-  actionInitialize,
-  actionLobbyPlayerJoined,
-  actionLobbyPlayerLeft,
-  actionPlayerJoined,
-  actionPlayerLeft,
-  actionPlayerNameChanged,
+  eventHeartbeat,
+  eventInitialize,
+  eventLobbyPlayerJoined,
+  eventLobbyPlayerLeft,
+  eventPlayerJoined,
+  eventPlayerLeft,
+  eventPlayerNameChanged,
 } from '@game-of-three/contracts'
 
 export class Server implements IServer {
@@ -62,15 +62,15 @@ export class Server implements IServer {
     >,
     WrappedServerSocket<
       SocketEvent.SYSTEM_HELLO,
-      Action<SocketEvent.SYSTEM_HELLO, 'world!', never, never>
+      IEventPayload<SocketEvent.SYSTEM_HELLO, 'world!', never, never>
     >,
     WrappedServerSocket<
       SocketEvent.SYSTEM_NAME_UPDATE,
-      Action<SocketEvent.SYSTEM_NAME_UPDATE, string, never, never>
+      IEventPayload<SocketEvent.SYSTEM_NAME_UPDATE, string, never, never>
     >,
     WrappedServerSocket<
       SocketEvent.LOBBY_MAKE_MATCH,
-      Action<SocketEvent.LOBBY_MAKE_MATCH, never, never, never>
+      IEventPayload<SocketEvent.LOBBY_MAKE_MATCH, never, never, never>
     >
   ]
 
@@ -129,7 +129,7 @@ export class Server implements IServer {
 
       this._broadcast(
         SocketEvent.LOBBY_PLAYER_JOINED,
-        actionLobbyPlayerJoined(player.id)
+        eventLobbyPlayerJoined(player.id)
       )
     } else {
       console.info(`can't add player id ${player.id} to the lobby`)
@@ -162,7 +162,7 @@ export class Server implements IServer {
       this.lobby.removePlayerId(playerID1)
       this._broadcast(
         SocketEvent.LOBBY_PLAYER_LEFT,
-        actionLobbyPlayerLeft(playerID1)
+        eventLobbyPlayerLeft(playerID1)
       )
       const player1 = this.playersStore.getPlayerByID(playerID1)
       const ai = AI.make()
@@ -181,12 +181,12 @@ export class Server implements IServer {
 
       this._broadcast(
         SocketEvent.LOBBY_PLAYER_LEFT,
-        actionLobbyPlayerLeft(playerID1)
+        eventLobbyPlayerLeft(playerID1)
       )
 
       this._broadcast(
         SocketEvent.LOBBY_PLAYER_LEFT,
-        actionLobbyPlayerLeft(playerID2)
+        eventLobbyPlayerLeft(playerID2)
       )
 
       const socketPlayer1 = this.io.sockets.sockets.get(playerID1)
@@ -214,8 +214,9 @@ export class Server implements IServer {
   private _handlerClientInitializeData = (socket: Socket) => {
     emitToSocket(socket)(
       SocketEvent.SYSTEM_INITIALIZE,
-      actionInitialize({
+      eventInitialize({
         lobby: this.lobby.playersId,
+        player: this.playersStore.getPlayerByID(socket.id).serialize(),
         players: this.playersStore.getSerializedPlayer(),
       })
     )
@@ -267,7 +268,7 @@ export class Server implements IServer {
     // notify all connected clients (except this client) that a new client has joined
     emitToAllSockets(socket)(
       SocketEvent.SYSTEM_PLAYER_JOINED,
-      actionPlayerJoined(player.serialize())
+      eventPlayerJoined(player.serialize())
     )
   }
 
@@ -327,7 +328,7 @@ export class Server implements IServer {
 
       this._broadcast(
         SocketEvent.LOBBY_PLAYER_LEFT,
-        actionLobbyPlayerLeft(player.id)
+        eventLobbyPlayerLeft(player.id)
       )
     }
   }
@@ -346,7 +347,7 @@ export class Server implements IServer {
     this.playersStore.removePlayerByID(player.id)
     this._broadcast(
       SocketEvent.SYSTEM_PLAYER_LEFT,
-      actionPlayerLeft(player.serialize())
+      eventPlayerLeft(player.serialize())
     )
   }
 
@@ -358,18 +359,18 @@ export class Server implements IServer {
 
     this._broadcast(
       SocketEvent.SYSTEM_NAME_CHANGED,
-      actionPlayerNameChanged(
+      eventPlayerNameChanged(
         this.playersStore.getPlayerByID(playerId).serialize()
       )
     )
   }
 
   private _startEmitHeartbeat(): void {
-    const action = () => actionHeartbeat(new Date().toISOString())
+    const action = () => eventHeartbeat(new Date().toISOString())
 
     this.heartbeatTimerID = setInterval(
       () => this._broadcast(SocketEvent.SYSTEM_HEARTBEAT, action()),
-      1000
+      1000 * 60
     )
   }
 

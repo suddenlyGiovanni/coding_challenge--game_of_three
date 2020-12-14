@@ -1,6 +1,6 @@
 import type { Human } from '../model'
 
-import type { PlayerSerialized } from '@game-of-three/contracts'
+import type { IPlayerEntity } from '@game-of-three/contracts'
 
 export type UUID = string
 
@@ -14,7 +14,7 @@ export interface IPlayersStore {
 
   getPlayerByID(id: UUID): undefined | Human
 
-  getSerializedPlayer(): PlayerSerialized[]
+  getSerializedPlayer(): IPlayerEntity[]
 
   isEmpty(): boolean
 

@@ -3,7 +3,7 @@ import { describe, expect, it } from '@jest/globals'
 import { IPlayer, PlayerType } from '../interfaces'
 import { Human } from '../model'
 
-import type { PlayerSerialized } from '@game-of-three/contracts'
+import type { IPlayerEntity } from '@game-of-three/contracts'
 
 describe('human class', () => {
   const ID_1 = 'PLAYER_1_ID'
@@ -56,7 +56,7 @@ describe('human class', () => {
   it('should allow to be serialized', () => {
     expect.hasAssertions()
 
-    let serializedPlayerObject!: PlayerSerialized
+    let serializedPlayerObject!: IPlayerEntity
     expect(() => {
       serializedPlayerObject = player1.serialize()
     }).not.toThrow()
