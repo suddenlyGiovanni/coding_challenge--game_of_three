@@ -1,0 +1,15 @@
+{
+  "presets": [
+    "@nrwl/react/babel",
+    [
+      "@emotion/babel-preset-css-prop",
+      {
+        "autoLabel": "dev-only",
+        "labelFormat": "[local]",
+        "useBuiltIns": false,
+        "throwIfNamespace": true
+      }
+    ]
+  ],
+  "plugins": []
+}

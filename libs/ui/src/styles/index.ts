@@ -1,0 +1,5 @@
+export { global } from './global.styles'
+export { reset } from './reset.styles'
+export { GlobalStyles } from './global'
+export { typography } from './typography.styles'
+export { colors } from './colors.styles'

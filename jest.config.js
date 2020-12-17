@@ -102,6 +102,7 @@ module.exports = {
     '<rootDir>/apps/client',
     '<rootDir>/apps/api',
     '<rootDir>/libs/api-interfaces',
+    '<rootDir>/libs/ui',
   ],
 
   // Use this configuration option to add custom reporters to Jest
